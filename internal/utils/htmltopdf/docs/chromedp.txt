@@ -1,0 +1,11 @@
+step.1 拉取鏡像
+  docker pull chromedp/headless-shell:latest
+
+step.2 執行鏡像
+  docker run -d -p 9222:9222 --rm --name headless-shell chromedp/headless-shell
+
+step.3 進入容器
+  docker exec -it headless-shell bash
+
+step.4 安裝中文字體
+  apt-get update &&  apt install xfonts-intl-chinese ttf-wqy-microhei xfonts-wqy

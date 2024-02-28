@@ -1,0 +1,25 @@
+{
+  "SignOff.Leave.Await.Subject": "待簽核【請假單】- %s",
+  "SignOff.Leave.Await.Msg": "請假單簽核",
+
+  "SignOff.Leave.Exceed.Subject": "超出三天未簽【請假單】- %s",
+  "SignOff.Leave.Exceed.Msg": "超出三天未簽，請假單簽核",
+
+  "SignOff.Leave.Approve.Subject": "核准【請假單】- %s",
+  "SignOff.Leave.Approve.Msg": "請假單核准",
+
+  "SignOff.Leave.Reject.Subject": "駁回【請假單】- %s",
+  "SignOff.Leave.Reject.Msg": "請假單駁回",
+
+  "SignOff.Overtime.Reject.Subject": "駁回【加班單】- %s",
+  "SignOff.Overtime.Reject.Msg": "加班單駁回",
+
+  "SignOff.Overtime.Await.Subject": "待簽核【加班單】- %s",
+  "SignOff.Overtime.Await.Msg": "加班單簽核",
+
+  "SignOff.Overtime.Exceed.Subject": "超過三天未簽【加班單】- %s",
+  "SignOff.Overtime.Exceed.Msg": "超過三天未簽，加班單簽核",
+
+  "SignOff.Overtime.Approve.Subject": "核准【加班單】- %s",
+  "SignOff.Overtime.Approve.Msg": "加班單核准"
+}

@@ -1,0 +1,29 @@
+{
+  "CodeSuccess": "請求成功",
+  "CodeError":   "請求失敗",
+
+  "CodeConsultFailedEncoding": "無效的編碼",
+  "CodeConsultFailedLanguage": "無效的語言",
+
+  "CodePermanentRedirect": "永久重定向",
+  "CodeTemporaryRedirect": "臨時重定向",
+
+  "CodeRequestInvalidUrlPath": "無效的 URL 路徑",
+  "CodeRequestInvalidMethod":  "無效的 HTTP 方法",
+  "CodeRequestInvalidParam":   "無效的动态路由参數",
+  "CodeRequestInvalidQuery":   "無效的請求参數",
+  "CodeRequestInvalidBody":    "無效的請求體",
+  "CodeRequestInvalidForm":    "無效的表單數據",
+  "CodeRequestInvalidHeader":  "無效的請求頭",
+
+  "CodeAuthTokenIllegal": "無效的身份驗證令牌",
+  "CodeAuthTokenExpired": "身份驗證令牌已過期",
+
+  "CodeModelEntryDuplication": "模型條目已存在",
+  "CodeModelEntryNotExist":    "模型條目不存在",
+
+  "CodeServiceFatal": "服務發生致命錯誤",
+
+  "CodeBusinessPanicError":   "業務邏輯發生崩潰錯誤",
+  "CodeUnknownInternalError": "發生未知的内部錯誤"
+}

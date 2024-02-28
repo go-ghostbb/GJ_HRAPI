@@ -1,0 +1,38 @@
+root = "."
+testdata_dir = "testdata"
+tmp_dir = "bin/tmp"
+
+[build]
+  args_bin = []
+  bin = "./bin/hrapi-dev"
+  cmd = "make build-dev"
+  delay = 1000
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "bin", "resource", "manifest", "log"]
+  exclude_regex = ["_test.go", "_gen.go", "_ttest.go"]
+  full_bin = "HR_DEBUG=true GB_DEBUG=true dlv --listen=:12366 --headless=true --api-version=2 --continue --accept-multiclient exec bin/hrapi-dev"
+  include_dir = []
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  include_file = []
+  kill_delay = "0s"
+  post_cmd = []
+  pre_cmd = []
+  rerun = false
+  rerun_delay = 500
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  main_only = false
+  time = false
+
+[misc]
+  clean_on_exit = false
+
+[screen]
+  clear_on_rebuild = false
+  keep_scroll = true

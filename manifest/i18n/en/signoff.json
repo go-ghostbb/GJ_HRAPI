@@ -1,0 +1,25 @@
+{
+  "SignOff.Leave.Await.Subject": "Pending Approval: Leave Request - %s",
+  "SignOff.Leave.Await.Msg": "Leave request pending approval",
+
+  "SignOff.Leave.Exceed.Subject": "Exceeded Three Days Unapproved: Leave Request - %s",
+  "SignOff.Leave.Exceed.Msg": "Exceeded Three Days Unapproved: Leave request approval",
+
+  "SignOff.Leave.Approve.Subject": "Approved: Leave Request- %s",
+  "SignOff.Leave.Approve.Msg": "Leave request approved",
+
+  "SignOff.Leave.Reject.Subject": "Rejected: Leave Request- %s",
+  "SignOff.Leave.Reject.Msg": "Leave request rejected",
+
+  "SignOff.Overtime.Reject.Subject": "Rejected: Overtime Request - %s",
+  "SignOff.Overtime.Reject.Msg": "Overtime request rejected",
+
+  "SignOff.Overtime.Await.Subject": "Pending Approval: Overtime Request - %s",
+  "SignOff.Overtime.Await.Msg": "Overtime request pending approval",
+
+  "SignOff.Overtime.Exceed.Subject": "Exceeded Three Days Unapproved: Overtime Request - %s",
+  "SignOff.Overtime.Exceed.Msg": "Exceeded Three Days Unapproved: Overtime request approval",
+
+  "SignOff.Overtime.Approve.Subject": "Approved: Overtime Request - %s",
+  "SignOff.Overtime.Approve.Msg": "Overtime request approved"
+}

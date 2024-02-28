@@ -1,0 +1,70 @@
+server:
+  logger:
+    path: "./log/server"
+  address: "9000"
+  read-timeout: "60s"
+  write-timeout: "0"
+  idle-timeout: "60s"
+  max-header-bytes: "10240"
+  access-log-enabled: true
+
+logger:
+  path: "./log/system"
+  level : "all"
+  stdout: true
+
+redis:
+  default:
+    address: 127.0.0.1:6379
+    db:      1
+  dbcache:
+    address: 127.0.0.1:6379
+    db:      0
+
+database:
+  logger:
+    path: "./log/database"
+  default:
+    host: "localhost"
+    port: "1433"
+    user: "sa"
+    pass: "Ab@589095"
+    name: "hrms"
+    type: "mssql"
+    maxIdle: 10
+    maxOpen: 100
+    access-log-enabled: true
+    slow-threshold: "2s"
+    record-not-found-err: false
+
+viewer:
+  path: ["resource/template"]
+  leaveSign:
+    default-file: "leaveSign.html"
+
+cors:
+  # mode說明
+  # allow-all: 放行全部
+  # whitelist: 白名單模式
+  # strict-whitelist: 嚴格白名單模式, 白名單外的請求一律拒絕
+  mode: allow-all
+  whitelist:
+    - allow-origin: example.com
+      allow-methods: GET, POST, OPTIONS, PUT, DELETE
+      allow-headers: Content-Type, AccessToken, X-CSRF-Token, Authorization, Locale
+      expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type, Content-Disposition, New-Token
+      allow-credentials: true
+
+jwt:
+  signing-key: "5699e718-0608-420b-5dd1-992682b20988"
+  issuer: "GB"
+  access-token-ep: "10m"
+  refresh-token-ep: "7d"
+
+email:
+  host: "smtp.office365.com"
+  port: 587
+  username: "project@mail.gj.com.tw"
+  password: "wL9/qsUE/SdbIInpE9H7YQ=="
+  from-name: "加九"
+  from-mail: "project@mail.gj.com.tw"

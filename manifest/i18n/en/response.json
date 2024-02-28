@@ -1,0 +1,29 @@
+{
+  "CodeSuccess": "success",
+  "CodeError":   "failed",
+
+  "CodeConsultFailedEncoding": "invalid encoding",
+  "CodeConsultFailedLanguage": "invalid language",
+
+  "CodePermanentRedirect": "permanent redirect",
+  "CodeTemporaryRedirect": "temporary redirect",
+
+  "CodeRequestInvalidUrlPath": "invalid URL path",
+  "CodeRequestInvalidMethod":  "invalid HTTP method",
+  "CodeRequestInvalidParam":   "invalid dynamic route parameter",
+  "CodeRequestInvalidQuery":   "invalid request parameter",
+  "CodeRequestInvalidBody":    "invalid request body",
+  "CodeRequestInvalidForm":    "invalid form data",
+  "CodeRequestInvalidHeader":  "invalid request header",
+
+  "CodeAuthTokenIllegal": "invalid authentication token",
+  "CodeAuthTokenExpired": "expired authentication token",
+
+  "CodeModelEntryDuplication": "model entry already exists",
+  "CodeModelEntryNotExist":    "model entry does not exist",
+
+  "CodeServiceFatal": "fatal error in service",
+
+  "CodeBusinessPanicError":   "panic error in business logic",
+  "CodeUnknownInternalError": "unknown internal error"
+}

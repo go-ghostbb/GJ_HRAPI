@@ -1,0 +1,4 @@
+{
+  "Daily.Leave.Error.TimeOverlap": "The created time overlaps with another leave request",
+  "Daily.Leave.Error.Limit": "Leave request exceeds the limit. Remaining hours: %g, This request's hours: %g"
+}

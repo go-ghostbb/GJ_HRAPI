@@ -1,0 +1,4 @@
+{
+  "Daily.Leave.Error.TimeOverlap": "建立的時間與其他請假單時間重疊",
+  "Daily.Leave.Error.Limit": "請假超過上限，可請時數%g，此單請假時數%g"
+}
