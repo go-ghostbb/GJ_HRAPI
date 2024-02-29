@@ -8,6 +8,7 @@ import (
 	gbutil "ghostbb.io/gb/util/gb_util"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"hrapi/internal/types/enum"
 	"hrapi/internal/utils/jwtx/claims"
 	"time"
 )
@@ -62,10 +63,11 @@ func (j *Jwtx) GetAccessTokenEp() time.Duration {
 }
 
 // CreateToken 創建Token
-func (j *Jwtx) CreateToken(baseClaims claims.BaseClaims) (accessToken, refreshToken string, err error) {
+func (j *Jwtx) CreateToken(authType enum.MenuShow, baseClaims claims.BaseClaims) (accessToken, refreshToken string, err error) {
 	key, _ := uuid.NewUUID()
 
 	accessClaims := claims.AccessClaims{
+		Type:       authType,
 		BaseClaims: baseClaims,
 		Key:        key,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -126,7 +128,7 @@ func (j *Jwtx) ParseRefreshToken(tokenString string) (*claims.RefreshClaims, err
 }
 
 // Refreshing 刷新token
-func (j *Jwtx) Refreshing(accessToken, refreshToken string) (newAccessToken, newRefreshToken string, err error) {
+func (j *Jwtx) Refreshing(authType enum.MenuShow, accessToken, refreshToken string) (newAccessToken, newRefreshToken string, err error) {
 	accessClaims, _, ok, err := j.compareAccessAndRefresh(accessToken, refreshToken)
 	if err != nil {
 		return "", "", err
@@ -134,7 +136,7 @@ func (j *Jwtx) Refreshing(accessToken, refreshToken string) (newAccessToken, new
 	if !ok {
 		return "", "", RefreshTokenErr
 	}
-	newAccessToken, newRefreshToken, err = j.CreateToken(accessClaims.BaseClaims)
+	newAccessToken, newRefreshToken, err = j.CreateToken(authType, accessClaims.BaseClaims)
 	if err != nil {
 		return "", "", err
 	}

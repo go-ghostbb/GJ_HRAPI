@@ -3,6 +3,7 @@ package claims
 import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"hrapi/internal/types/enum"
 )
 
 type ClaimType string
@@ -13,7 +14,8 @@ const (
 )
 
 type AccessClaims struct {
-	Key uuid.UUID
+	Type enum.MenuShow
+	Key  uuid.UUID
 	jwt.RegisteredClaims
 	BaseClaims
 }

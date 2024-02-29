@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type Role struct {
 	gorm.Model
 	Code   string `gorm:"size:100;unique;not null;comment:角色代號"`
-	Name   string `gorm:"size:100;not null;comment:工廠名稱"`
+	Name   string `gorm:"size:100;not null;comment:角色名稱"`
 	Status bool   `gorm:"default:true;not null;comment:狀態"`
 	Remark string `gorm:"comment:備註"`
 

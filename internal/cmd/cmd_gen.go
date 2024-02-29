@@ -61,6 +61,7 @@ func genFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 	// 從連接的數據庫為所有表生成 Model 結構體和 CRUD 程式碼
 	// 也可以手動指定需要生成程式碼的數據表
 	g.ApplyBasic(types.Basic()...)
+	g.ApplyBasic(types.M2M()...)
 
 	// 執行並生成程式碼
 	g.Execute()

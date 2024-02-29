@@ -52,7 +52,7 @@ cors:
     - allow-origin: example.com
       allow-methods: GET, POST, OPTIONS, PUT, DELETE
       allow-headers: Content-Type, AccessToken, X-CSRF-Token, Authorization, Locale
-      expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type, Content-Disposition, New-Token
+      expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type, Content-Disposition, X-Token
       allow-credentials: true
 
 jwt:

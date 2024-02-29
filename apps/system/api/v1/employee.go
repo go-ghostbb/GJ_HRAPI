@@ -16,7 +16,8 @@ import (
 type EmployeeApi struct{}
 
 func (e *EmployeeApi) Init(group *gin.RouterGroup) {
-	v1 := group.Group("api/v1/employee").Use(middleware.Auth())
+	// 需要有後台權限 (middleware.Software())
+	v1 := group.Group("api/v1/employee").Use(middleware.Auth(), middleware.Software())
 	v1.GET("", e.getByKeyword)
 	v1.GET("/:id", e.getByID)
 	v1.POST("", e.insert)
@@ -41,7 +42,7 @@ func (e *EmployeeApi) getByKeyword(c *gin.Context) {
 
 	out, err = service.Employee(ctx).GetByKeyword(in)
 	if err != nil {
-		Responder(Mount(c)).FailWithDetail(CodeOperationFailed, err.Error())
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
 	}
 
@@ -63,10 +64,10 @@ func (e *EmployeeApi) getByID(c *gin.Context) {
 	out, err = service.Employee(ctx).GetByID(in)
 	if err != nil {
 		if gberror.Is(err, gorm.ErrRecordNotFound) {
-			Responder(Mount(c)).OkWithData("record not found")
+			Responder(Mount(c)).OkWithDetail("record not found")
 			return
 		}
-		Responder(Mount(c)).FailWithDetail(CodeOperationFailed, err.Error())
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
 	}
 
@@ -90,7 +91,7 @@ func (e *EmployeeApi) insert(c *gin.Context) {
 
 	out, err = service.Employee(ctx).Insert(in)
 	if err != nil {
-		Responder(Mount(c)).FailWithDetail(CodeOperationFailed, err.Error())
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
 	}
 
@@ -108,18 +109,18 @@ func (e *EmployeeApi) update(c *gin.Context) {
 	)
 	in.ID = gbconv.Uint(c.Query("id"))
 	if in.ID = gbconv.Uint(c.Param("id")); in.ID == 0 {
-		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidParam, err.Error())
+		Responder(Mount(c)).FailWithMsg(CodeRequestInvalidParam, err.Error())
 		return
 	}
 
 	if err = gbhttp.ParseJSON(c, &in.Employee); err != nil {
-		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		Responder(Mount(c)).FailWithMsg(CodeRequestInvalidBody, err.Error())
 		return
 	}
 
 	_, err = service.Employee(ctx).Update(in)
 	if err != nil {
-		Responder(Mount(c)).FailWithDetail(CodeOperationFailed, err.Error())
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
 	}
 
@@ -140,7 +141,7 @@ func (e *EmployeeApi) delete(c *gin.Context) {
 
 	_, err = service.Employee(ctx).Delete(in)
 	if err != nil {
-		Responder(Mount(c)).FailWithDetail(CodeOperationFailed, err.Error())
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
 	}
 

@@ -53,7 +53,7 @@ func Auth() gin.HandlerFunc {
 						// Put the old accessToken into the whitelist
 						_ = token.SetWhite(g.Redis(), accessToken)
 						// Add new accessToken response header
-						c.Header("new-token", newAccessToken.(string))
+						c.Header("x-token", newAccessToken.(string))
 					}
 				}
 			} else {
@@ -68,6 +68,7 @@ func Auth() gin.HandlerFunc {
 		gbhttp.Set(c, "employee.real_name", accessClaims.RealName)
 		gbhttp.Set(c, "employee.account", accessClaims.Account)
 		gbhttp.Set(c, "employee.roles", accessClaims.Roles)
+		gbhttp.Set(c, "auth.type", accessClaims.Type)
 		c.Next()
 	}
 }
@@ -76,18 +77,20 @@ func Auth() gin.HandlerFunc {
 func refresh(accessToken string, accessClaims *claims.AccessClaims) (interface{}, error, bool) {
 	// Use singleflight to merge requests to avoid high concurrency
 	return sf.Do("JWT:"+accessToken, func() (interface{}, error) {
+		key := string(accessClaims.Type) + ":" + gbconv.String(accessClaims.BaseClaims.EmployeeID)
+
 		// Get the refreshToken from redis
-		refreshToken, err := token.GetRefreshToken(g.Redis(), gbconv.String(accessClaims.BaseClaims.EmployeeID))
+		refreshToken, err := token.GetRefreshToken(g.Redis(), key)
 		if err != nil {
 			return nil, err
 		}
 		// refresh
-		newAccessToken, newRefreshToken, err := jwtx.Service.Refreshing(accessToken, refreshToken)
+		newAccessToken, newRefreshToken, err := jwtx.Service.Refreshing(accessClaims.Type, accessToken, refreshToken)
 		if err != nil {
 			return nil, err
 		}
 		// Put the new refreshToken back into redis
-		if err = token.SetRefreshToken(g.Redis(), gbconv.String(accessClaims.BaseClaims.EmployeeID), newRefreshToken, jwtx.Service.GetRefreshTokenEp()); err != nil {
+		if err = token.SetRefreshToken(g.Redis(), key, newRefreshToken, jwtx.Service.GetRefreshTokenEp()); err != nil {
 			return nil, err
 		}
 		return newAccessToken, nil

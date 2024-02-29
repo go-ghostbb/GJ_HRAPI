@@ -23,6 +23,8 @@ var (
 	Menu             *menu
 	Permission       *permission
 	Role             *role
+	RoleMenu         *roleMenu
+	RolePermission   *rolePermission
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -33,6 +35,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Menu = &Q.Menu
 	Permission = &Q.Permission
 	Role = &Q.Role
+	RoleMenu = &Q.RoleMenu
+	RolePermission = &Q.RolePermission
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
@@ -44,6 +48,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Menu:             newMenu(db, opts...),
 		Permission:       newPermission(db, opts...),
 		Role:             newRole(db, opts...),
+		RoleMenu:         newRoleMenu(db, opts...),
+		RolePermission:   newRolePermission(db, opts...),
 	}
 }
 
@@ -56,6 +62,8 @@ type Query struct {
 	Menu             menu
 	Permission       permission
 	Role             role
+	RoleMenu         roleMenu
+	RolePermission   rolePermission
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -69,6 +77,8 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Menu:             q.Menu.clone(db),
 		Permission:       q.Permission.clone(db),
 		Role:             q.Role.clone(db),
+		RoleMenu:         q.RoleMenu.clone(db),
+		RolePermission:   q.RolePermission.clone(db),
 	}
 }
 
@@ -89,6 +99,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Menu:             q.Menu.replaceDB(db),
 		Permission:       q.Permission.replaceDB(db),
 		Role:             q.Role.replaceDB(db),
+		RoleMenu:         q.RoleMenu.replaceDB(db),
+		RolePermission:   q.RolePermission.replaceDB(db),
 	}
 }
 
@@ -99,6 +111,8 @@ type queryCtx struct {
 	Menu             IMenuDo
 	Permission       IPermissionDo
 	Role             IRoleDo
+	RoleMenu         IRoleMenuDo
+	RolePermission   IRolePermissionDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
@@ -109,6 +123,8 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Menu:             q.Menu.WithContext(ctx),
 		Permission:       q.Permission.WithContext(ctx),
 		Role:             q.Role.WithContext(ctx),
+		RoleMenu:         q.RoleMenu.WithContext(ctx),
+		RolePermission:   q.RolePermission.WithContext(ctx),
 	}
 }
 

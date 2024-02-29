@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type LoginInformation struct {
 	gorm.Model
-	EmployeeID uint   `gorm:"unique;index;not null" json:"employee_id"`
+	EmployeeID uint   `gorm:"unique;index;not null" json:"employeeId"`
 	Status     bool   `gorm:"not null;default:true;comment:狀態" json:"status"`
 	Account    string `gorm:"size:50;not null;unique;comment:帳號" json:"account"`
 	Password   string `gorm:"size:150;not null;comment:密碼" json:"password"`

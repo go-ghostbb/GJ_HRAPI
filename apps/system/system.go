@@ -9,5 +9,6 @@ func New() []gbhttp.IBind {
 	return []gbhttp.IBind{
 		&v1.BaseApi{},
 		&v1.EmployeeApi{},
+		&v1.MenuApi{},
 	}
 }

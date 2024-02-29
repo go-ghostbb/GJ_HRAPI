@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"ghostbb.io/gb/frame/g"
-	gbcfg "ghostbb.io/gb/os/gb_cfg"
 	gbcmd "ghostbb.io/gb/os/gb_cmd"
 )
 
@@ -21,10 +19,10 @@ func init() {
 	value := gbcmd.GetOptWithEnv(commandEnvKeyForDebugKey).String()
 	if value == "" || value == "0" || value == "false" {
 		isDebugEnabled = false
-		g.Cfg().GetAdapter().(*gbcfg.AdapterFile).SetFileName("config.prod.yaml")
+		//g.Cfg().GetAdapter().(*gbcfg.AdapterFile).SetFileName("config.prod.yaml")
 	} else {
 		isDebugEnabled = true
-		g.Cfg().GetAdapter().(*gbcfg.AdapterFile).SetFileName("config.dev.yaml")
+		//g.Cfg().GetAdapter().(*gbcfg.AdapterFile).SetFileName("config.dev.yaml")
 	}
 }
 

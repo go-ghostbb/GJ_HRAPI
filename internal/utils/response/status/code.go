@@ -5,6 +5,7 @@ import gbcode "ghostbb.io/gb/errors/gb_code"
 var (
 	CodeNil                       = gbcode.New(-1, "", nil)                             // No error code specified.
 	CodeOK                        = gbcode.New(0, "OK", nil)                            // It is OK.
+	CodeFailed                    = gbcode.New(10000, "Failed", nil)                    // It is failed.
 	CodeInternalError             = gbcode.New(50, "Internal Error", nil)               // An error occurred internally.
 	CodeValidationFailed          = gbcode.New(51, "Validation Failed", nil)            // Data validation failed.
 	CodeDbOperationError          = gbcode.New(52, "Database Operation Error", nil)     // Database operation error.

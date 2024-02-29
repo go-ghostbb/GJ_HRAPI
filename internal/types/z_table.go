@@ -10,3 +10,10 @@ func Basic() []interface{} {
 		&Department{},       //department
 	}
 }
+
+func M2M() []interface{} {
+	return []interface{}{
+		&RoleMenu{},
+		&RolePermission{},
+	}
+}

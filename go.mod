@@ -3,16 +3,17 @@ module hrapi
 go 1.22
 
 require (
-	ghostbb.io/gb v1.5.2
-	ghostbb.io/gb/contrib/dbcache v1.5.2
-	ghostbb.io/gb/contrib/drivers/mssql v1.5.2
-	ghostbb.io/gb/contrib/nosql/redis v1.5.2
+	ghostbb.io/gb v1.5.3
+	ghostbb.io/gb/contrib/dbcache v1.5.3
+	ghostbb.io/gb/contrib/drivers/mssql v1.5.3
+	ghostbb.io/gb/contrib/nosql/redis v1.5.3
 	github.com/chromedp/cdproto v0.0.0-20240226204813-532e667d868f
 	github.com/chromedp/chromedp v0.9.5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/goccy/go-json v0.10.2
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/google/uuid v1.6.0
+	github.com/jinzhu/copier v0.4.0
 	golang.org/x/crypto v0.20.0
 	golang.org/x/sync v0.6.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -24,7 +25,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
-	github.com/bytedance/sonic v1.11.1 // indirect
+	github.com/bytedance/sonic v1.11.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.1 // indirect

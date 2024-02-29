@@ -7,20 +7,20 @@ import (
 
 type Menu struct {
 	gorm.Model
-	Type      enum.MenuType `gorm:"size:20;comment:類型"`
-	Show      enum.MenuShow `gorm:"size:20;not null;comment:顯示於..."`
-	ParentID  uint          `gorm:"default:0;not null;comment:父節點"`
-	Path      string        `gorm:"not null;comment:路由"`
-	Name      string        `gorm:"not null;comment:路由名稱"`
-	Component string        `gorm:"not null;comment:組件路徑"`
-	Redirect  string
-	Sort      int  `gorm:"default:0;not null;comment:排序標記"`
-	Status    bool `gorm:"default:true;comment:是否啟用"`
-	Meta      `gorm:"embedded;comment:附加屬性"`
+	Type      enum.MenuType `gorm:"size:20;comment:類型" json:"type"`
+	Show      enum.MenuShow `gorm:"size:20;not null;comment:顯示於..." json:"show"`
+	ParentID  uint          `gorm:"default:0;not null;comment:父節點" json:"parentId"`
+	Path      string        `gorm:"not null;comment:路由" json:"path"`
+	Name      string        `gorm:"not null;comment:路由名稱" json:"name"`
+	Component string        `gorm:"not null;comment:組件路徑" json:"component"`
+	Redirect  string        `json:"redirect"`
+	Sort      int           `gorm:"default:0;not null;comment:排序標記" json:"sort"`
+	Status    bool          `gorm:"default:true;comment:是否啟用" json:"status"`
+	Meta      `gorm:"embedded;comment:附加屬性" json:"meta"`
 
-	Children []*Menu `gorm:"-"`
+	Children []*Menu `gorm:"-" json:"children"`
 
-	Roles []*Role `gorm:"many2many:role_menu;"`
+	Roles []*Role `gorm:"many2many:role_menu;" json:"roles"`
 }
 
 type Meta struct {
