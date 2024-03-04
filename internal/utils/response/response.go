@@ -19,6 +19,7 @@ var RecoveryFn = func(c *gin.Context) {
 			gberr = gberror.NewSkip(1, gbconv.String(v))
 		}
 
+		_ = c.Error(gberr)
 		Responder(Mount(c)).Fatal(CodeInternalError, gberr.Error())
 	}
 }

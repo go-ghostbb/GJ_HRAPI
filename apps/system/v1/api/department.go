@@ -1,48 +1,47 @@
-package v1
+package api
 
 import (
-	gberror "ghostbb.io/gb/errors/gb_error"
 	gbhttp "ghostbb.io/gb/net/gb_http"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"hrapi/apps/system/model"
-	"hrapi/apps/system/service"
+	"hrapi/apps/system/v1/model"
+	"hrapi/apps/system/v1/service"
 	"hrapi/internal/middleware"
 
 	. "hrapi/internal/utils/response"
 	. "hrapi/internal/utils/response/status"
 )
 
-type MenuApi struct{}
+type DepartmentApi struct{}
 
-func (m *MenuApi) Init(group *gin.RouterGroup) {
+func (d *DepartmentApi) Init(group *gin.RouterGroup) {
 	// 需要有後台權限 (middleware.Software())
-	v1 := group.Group("api/v1/menu").Use(middleware.Auth(), middleware.Software())
-	v1.GET("", m.getByKeyword)
-	v1.GET(":id", m.getByID)
-	v1.POST("", m.insert)
-	v1.PUT(":id", m.update)
-	v1.DELETE(":id", m.delete)
-	v1.PATCH(":id/status", m.setStatus)
+	v1 := group.Group("department").Use(middleware.Auth(), middleware.Software())
+	v1.GET("", d.getByKeyword)
+	v1.GET(":id", d.getByID)
+	v1.POST("", d.insert)
+	v1.PUT(":id", d.update)
+	v1.DELETE(":id", d.delete)
+	v1.PATCH(":id/status", d.setStatus)
 }
 
-// 根據keyword, status, show獲取對應menu
+// 根據keyword, status獲取部門
 //
-//	route => GET /api/v1/menu
-func (m *MenuApi) getByKeyword(c *gin.Context) {
+//	route => GET /api/v1/department
+func (d *DepartmentApi) getByKeyword(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
-		in  model.GetByKeywordMenuReq
-		out []*model.GetByKeywordMenuRes
+		in  model.GetByKeywordDepartmentReq
+		out []*model.GetByKeywordDepartmentRes
 		err error
 	)
+
 	if err = gbhttp.ParseQuery(c, &in); err != nil {
 		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
 		return
 	}
 
-	out, err = service.Menu(ctx).GetByKeyword(in)
+	out, err = service.Department(ctx).GetByKeyword(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
@@ -51,25 +50,21 @@ func (m *MenuApi) getByKeyword(c *gin.Context) {
 	Responder(Mount(c)).OkWithData(out)
 }
 
-// 根據ID獲取menu
+// 根據ID獲取部門
 //
-//	route => GET /api/v1/menu/:id
-func (m *MenuApi) getByID(c *gin.Context) {
+//	route => GET /api/v1/department/:id
+func (d *DepartmentApi) getByID(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
-		in  model.GetByIDMenuReq
-		out model.GetByIDMenuRes
+		in  model.GetByIDDepartmentReq
+		out model.GetByIDDepartmentRes
 		err error
 	)
 
 	in.ID = gbconv.Uint(c.Param("id"))
 
-	out, err = service.Menu(ctx).GetByID(in)
+	out, err = service.Department(ctx).GetByID(in)
 	if err != nil {
-		if gberror.Is(err, gorm.ErrRecordNotFound) {
-			Responder(Mount(c)).OkWithDetail("record not found")
-			return
-		}
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
 	}
@@ -77,13 +72,12 @@ func (m *MenuApi) getByID(c *gin.Context) {
 	Responder(Mount(c)).OkWithData(out)
 }
 
-// 新增menu
-//
-//	route => POST /api/v1/menu
-func (m *MenuApi) insert(c *gin.Context) {
+// 新增部門
+// route => POST /api/v1/department
+func (d *DepartmentApi) insert(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
-		in  model.PostMenuReq
+		in  model.PostDepartmentReq
 		err error
 	)
 
@@ -92,7 +86,7 @@ func (m *MenuApi) insert(c *gin.Context) {
 		return
 	}
 
-	err = service.Menu(ctx).Insert(in)
+	err = service.Department(ctx).Insert(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
@@ -101,15 +95,16 @@ func (m *MenuApi) insert(c *gin.Context) {
 	Responder(Mount(c)).Ok()
 }
 
-// 更新menu
+// 更新部門
 //
-//	route => PUT /api/v1/menu/:id
-func (m *MenuApi) update(c *gin.Context) {
+//	route => PUT /api/v1/department/:id
+func (d *DepartmentApi) update(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
-		in  model.PutMenuReq
+		in  model.PutDepartmentReq
 		err error
 	)
+
 	in.ID = gbconv.Uint(c.Param("id"))
 
 	if err = gbhttp.ParseJSON(c, &in); err != nil {
@@ -117,7 +112,7 @@ func (m *MenuApi) update(c *gin.Context) {
 		return
 	}
 
-	err = service.Menu(ctx).Update(in)
+	err = service.Department(ctx).Update(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
@@ -126,18 +121,19 @@ func (m *MenuApi) update(c *gin.Context) {
 	Responder(Mount(c)).Ok()
 }
 
-// 刪除menu
+// 刪除部門
 //
-//	route => DELETE /api/v1/menu/:id
-func (m *MenuApi) delete(c *gin.Context) {
+//	route => DELETE /api/v1/department/:id
+func (d *DepartmentApi) delete(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
-		in  model.DeleteMenuReq
+		in  model.DeleteDepartmentReq
 		err error
 	)
+
 	in.ID = gbconv.Uint(c.Param("id"))
 
-	err = service.Menu(ctx).Delete(in)
+	err = service.Department(ctx).Delete(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
@@ -146,23 +142,24 @@ func (m *MenuApi) delete(c *gin.Context) {
 	Responder(Mount(c)).Ok()
 }
 
-// 設置menu狀態
+// 設置狀態
 //
-//	route => PATCH /api/v1/menu/:id/status
-func (m *MenuApi) setStatus(c *gin.Context) {
+//	route => PATCH /api/v1/department/:id/status
+func (d *DepartmentApi) setStatus(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
-		in  model.SetStatusReq
+		in  model.SetStatusDepartmentReq
 		err error
 	)
+
 	in.ID = gbconv.Uint(c.Param("id"))
 
-	if err = gbhttp.ParseQuery(c, &in); err != nil {
-		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
 		return
 	}
 
-	err = service.Menu(ctx).SetStatus(in)
+	err = service.Department(ctx).SetStatus(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

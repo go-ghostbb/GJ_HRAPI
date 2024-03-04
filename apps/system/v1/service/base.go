@@ -9,7 +9,7 @@ import (
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
-	"hrapi/apps/system/model"
+	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"

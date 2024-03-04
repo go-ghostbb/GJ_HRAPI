@@ -23,6 +23,10 @@ type Menu struct {
 	Roles []*Role `gorm:"many2many:role_menu;" json:"roles"`
 }
 
+func (m *Menu) TableName() string {
+	return "menu"
+}
+
 type Meta struct {
 	// 路由title  一般必填
 	Title string `json:"title"`

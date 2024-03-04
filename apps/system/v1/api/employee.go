@@ -1,4 +1,4 @@
-package v1
+package api
 
 import (
 	gberror "ghostbb.io/gb/errors/gb_error"
@@ -6,8 +6,8 @@ import (
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"hrapi/apps/system/model"
-	"hrapi/apps/system/service"
+	"hrapi/apps/system/v1/model"
+	"hrapi/apps/system/v1/service"
 	"hrapi/internal/middleware"
 	. "hrapi/internal/utils/response"
 	. "hrapi/internal/utils/response/status"
@@ -17,7 +17,7 @@ type EmployeeApi struct{}
 
 func (e *EmployeeApi) Init(group *gin.RouterGroup) {
 	// 需要有後台權限 (middleware.Software())
-	v1 := group.Group("api/v1/employee").Use(middleware.Auth(), middleware.Software())
+	v1 := group.Group("employee").Use(middleware.Auth(), middleware.Software())
 	v1.GET("", e.getByKeyword)
 	v1.GET("/:id", e.getByID)
 	v1.POST("", e.insert)
@@ -32,7 +32,7 @@ func (e *EmployeeApi) getByKeyword(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
 		in  model.GetByKeywordEmployeeReq
-		out model.GetByKeywordEmployeeRes
+		out []*model.GetByKeywordEmployeeRes
 		err error
 	)
 	if err = gbhttp.ParseQuery(c, &in); err != nil {
@@ -118,7 +118,7 @@ func (e *EmployeeApi) update(c *gin.Context) {
 		return
 	}
 
-	_, err = service.Employee(ctx).Update(in)
+	err = service.Employee(ctx).Update(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
@@ -139,7 +139,7 @@ func (e *EmployeeApi) delete(c *gin.Context) {
 
 	in.ID = gbconv.Uint(gbhttp.ParseParam(c, "id"))
 
-	_, err = service.Employee(ctx).Delete(in)
+	err = service.Employee(ctx).Delete(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

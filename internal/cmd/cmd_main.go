@@ -28,7 +28,9 @@ func mainFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 	g.Server().SetRecoveryFn(response.RecoveryFn)
 
 	// TODO: bind
-	g.Server().Bind(system.New()...)
+	g.Server().Bind(
+		system.New(),
+	)
 
 	// Register static resource
 	utils.MkdirIfNotExist("assets")

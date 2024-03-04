@@ -3,8 +3,11 @@ package service
 import (
 	"context"
 	"ghostbb.io/gb/contrib/dbcache"
+	gbconv "ghostbb.io/gb/util/gb_conv"
 	gbrand "ghostbb.io/gb/util/gb_rand"
-	"hrapi/apps/system/model"
+	"github.com/jinzhu/copier"
+	"gorm.io/gen"
+	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/utils/password"
@@ -16,11 +19,11 @@ func Employee(ctx context.Context) IEmployee {
 
 type (
 	IEmployee interface {
-		GetByKeyword(in model.GetByKeywordEmployeeReq) (out model.GetByKeywordEmployeeRes, err error)
+		GetByKeyword(in model.GetByKeywordEmployeeReq) (out []*model.GetByKeywordEmployeeRes, err error)
 		GetByID(in model.GetByIDEmployeeReq) (out model.GetByIDEmployeeRes, err error)
 		Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, err error)
-		Update(in model.PutEmployeeReq) (out model.PutEmployeeRes, err error)
-		Delete(in model.DeleteEmployeeReq) (out model.DeleteEmployeeRes, err error)
+		Update(in model.PutEmployeeReq) (err error)
+		Delete(in model.DeleteEmployeeReq) (err error)
 	}
 
 	employee struct {
@@ -28,10 +31,28 @@ type (
 	}
 )
 
-func (e *employee) GetByKeyword(in model.GetByKeywordEmployeeReq) (out model.GetByKeywordEmployeeRes, err error) {
-	qEmployee := query.Employee
-	out.Employees, err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Preload(qEmployee.LoginInformation).
-		Where(qEmployee.RealName.Like("%" + in.Keyword + "%")).Or(qEmployee.NationalID.Like("%" + in.Keyword + "%")).Find()
+func (e *employee) GetByKeyword(in model.GetByKeywordEmployeeReq) (out []*model.GetByKeywordEmployeeRes, err error) {
+	var (
+		qEmployee  = query.Employee
+		qdEmployee = qEmployee.WithContext(dbcache.WithCtx(e.ctx))
+		employees  []*types.Employee
+		conds      = []gen.Condition{
+			// keyword => where (real_name like ? or national_id like ?)
+			qdEmployee.Where(qdEmployee.Where(qEmployee.RealName.Like("%" + in.Keyword + "%")).Or(qEmployee.NationalID.Like("%" + in.Keyword + "%"))),
+			// status => and employment_status = ?
+			qEmployee.EmploymentStatus.Eq(in.EmploymentStatus),
+		}
+	)
+	if in.DepartmentId != "" {
+		// department_id => and department_id = ?
+		conds = append(conds, qEmployee.DepartmentId.Eq(gbconv.Uint(in.DepartmentId)))
+	}
+
+	employees, err = qdEmployee.Preload(qEmployee.LoginInformation).Where(conds...).Find()
+
+	if err = copier.Copy(&out, employees); err != nil {
+		return
+	}
 	return
 }
 
@@ -72,16 +93,14 @@ func (e *employee) Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, 
 	return
 }
 
-func (e *employee) Update(in model.PutEmployeeReq) (out model.PutEmployeeRes, err error) {
-	var (
-		qEmployee = query.Employee
-	)
+func (e *employee) Update(in model.PutEmployeeReq) (err error) {
+	// 寫入ID
+	in.Employee.ID = in.ID
 
-	_, err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Where(qEmployee.ID.Eq(in.ID)).Updates(in.Employee)
-	return
+	return query.Employee.WithContext(dbcache.WithCtx(e.ctx)).Save(in.Employee)
 }
 
-func (e *employee) Delete(in model.DeleteEmployeeReq) (out model.DeleteEmployeeRes, err error) {
+func (e *employee) Delete(in model.DeleteEmployeeReq) (err error) {
 	var (
 		qEmployee = query.Employee
 	)

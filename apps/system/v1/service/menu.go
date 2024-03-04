@@ -9,10 +9,11 @@ import (
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/jinzhu/copier"
 	"gorm.io/gen"
-	"hrapi/apps/system/model"
+	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
+	"hrapi/internal/utils/deepcopy"
 	"slices"
 )
 
@@ -38,7 +39,9 @@ type (
 		// Delete 刪除menu
 		Delete(in model.DeleteMenuReq) error
 		// SetStatus 設置menu狀態
-		SetStatus(in model.SetStatusReq) (err error)
+		SetStatus(in model.SetStatusMenuReq) (err error)
+		// 組裝
+		assemble(menus []*types.Menu) (result []*types.Menu)
 	}
 
 	menu struct {
@@ -166,6 +169,10 @@ func (m *menu) assemble(menus []*types.Menu) (result []*types.Menu) {
 		menuMap = make(map[uint]*types.Menu)
 	)
 
+	// database查詢出來的結果都帶有指針
+	// 深層拷貝避免重複建構
+	menus = deepcopy.Copy(menus).([]*types.Menu)
+
 	result = make([]*types.Menu, 0)
 
 	// 利用指針組裝
@@ -210,7 +217,7 @@ func (m *menu) assemble(menus []*types.Menu) (result []*types.Menu) {
 }
 
 // SetStatus 設置menu狀態
-func (m *menu) SetStatus(in model.SetStatusReq) (err error) {
+func (m *menu) SetStatus(in model.SetStatusMenuReq) (err error) {
 	_, err = query.Menu.WithContext(dbcache.WithCtx(m.ctx)).
 		Where(query.Menu.ID.Eq(in.ID)).Update(query.Menu.Status, in.Status)
 	return err

@@ -24,6 +24,10 @@ func (p *Pagination) Where(conds ...gen.Condition) func(gen.Dao) gen.Dao {
 			dao.Where(conds...)
 		}
 		p.Total, _ = dao.Count()
+
+		if p.Limit == 0 {
+			return dao
+		}
 		return dao.Offset(p.Offset).Limit(p.Limit)
 	}
 }

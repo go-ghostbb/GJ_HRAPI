@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"hrapi/internal/types"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -452,6 +453,39 @@ type IMenuDo interface {
 	Returning(value interface{}, columns ...string) IMenuDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
+
+	QueryAllRelated(menuIDs []uint) (result []uint, err error)
+}
+
+// with tree as (
+//
+//	select id,
+//	       parent_id,
+//	       convert(nvarchar(150),CONCAT('.',id,'.')) as path
+//	from @@table where parent_id = 0
+//	union all
+//	select data.id,
+//	       data.parent_id,
+//	       Convert(nvarchar(150),CONCAT(tree.Path , '-','.',data.id,'.')) as Path
+//	from @@table data
+//	join tree tree on data.parent_id = tree.id and tree.path not like '%' + CONCAT('.',data.Id,'.') + '%'
+//
+// )
+// select distinct convert(bigint, replace(s.value, '.', ”)) as id from tree t
+// cross apply STRING_SPLIT(t.path, '-') s
+// where t.id in @menuIDs
+func (m menuDo) QueryAllRelated(menuIDs []uint) (result []uint, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, menuIDs)
+	generateSQL.WriteString("with tree as ( select id, parent_id, convert(nvarchar(150),CONCAT('.',id,'.')) as path from menu where parent_id = 0 union all select data.id, data.parent_id, Convert(nvarchar(150),CONCAT(tree.Path , '-','.',data.id,'.')) as Path from menu data join tree tree on data.parent_id = tree.id and tree.path not like '%' + CONCAT('.',data.Id,'.') + '%' ) select distinct convert(bigint, replace(s.value, '.', '')) as id from tree t cross apply STRING_SPLIT(t.path, '-') s where t.id in ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = m.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
 }
 
 func (m menuDo) Debug() IMenuDo {

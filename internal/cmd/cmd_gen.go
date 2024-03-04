@@ -9,6 +9,7 @@ import (
 	"gorm.io/gen"
 	"gorm.io/gorm"
 	"hrapi/internal/types"
+	"hrapi/internal/types/method"
 )
 
 func genFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
@@ -62,6 +63,7 @@ func genFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 	// 也可以手動指定需要生成程式碼的數據表
 	g.ApplyBasic(types.Basic()...)
 	g.ApplyBasic(types.M2M()...)
+	g.ApplyInterface(func(method.Menu) {}, types.Menu{})
 
 	// 執行並生成程式碼
 	g.Execute()

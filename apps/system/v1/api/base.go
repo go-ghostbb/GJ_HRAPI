@@ -1,11 +1,11 @@
-package v1
+package api
 
 import (
 	gberror "ghostbb.io/gb/errors/gb_error"
 	gbhttp "ghostbb.io/gb/net/gb_http"
 	"github.com/gin-gonic/gin"
-	"hrapi/apps/system/model"
-	"hrapi/apps/system/service"
+	"hrapi/apps/system/v1/model"
+	"hrapi/apps/system/v1/service"
 	"hrapi/internal/middleware"
 	"hrapi/internal/types/enum"
 	. "hrapi/internal/utils/response"
@@ -14,8 +14,7 @@ import (
 
 type BaseApi struct{}
 
-func (b *BaseApi) Init(group *gin.RouterGroup) {
-	v1 := group.Group("api/v1")
+func (b *BaseApi) Init(v1 *gin.RouterGroup) {
 	v1.GET("migrate", b.migrate)
 	v1.POST("login/:type", b.login)
 	v1.Use(middleware.Auth()).DELETE("logout/:type", b.logout)

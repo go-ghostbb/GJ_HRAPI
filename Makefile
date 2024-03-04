@@ -17,3 +17,5 @@ dlv-dev:
 	@dlv --listen=:12366 --headless=true --api-version=2 --continue --accept-multiclient exec bin/hrapi-dev
 dev:
 	@air
+gen:
+	@GB_CFG_FILE=config.dev.yaml go run main.go gen

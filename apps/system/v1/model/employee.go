@@ -1,13 +1,18 @@
 package model
 
-import "hrapi/internal/types"
+import (
+	"hrapi/internal/types"
+	"hrapi/internal/types/enum"
+)
 
 type GetByKeywordEmployeeReq struct {
-	Keyword string `form:"keyword" json:"keyword"`
+	Keyword          string                `form:"keyword" json:"keyword"`
+	EmploymentStatus enum.EmploymentStatus `json:"employmentStatus" form:"employmentStatus"`
+	DepartmentId     string                `form:"departmentId" json:"departmentId"`
 }
 
 type GetByKeywordEmployeeRes struct {
-	Employees []*types.Employee
+	*types.Employee
 }
 
 type GetByIDEmployeeReq struct {
@@ -15,7 +20,7 @@ type GetByIDEmployeeReq struct {
 }
 
 type GetByIDEmployeeRes struct {
-	Employee *types.Employee
+	*types.Employee
 }
 
 type PostEmployeeReq struct {

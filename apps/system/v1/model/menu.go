@@ -39,9 +39,9 @@ type DeleteMenuReq struct {
 
 type DeleteMenuRes struct{}
 
-type SetStatusReq struct {
+type SetStatusMenuReq struct {
 	ID     uint
 	Status bool `json:"status" form:"status"`
 }
 
-type SetStatusRes struct{}
+type SetStatusMenuRes struct{}
