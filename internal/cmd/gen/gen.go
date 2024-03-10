@@ -1,9 +1,7 @@
-package cmd
+package main
 
 import (
-	"context"
 	"fmt"
-	gbcmd "ghostbb.io/gb/os/gb_cmd"
 	gbstr "ghostbb.io/gb/text/gb_str"
 	"gorm.io/driver/sqlserver"
 	"gorm.io/gen"
@@ -12,7 +10,7 @@ import (
 	"hrapi/internal/types/method"
 )
 
-func genFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
+func main() {
 	const sqlServerDSN = "sqlserver://sa:Ab@589095@localhost:1433?database=hrms&encrypt=disable"
 	var connectDB = func(dsn string) *gorm.DB {
 		db, err := gorm.Open(sqlserver.Open(dsn))
@@ -67,5 +65,4 @@ func genFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 
 	// 執行並生成程式碼
 	g.Execute()
-	return nil
 }

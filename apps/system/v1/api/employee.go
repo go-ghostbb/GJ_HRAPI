@@ -9,6 +9,7 @@ import (
 	"hrapi/apps/system/v1/model"
 	"hrapi/apps/system/v1/service"
 	"hrapi/internal/middleware"
+	"hrapi/internal/utils/paginator"
 	. "hrapi/internal/utils/response"
 	. "hrapi/internal/utils/response/status"
 )
@@ -18,11 +19,15 @@ type EmployeeApi struct{}
 func (e *EmployeeApi) Init(group *gin.RouterGroup) {
 	// 需要有後台權限 (middleware.Software())
 	v1 := group.Group("employee").Use(middleware.Auth(), middleware.Software())
-	v1.GET("", e.getByKeyword)
-	v1.GET("/:id", e.getByID)
+	v1.GET("", middleware.Paginator(), e.getByKeyword)
+	v1.GET(":id", e.getByID)
 	v1.POST("", e.insert)
-	v1.PUT("/:id", e.update)
-	v1.DELETE("/:id", e.delete)
+	v1.PUT(":id", e.update)
+	v1.DELETE(":id", e.delete)
+	v1.PATCH(":id/password", e.resetPassword)
+	v1.PATCH(":id/employmentStatus", e.setEmploymentStatus)
+	v1.PATCH(":id/login/status", e.setLoginStatus)
+	v1.POST("upload/avatar")
 }
 
 // 根據keyword獲取employee資料
@@ -30,17 +35,18 @@ func (e *EmployeeApi) Init(group *gin.RouterGroup) {
 //	route => GET /api/v1/employee?keyword=test
 func (e *EmployeeApi) getByKeyword(c *gin.Context) {
 	var (
-		ctx = gbhttp.Ctx(c)
-		in  model.GetByKeywordEmployeeReq
-		out []*model.GetByKeywordEmployeeRes
-		err error
+		ctx  = gbhttp.Ctx(c)
+		in   model.GetByKeywordEmployeeReq
+		out  model.GetByKeywordEmployeeRes
+		page = gbhttp.Get(c, "paginator").Interface().(*paginator.Pagination)
+		err  error
 	)
 	if err = gbhttp.ParseQuery(c, &in); err != nil {
 		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
 		return
 	}
 
-	out, err = service.Employee(ctx).GetByKeyword(in)
+	out, err = service.Employee(ctx, page).GetByKeyword(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
@@ -140,6 +146,82 @@ func (e *EmployeeApi) delete(c *gin.Context) {
 	in.ID = gbconv.Uint(gbhttp.ParseParam(c, "id"))
 
 	err = service.Employee(ctx).Delete(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 重置密碼
+//
+//	route => PATCH /api/v1/employee/:id/password
+func (e *EmployeeApi) resetPassword(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.ResetPasswordReq
+		err error
+	)
+
+	in.ID = gbconv.Uint(gbhttp.ParseParam(c, "id"))
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Employee(ctx).ResetPassword(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 設置就職狀態
+//
+//	route => PATCH /api/v1/employee/:id/employmentStatus
+func (e *EmployeeApi) setEmploymentStatus(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetEmploymentStatusReq
+		err error
+	)
+	in.ID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	err = service.Employee(ctx).SetEmploymentStatus(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 設置登入狀態, 啟用, 禁用
+//
+//	route => PATCH /api/v1/employee/:id/login/status
+func (e *EmployeeApi) setLoginStatus(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetLoginStatusReq
+		err error
+	)
+	in.ID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	err = service.Employee(ctx).SetLoginStatus(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

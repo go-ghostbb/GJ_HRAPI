@@ -32,6 +32,7 @@ type (
 		GetEmployeeInfo(employeeID uint) (out model.GetEmployeeInfoRes, err error)
 		GetPermission(roleCodes []string) (out []string, err error)
 		GetMenu(roleCodes []string, show enum.MenuShow) (out []*model.GetMenuRes, err error)
+		ChangePassword(in model.ChangePasswordReq) (err error)
 	}
 
 	base struct {
@@ -236,4 +237,36 @@ func (b *base) GetMenu(roleCodes []string, show enum.MenuShow) (out []*model.Get
 	}
 
 	return
+}
+
+func (b *base) ChangePassword(in model.ChangePasswordReq) (err error) {
+	// 輸入驗證
+	if err = g.Validator().Data(in).Run(b.ctx); err != nil {
+		return err
+	}
+
+	// 查詢此使用者原本的密碼
+	var (
+		originPassword string
+		qLoginInfo     = query.LoginInformation
+	)
+	err = qLoginInfo.WithContext(b.ctx).Select(qLoginInfo.Password).Where(qLoginInfo.EmployeeID.Eq(in.EmployeeID)).Scan(&originPassword)
+	if err != nil {
+		return err
+	}
+
+	// 驗證密碼
+	if !password.Check(originPassword, in.OldPassword) {
+		return gberror.New("incorrect password")
+	}
+
+	// 進行密碼修改
+	_, err = qLoginInfo.WithContext(dbcache.WithCtx(b.ctx)).
+		Where(qLoginInfo.EmployeeID.Eq(in.EmployeeID)).
+		Update(qLoginInfo.Password, password.Hash(in.NewPassword))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
+	"ghostbb.io/gb/frame/g"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	gbrand "ghostbb.io/gb/util/gb_rand"
 	"github.com/jinzhu/copier"
@@ -10,28 +12,37 @@ import (
 	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
+	"hrapi/internal/utils/paginator"
 	"hrapi/internal/utils/password"
+	"os"
 )
 
-func Employee(ctx context.Context) IEmployee {
+func Employee(ctx context.Context, page ...*paginator.Pagination) IEmployee {
+	if len(page) != 0 {
+		return &employee{page: page[0], ctx: ctx}
+	}
 	return &employee{ctx: ctx}
 }
 
 type (
 	IEmployee interface {
-		GetByKeyword(in model.GetByKeywordEmployeeReq) (out []*model.GetByKeywordEmployeeRes, err error)
+		GetByKeyword(in model.GetByKeywordEmployeeReq) (out model.GetByKeywordEmployeeRes, err error)
 		GetByID(in model.GetByIDEmployeeReq) (out model.GetByIDEmployeeRes, err error)
 		Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, err error)
 		Update(in model.PutEmployeeReq) (err error)
 		Delete(in model.DeleteEmployeeReq) (err error)
+		ResetPassword(in model.ResetPasswordReq) (err error)
+		SetEmploymentStatus(in model.SetEmploymentStatusReq) (err error)
+		SetLoginStatus(in model.SetLoginStatusReq) (err error)
 	}
 
 	employee struct {
-		ctx context.Context
+		ctx  context.Context
+		page *paginator.Pagination
 	}
 )
 
-func (e *employee) GetByKeyword(in model.GetByKeywordEmployeeReq) (out []*model.GetByKeywordEmployeeRes, err error) {
+func (e *employee) GetByKeyword(in model.GetByKeywordEmployeeReq) (out model.GetByKeywordEmployeeRes, err error) {
 	var (
 		qEmployee  = query.Employee
 		qdEmployee = qEmployee.WithContext(dbcache.WithCtx(e.ctx))
@@ -39,26 +50,39 @@ func (e *employee) GetByKeyword(in model.GetByKeywordEmployeeReq) (out []*model.
 		conds      = []gen.Condition{
 			// keyword => where (real_name like ? or national_id like ?)
 			qdEmployee.Where(qdEmployee.Where(qEmployee.RealName.Like("%" + in.Keyword + "%")).Or(qEmployee.NationalID.Like("%" + in.Keyword + "%"))),
-			// status => and employment_status = ?
-			qEmployee.EmploymentStatus.Eq(in.EmploymentStatus),
 		}
 	)
+
+	if in.EmploymentStatus != "" {
+		// status => and employment_status = ?
+		conds = append(conds, qEmployee.EmploymentStatus.Eq(in.EmploymentStatus))
+	}
+
 	if in.DepartmentId != "" {
 		// department_id => and department_id = ?
 		conds = append(conds, qEmployee.DepartmentId.Eq(gbconv.Uint(in.DepartmentId)))
 	}
 
-	employees, err = qdEmployee.Preload(qEmployee.LoginInformation).Where(conds...).Find()
+	employees, err = qdEmployee.Scopes(e.page.Where(conds...)).Preload(
+		qEmployee.LoginInformation,
+		qEmployee.Department,
+	).Find()
 
-	if err = copier.Copy(&out, employees); err != nil {
+	if err = copier.Copy(&out.Items, employees); err != nil {
 		return
 	}
+
+	out.Total = e.page.Total
+
 	return
 }
 
 func (e *employee) GetByID(in model.GetByIDEmployeeReq) (out model.GetByIDEmployeeRes, err error) {
 	qEmployee := query.Employee
-	out.Employee, err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Preload(qEmployee.LoginInformation).Where(qEmployee.ID.Eq(in.ID)).First()
+	out.Employee, err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Preload(
+		qEmployee.LoginInformation,
+		qEmployee.Department,
+	).Where(qEmployee.ID.Eq(in.ID)).First()
 	return
 }
 
@@ -74,15 +98,20 @@ func (e *employee) Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, 
 		if err != nil {
 			return err
 		}
+
 		// 建立預設帳號密碼
 		loginInfo := new(types.LoginInformation)
 		loginInfo.EmployeeID = in.ID
 		loginInfo.Account = in.NationalID
 		loginInfo.Password = password.Hash(tmpPass)
+
+		// 儲存登入資訊
 		err = qLoginInfo.WithContext(dbcache.WithCtx(e.ctx)).Create(loginInfo)
 		if err != nil {
 			return err
 		}
+
+		// 回傳
 		out.Account = loginInfo.Account
 		out.Password = tmpPass
 
@@ -93,18 +122,106 @@ func (e *employee) Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, 
 	return
 }
 
-func (e *employee) Update(in model.PutEmployeeReq) (err error) {
+func (e *employee) Update(in model.PutEmployeeReq) error {
 	// 寫入ID
 	in.Employee.ID = in.ID
 
-	return query.Employee.WithContext(dbcache.WithCtx(e.ctx)).Save(in.Employee)
+	return query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qEmployee    = query.Employee
+			qDepartment  = query.Department
+			originDeptID uint
+			err          error
+		)
+
+		// 查詢該員工原本的部門ID
+		err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Select(qEmployee.DepartmentId).Where(qEmployee.ID.Eq(in.ID)).Scan(&originDeptID)
+		if err != nil {
+			return err
+		}
+
+		// 判斷部門是否有更動
+		if originDeptID != in.Employee.DepartmentId {
+			// 有更動的話
+			// 如果該員工是某部門主管, 將該部門主管id改為0
+			_, err = qDepartment.WithContext(dbcache.WithCtx(e.ctx)).Where(qDepartment.ManagerId.Eq(in.ID)).Update(qDepartment.ManagerId, 0)
+			if err != nil {
+				return err
+			}
+		}
+
+		// 儲存員工資訊
+		err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Save(in.Employee)
+		if err != nil {
+			return err
+		}
+
+		// commit
+		return nil
+	})
 }
 
 func (e *employee) Delete(in model.DeleteEmployeeReq) (err error) {
+	return query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qEmployee   = tx.Employee
+			qLoginInfo  = tx.LoginInformation
+			qDepartment = tx.Department
+		)
+		// 刪除員工靜態文件資料夾
+		if err = os.RemoveAll(fmt.Sprintf("assets/employee/%d", in.ID)); err != nil {
+			return err
+		}
+
+		// 刪除員工
+		_, err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Unscoped().Where(qEmployee.ID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
+		// 刪除員工登入資訊
+		_, err = qLoginInfo.WithContext(dbcache.WithCtx(e.ctx)).Unscoped().Where(qLoginInfo.EmployeeID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
+		// 如果該員工是某部門主管, 將該部門主管id改為0
+		_, err = qDepartment.WithContext(dbcache.WithCtx(e.ctx)).Where(qDepartment.ManagerId.Eq(in.ID)).Update(qDepartment.ManagerId, 0)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (e *employee) ResetPassword(in model.ResetPasswordReq) (err error) {
+	// 輸入驗證
+	if err = g.Validator().Data(in).Run(e.ctx); err != nil {
+		return err
+	}
+
 	var (
-		qEmployee = query.Employee
+		qLoginInfo = query.LoginInformation
 	)
 
-	_, err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Unscoped().Preload(qEmployee.LoginInformation).Where(qEmployee.ID.Eq(in.ID)).Delete()
-	return
+	// 進行密碼修改
+	_, err = qLoginInfo.WithContext(dbcache.WithCtx(e.ctx)).
+		Where(qLoginInfo.EmployeeID.Eq(in.ID)).
+		Update(qLoginInfo.Password, password.Hash(in.Password))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *employee) SetEmploymentStatus(in model.SetEmploymentStatusReq) (err error) {
+	_, err = query.Employee.WithContext(dbcache.WithCtx(e.ctx)).Where(query.Employee.ID.Eq(in.ID)).Update(query.Employee.EmploymentStatus, in.EmploymentStatus)
+	return err
+}
+
+func (e *employee) SetLoginStatus(in model.SetLoginStatusReq) (err error) {
+	_, err = query.LoginInformation.WithContext(dbcache.WithCtx(e.ctx)).Where(query.LoginInformation.EmployeeID.Eq(in.ID)).Update(query.LoginInformation.Status, in.Status)
+	return err
 }

@@ -1,0 +1,8 @@
+{
+  "new password cannot be empty": "新密碼不能為空",
+  "old password cannot be empty": "舊密碼不能為空",
+  "password cannot be empty": "密碼不能為空",
+  "verify password cannot be empty": "驗證密碼不能為空",
+  "password must between 6, 18": "密碼長度必須6到18",
+  "the passwords entered twice do not match": "二次密碼不正確"
+}

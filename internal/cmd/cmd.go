@@ -11,12 +11,6 @@ var (
 		Brief: "start http server",
 		Func:  mainFn,
 	}
-	Gen = &gbcmd.Command{
-		Name:  "gen",
-		Usage: "gen",
-		Brief: "start gen",
-		Func:  genFn,
-	}
 	Test = &gbcmd.Command{
 		Name:  "test",
 		Usage: "test",

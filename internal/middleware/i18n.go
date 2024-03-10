@@ -9,11 +9,13 @@ import (
 func I18n() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var (
-			locale    = c.GetHeader("Locale")
+			locale    = c.GetHeader("x-locale")
 			serverCtx = gbhttp.Ctx(c)
-			ctx       = gbi18n.WithLanguage(serverCtx, locale)
 		)
-		*c.Request = *c.Request.WithContext(ctx)
+		if locale == "" {
+			locale = "en"
+		}
+		*c.Request = *c.Request.WithContext(gbi18n.WithLanguage(serverCtx, locale))
 		c.Next()
 	}
 }

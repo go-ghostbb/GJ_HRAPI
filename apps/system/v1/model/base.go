@@ -44,3 +44,12 @@ type GetMenuRes struct {
 	Redirect  string        `json:"redirect" copier:"Redirect"`
 	Children  []*GetMenuRes `json:"children" copier:"-"`
 }
+
+type ChangePasswordReq struct {
+	EmployeeID     uint   `json:"-"`
+	OldPassword    string `json:"oldPassword" v:"required#old password cannot be empty"`
+	NewPassword    string `json:"newPassword" v:"required#new password cannot be empty|password#password must between 6, 18"`
+	VerifyPassword string `json:"verifyPassword" v:"required#verify password cannot be empty|same:NewPassword#the passwords entered twice do not match"`
+}
+
+type ChangePasswordRes struct{}

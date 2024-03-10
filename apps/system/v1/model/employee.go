@@ -3,6 +3,7 @@ package model
 import (
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
+	"hrapi/internal/utils/response/page"
 )
 
 type GetByKeywordEmployeeReq struct {
@@ -12,7 +13,7 @@ type GetByKeywordEmployeeReq struct {
 }
 
 type GetByKeywordEmployeeRes struct {
-	*types.Employee
+	page.Model[types.Employee]
 }
 
 type GetByIDEmployeeReq struct {
@@ -46,3 +47,25 @@ type DeleteEmployeeReq struct {
 
 type DeleteEmployeeRes struct {
 }
+
+type ResetPasswordReq struct {
+	ID             uint
+	Password       string `json:"password" v:"required#password cannot be empty|password#password must between 6, 18"`
+	VerifyPassword string `json:"verifyPassword" v:"required#verify password cannot be empty|same:Password#the passwords entered twice do not match"`
+}
+
+type ResetPasswordRes struct{}
+
+type SetEmploymentStatusReq struct {
+	ID               uint
+	EmploymentStatus enum.EmploymentStatus `json:"employmentStatus"`
+}
+
+type SetEmploymentStatusRes struct{}
+
+type SetLoginStatusReq struct {
+	ID     uint
+	Status bool `json:"status"`
+}
+
+type SetLoginStatusRes struct{}

@@ -11,9 +11,6 @@ import (
 )
 
 func main() {
-	if err := cmd.Main.AddCommand(cmd.Gen); err != nil {
-		panic(err)
-	}
 	if err := cmd.Main.AddCommand(cmd.Test); err != nil {
 		panic(err)
 	}

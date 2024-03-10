@@ -16,69 +16,114 @@ import (
 )
 
 var (
-	Q                = new(Query)
-	Department       *department
-	Employee         *employee
-	LoginInformation *loginInformation
-	Menu             *menu
-	Permission       *permission
-	Role             *role
-	RoleMenu         *roleMenu
-	RolePermission   *rolePermission
+	Q                         = new(Query)
+	Department                *department
+	Employee                  *employee
+	Leave                     *leave
+	LeaveGroup                *leaveGroup
+	LeaveGroupCondition       *leaveGroupCondition
+	LeaveGroupEmployee        *leaveGroupEmployee
+	LoginInformation          *loginInformation
+	Menu                      *menu
+	Permission                *permission
+	Role                      *role
+	RoleMenu                  *roleMenu
+	RolePermission            *rolePermission
+	Vacation                  *vacation
+	VacationGroup             *vacationGroup
+	VacationGroupEmployee     *vacationGroupEmployee
+	VacationGroupOvertimeRate *vacationGroupOvertimeRate
+	VacationSchedule          *vacationSchedule
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Department = &Q.Department
 	Employee = &Q.Employee
+	Leave = &Q.Leave
+	LeaveGroup = &Q.LeaveGroup
+	LeaveGroupCondition = &Q.LeaveGroupCondition
+	LeaveGroupEmployee = &Q.LeaveGroupEmployee
 	LoginInformation = &Q.LoginInformation
 	Menu = &Q.Menu
 	Permission = &Q.Permission
 	Role = &Q.Role
 	RoleMenu = &Q.RoleMenu
 	RolePermission = &Q.RolePermission
+	Vacation = &Q.Vacation
+	VacationGroup = &Q.VacationGroup
+	VacationGroupEmployee = &Q.VacationGroupEmployee
+	VacationGroupOvertimeRate = &Q.VacationGroupOvertimeRate
+	VacationSchedule = &Q.VacationSchedule
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
-		db:               db,
-		Department:       newDepartment(db, opts...),
-		Employee:         newEmployee(db, opts...),
-		LoginInformation: newLoginInformation(db, opts...),
-		Menu:             newMenu(db, opts...),
-		Permission:       newPermission(db, opts...),
-		Role:             newRole(db, opts...),
-		RoleMenu:         newRoleMenu(db, opts...),
-		RolePermission:   newRolePermission(db, opts...),
+		db:                        db,
+		Department:                newDepartment(db, opts...),
+		Employee:                  newEmployee(db, opts...),
+		Leave:                     newLeave(db, opts...),
+		LeaveGroup:                newLeaveGroup(db, opts...),
+		LeaveGroupCondition:       newLeaveGroupCondition(db, opts...),
+		LeaveGroupEmployee:        newLeaveGroupEmployee(db, opts...),
+		LoginInformation:          newLoginInformation(db, opts...),
+		Menu:                      newMenu(db, opts...),
+		Permission:                newPermission(db, opts...),
+		Role:                      newRole(db, opts...),
+		RoleMenu:                  newRoleMenu(db, opts...),
+		RolePermission:            newRolePermission(db, opts...),
+		Vacation:                  newVacation(db, opts...),
+		VacationGroup:             newVacationGroup(db, opts...),
+		VacationGroupEmployee:     newVacationGroupEmployee(db, opts...),
+		VacationGroupOvertimeRate: newVacationGroupOvertimeRate(db, opts...),
+		VacationSchedule:          newVacationSchedule(db, opts...),
 	}
 }
 
 type Query struct {
 	db *gorm.DB
 
-	Department       department
-	Employee         employee
-	LoginInformation loginInformation
-	Menu             menu
-	Permission       permission
-	Role             role
-	RoleMenu         roleMenu
-	RolePermission   rolePermission
+	Department                department
+	Employee                  employee
+	Leave                     leave
+	LeaveGroup                leaveGroup
+	LeaveGroupCondition       leaveGroupCondition
+	LeaveGroupEmployee        leaveGroupEmployee
+	LoginInformation          loginInformation
+	Menu                      menu
+	Permission                permission
+	Role                      role
+	RoleMenu                  roleMenu
+	RolePermission            rolePermission
+	Vacation                  vacation
+	VacationGroup             vacationGroup
+	VacationGroupEmployee     vacationGroupEmployee
+	VacationGroupOvertimeRate vacationGroupOvertimeRate
+	VacationSchedule          vacationSchedule
 }
 
 func (q *Query) Available() bool { return q.db != nil }
 
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
-		db:               db,
-		Department:       q.Department.clone(db),
-		Employee:         q.Employee.clone(db),
-		LoginInformation: q.LoginInformation.clone(db),
-		Menu:             q.Menu.clone(db),
-		Permission:       q.Permission.clone(db),
-		Role:             q.Role.clone(db),
-		RoleMenu:         q.RoleMenu.clone(db),
-		RolePermission:   q.RolePermission.clone(db),
+		db:                        db,
+		Department:                q.Department.clone(db),
+		Employee:                  q.Employee.clone(db),
+		Leave:                     q.Leave.clone(db),
+		LeaveGroup:                q.LeaveGroup.clone(db),
+		LeaveGroupCondition:       q.LeaveGroupCondition.clone(db),
+		LeaveGroupEmployee:        q.LeaveGroupEmployee.clone(db),
+		LoginInformation:          q.LoginInformation.clone(db),
+		Menu:                      q.Menu.clone(db),
+		Permission:                q.Permission.clone(db),
+		Role:                      q.Role.clone(db),
+		RoleMenu:                  q.RoleMenu.clone(db),
+		RolePermission:            q.RolePermission.clone(db),
+		Vacation:                  q.Vacation.clone(db),
+		VacationGroup:             q.VacationGroup.clone(db),
+		VacationGroupEmployee:     q.VacationGroupEmployee.clone(db),
+		VacationGroupOvertimeRate: q.VacationGroupOvertimeRate.clone(db),
+		VacationSchedule:          q.VacationSchedule.clone(db),
 	}
 }
 
@@ -92,39 +137,66 @@ func (q *Query) WriteDB() *Query {
 
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
-		db:               db,
-		Department:       q.Department.replaceDB(db),
-		Employee:         q.Employee.replaceDB(db),
-		LoginInformation: q.LoginInformation.replaceDB(db),
-		Menu:             q.Menu.replaceDB(db),
-		Permission:       q.Permission.replaceDB(db),
-		Role:             q.Role.replaceDB(db),
-		RoleMenu:         q.RoleMenu.replaceDB(db),
-		RolePermission:   q.RolePermission.replaceDB(db),
+		db:                        db,
+		Department:                q.Department.replaceDB(db),
+		Employee:                  q.Employee.replaceDB(db),
+		Leave:                     q.Leave.replaceDB(db),
+		LeaveGroup:                q.LeaveGroup.replaceDB(db),
+		LeaveGroupCondition:       q.LeaveGroupCondition.replaceDB(db),
+		LeaveGroupEmployee:        q.LeaveGroupEmployee.replaceDB(db),
+		LoginInformation:          q.LoginInformation.replaceDB(db),
+		Menu:                      q.Menu.replaceDB(db),
+		Permission:                q.Permission.replaceDB(db),
+		Role:                      q.Role.replaceDB(db),
+		RoleMenu:                  q.RoleMenu.replaceDB(db),
+		RolePermission:            q.RolePermission.replaceDB(db),
+		Vacation:                  q.Vacation.replaceDB(db),
+		VacationGroup:             q.VacationGroup.replaceDB(db),
+		VacationGroupEmployee:     q.VacationGroupEmployee.replaceDB(db),
+		VacationGroupOvertimeRate: q.VacationGroupOvertimeRate.replaceDB(db),
+		VacationSchedule:          q.VacationSchedule.replaceDB(db),
 	}
 }
 
 type queryCtx struct {
-	Department       IDepartmentDo
-	Employee         IEmployeeDo
-	LoginInformation ILoginInformationDo
-	Menu             IMenuDo
-	Permission       IPermissionDo
-	Role             IRoleDo
-	RoleMenu         IRoleMenuDo
-	RolePermission   IRolePermissionDo
+	Department                IDepartmentDo
+	Employee                  IEmployeeDo
+	Leave                     ILeaveDo
+	LeaveGroup                ILeaveGroupDo
+	LeaveGroupCondition       ILeaveGroupConditionDo
+	LeaveGroupEmployee        ILeaveGroupEmployeeDo
+	LoginInformation          ILoginInformationDo
+	Menu                      IMenuDo
+	Permission                IPermissionDo
+	Role                      IRoleDo
+	RoleMenu                  IRoleMenuDo
+	RolePermission            IRolePermissionDo
+	Vacation                  IVacationDo
+	VacationGroup             IVacationGroupDo
+	VacationGroupEmployee     IVacationGroupEmployeeDo
+	VacationGroupOvertimeRate IVacationGroupOvertimeRateDo
+	VacationSchedule          IVacationScheduleDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
-		Department:       q.Department.WithContext(ctx),
-		Employee:         q.Employee.WithContext(ctx),
-		LoginInformation: q.LoginInformation.WithContext(ctx),
-		Menu:             q.Menu.WithContext(ctx),
-		Permission:       q.Permission.WithContext(ctx),
-		Role:             q.Role.WithContext(ctx),
-		RoleMenu:         q.RoleMenu.WithContext(ctx),
-		RolePermission:   q.RolePermission.WithContext(ctx),
+		Department:                q.Department.WithContext(ctx),
+		Employee:                  q.Employee.WithContext(ctx),
+		Leave:                     q.Leave.WithContext(ctx),
+		LeaveGroup:                q.LeaveGroup.WithContext(ctx),
+		LeaveGroupCondition:       q.LeaveGroupCondition.WithContext(ctx),
+		LeaveGroupEmployee:        q.LeaveGroupEmployee.WithContext(ctx),
+		LoginInformation:          q.LoginInformation.WithContext(ctx),
+		Menu:                      q.Menu.WithContext(ctx),
+		Permission:                q.Permission.WithContext(ctx),
+		Role:                      q.Role.WithContext(ctx),
+		RoleMenu:                  q.RoleMenu.WithContext(ctx),
+		RolePermission:            q.RolePermission.WithContext(ctx),
+		Vacation:                  q.Vacation.WithContext(ctx),
+		VacationGroup:             q.VacationGroup.WithContext(ctx),
+		VacationGroupEmployee:     q.VacationGroupEmployee.WithContext(ctx),
+		VacationGroupOvertimeRate: q.VacationGroupOvertimeRate.WithContext(ctx),
+		VacationSchedule:          q.VacationSchedule.WithContext(ctx),
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
+	"hrapi/internal/utils/deepcopy"
 )
 
 func Department(ctx context.Context) IDepartment {
@@ -85,9 +86,16 @@ func (d *department) Update(in model.PutDepartmentReq) (err error) {
 func (d *department) Delete(in model.DeleteDepartmentReq) (err error) {
 	return query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			qDept     = tx.Department
-			qEmployee = tx.Employee
+			qDept       = tx.Department
+			qEmployee   = tx.Employee
+			subQueryPID = qDept.WithContext(dbcache.WithCtx(d.ctx)).Select(qDept.ParentID).Where(qDept.ID.Eq(in.ID))
 		)
+
+		// 將該部門底下的子部門parent id改為該部門的parent id
+		_, err = qDept.WithContext(dbcache.WithCtx(d.ctx)).Where(qDept.ParentID.Eq(in.ID)).Update(qDept.ParentID, subQueryPID)
+		if err != nil {
+			return err
+		}
 
 		// 刪除部門, 使用硬刪除
 		_, err = qDept.WithContext(dbcache.WithCtx(d.ctx)).Unscoped().Where(qDept.ID.Eq(in.ID)).Delete()
@@ -120,6 +128,8 @@ func (d *department) assemble(depts []*types.Department) (result []*types.Depart
 		deptMap = make(map[uint]*types.Department)
 	)
 
+	depts = deepcopy.Copy(depts).([]*types.Department)
+
 	result = make([]*types.Department, 0)
 
 	// 利用指針組裝
@@ -129,13 +139,14 @@ func (d *department) assemble(depts []*types.Department) (result []*types.Depart
 				// 如果沒父節點
 				// 直接append回傳陣列
 				result = append(result, dept)
-				// 加入map
-				// 等待item加入
-				deptMap[dept.ID] = dept
 			} else {
 				// 否則append組裝陣列
 				item = append(item, dept)
 			}
+
+			// 加入map
+			// 等待item加入
+			deptMap[dept.ID] = dept
 
 			// 標記
 			check[dept.ID] = struct{}{}

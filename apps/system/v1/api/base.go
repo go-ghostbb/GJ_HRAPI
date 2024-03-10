@@ -24,6 +24,7 @@ func (b *BaseApi) Init(v1 *gin.RouterGroup) {
 	meGroup.GET("info", b.getEmployeeInfo)
 	meGroup.GET("perm", b.getPermission)
 	meGroup.GET("menu", b.getMenu)
+	meGroup.PATCH("password", b.changePassword)
 }
 
 // 遷移資料庫
@@ -173,4 +174,30 @@ func (b *BaseApi) getMenu(c *gin.Context) {
 	}
 
 	Responder(Mount(c)).OkWithData(out)
+}
+
+// 修改密碼(只能是自身)
+//
+//	route => PATCH /api/v1/me/password
+func (b *BaseApi) changePassword(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.ChangePasswordReq
+		err error
+	)
+
+	in.EmployeeID = gbhttp.Get(c, "employee.id").Uint()
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Base(ctx).ChangePassword(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
 }
