@@ -34,6 +34,8 @@ func newVacationGroupOvertimeRate(db *gorm.DB, opts ...gen.DOOption) vacationGro
 	_vacationGroupOvertimeRate.Hours = field.NewUint(tableName, "hours")
 	_vacationGroupOvertimeRate.Multiply = field.NewFloat32(tableName, "multiply")
 	_vacationGroupOvertimeRate.Level = field.NewUint(tableName, "level")
+	_vacationGroupOvertimeRate.IsFill = field.NewBool(tableName, "is_fill")
+	_vacationGroupOvertimeRate.Fill = field.NewUint(tableName, "fill")
 	_vacationGroupOvertimeRate.VacationGroup = vacationGroupOvertimeRateBelongsToVacationGroup{
 		db: db.Session(&gorm.Session{}),
 
@@ -195,6 +197,8 @@ type vacationGroupOvertimeRate struct {
 	Hours           field.Uint
 	Multiply        field.Float32
 	Level           field.Uint
+	IsFill          field.Bool
+	Fill            field.Uint
 	VacationGroup   vacationGroupOvertimeRateBelongsToVacationGroup
 
 	fieldMap map[string]field.Expr
@@ -220,6 +224,8 @@ func (v *vacationGroupOvertimeRate) updateTableName(table string) *vacationGroup
 	v.Hours = field.NewUint(table, "hours")
 	v.Multiply = field.NewFloat32(table, "multiply")
 	v.Level = field.NewUint(table, "level")
+	v.IsFill = field.NewBool(table, "is_fill")
+	v.Fill = field.NewUint(table, "fill")
 
 	v.fillFieldMap()
 
@@ -250,7 +256,7 @@ func (v *vacationGroupOvertimeRate) GetFieldByName(fieldName string) (field.Orde
 }
 
 func (v *vacationGroupOvertimeRate) fillFieldMap() {
-	v.fieldMap = make(map[string]field.Expr, 9)
+	v.fieldMap = make(map[string]field.Expr, 11)
 	v.fieldMap["id"] = v.ID
 	v.fieldMap["created_at"] = v.CreatedAt
 	v.fieldMap["updated_at"] = v.UpdatedAt
@@ -259,6 +265,8 @@ func (v *vacationGroupOvertimeRate) fillFieldMap() {
 	v.fieldMap["hours"] = v.Hours
 	v.fieldMap["multiply"] = v.Multiply
 	v.fieldMap["level"] = v.Level
+	v.fieldMap["is_fill"] = v.IsFill
+	v.fieldMap["fill"] = v.Fill
 
 }
 

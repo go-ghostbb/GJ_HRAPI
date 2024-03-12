@@ -68,6 +68,13 @@ type DeleteVacationGroupReq struct {
 
 type DeleteVacationGroupRes struct{}
 
+type SetVacationGroupNameReq struct {
+	ID   uint
+	Name string `json:"name"`
+}
+
+type SetVacationGroupNameRes struct{}
+
 type SetVacationGroupEmployeeReq struct {
 	ID         uint
 	EmployeeID []uint `json:"employeeId"`
@@ -81,3 +88,38 @@ type SetVacationGroupOvertimeRateReq struct {
 }
 
 type SetVacationGroupOvertimeRateRes struct{}
+
+type GetByDateVacationScheduleReq struct {
+	Start string `form:"start" binding:"required" v:"date-format:Y-m-d"`
+	End   string `form:"end" binding:"required" v:"date-format:Y-m-d"`
+}
+
+type GetByDateVacationScheduleRes struct {
+	*types.VacationSchedule
+}
+
+type PostVacationScheduleReq struct {
+	*types.VacationScheduleConfig
+	Remark     string `json:"remark"`
+	VacationID uint   `json:"vacationId"`
+}
+
+type PostVacationScheduleRes struct{}
+
+type PutVacationScheduleReq struct {
+	GeneralKey string `form:"generalKey" binding:"required"`
+
+	// 內容
+	*types.VacationScheduleConfig
+	Remark     string `json:"remark"`
+	VacationID uint   `json:"vacationId"`
+}
+
+type PutVacationScheduleRes struct{}
+
+type DeleteVacationScheduleReq struct {
+	ID     uint
+	Repeat bool `form:"repeat"`
+}
+
+type DeleteVacationScheduleRes struct{}

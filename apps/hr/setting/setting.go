@@ -23,5 +23,6 @@ func v1List() []gbhttp.IBind {
 	return []gbhttp.IBind{
 		&v1.LeaveApi{},
 		&v1.VacationApi{},
+		&v1.WorkShiftApi{},
 	}
 }

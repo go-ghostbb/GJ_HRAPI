@@ -40,6 +40,8 @@ type (
 		InsertGroup(in model.PostLeaveGroupReq) error
 		// DeleteGroup 刪除群組
 		DeleteGroup(in model.DeleteLeaveGroupReq) error
+		// SetLeaveGroupName 設置群組名稱
+		SetLeaveGroupName(in model.SetLeaveGroupNameReq) (err error)
 		// SetLeaveGroupEmployee 設置群組的員工
 		SetLeaveGroupEmployee(in model.SetLeaveGroupEmployeeReq) (err error)
 		// SetLeaveGroupCond 設置群組的條件
@@ -120,10 +122,10 @@ func (l *leave) Update(in model.PutLeaveReq) (err error) {
 func (l *leave) Delete(in model.DeleteLeaveReq) error {
 	return query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			qLeave          = query.Leave
-			qLeaveGroup     = query.LeaveGroup
-			qLeaveGroupCond = query.LeaveGroupCondition
-			qM2M            = query.LeaveGroupEmployee
+			qLeave          = tx.Leave
+			qLeaveGroup     = tx.LeaveGroup
+			qLeaveGroupCond = tx.LeaveGroupCondition
+			qM2M            = tx.LeaveGroupEmployee
 			err             error
 		)
 		// 刪除假別
@@ -238,6 +240,12 @@ func (l *leave) DeleteGroup(in model.DeleteLeaveGroupReq) error {
 		// commit
 		return nil
 	})
+}
+
+// SetLeaveGroupName 設置群組名稱
+func (l *leave) SetLeaveGroupName(in model.SetLeaveGroupNameReq) (err error) {
+	_, err = query.LeaveGroup.WithContext(dbcache.WithCtx(l.ctx)).Where(query.LeaveGroup.ID.Eq(in.ID)).Update(query.Leave.Name, in.Name)
+	return err
 }
 
 // SetLeaveGroupEmployee 設置群組的員工

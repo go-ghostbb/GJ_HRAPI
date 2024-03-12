@@ -28,6 +28,7 @@ func (l *LeaveApi) Init(group *gin.RouterGroup) {
 	v1.GET("group/:leaveID", l.getLeaveGroup)
 	v1.POST("group", l.insertGroup)
 	v1.DELETE("group/:id", l.deleteGroup)
+	v1.PATCH("group/:id/name", l.setLeaveGroupName)
 	v1.PATCH("group/:id/employee", l.setLeaveGroupEmployee)
 	v1.PATCH("group/:id/condition", l.setLeaveGroupCond)
 }
@@ -228,6 +229,30 @@ func (l *LeaveApi) deleteGroup(c *gin.Context) {
 	in.ID = gbconv.Uint(c.Param("id"))
 
 	err = service.Leave(ctx).DeleteGroup(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 設置群組名稱
+//
+//	route => PATCH /api/v1/leave/group/:id/name
+func (l *LeaveApi) setLeaveGroupName(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetLeaveGroupNameReq
+		err error
+	)
+	in.ID = gbconv.Uint(c.Param("id"))
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Leave(ctx).SetLeaveGroupName(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

@@ -34,6 +34,8 @@ var (
 	VacationGroupEmployee     *vacationGroupEmployee
 	VacationGroupOvertimeRate *vacationGroupOvertimeRate
 	VacationSchedule          *vacationSchedule
+	WorkSchedule              *workSchedule
+	WorkShift                 *workShift
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -55,6 +57,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	VacationGroupEmployee = &Q.VacationGroupEmployee
 	VacationGroupOvertimeRate = &Q.VacationGroupOvertimeRate
 	VacationSchedule = &Q.VacationSchedule
+	WorkSchedule = &Q.WorkSchedule
+	WorkShift = &Q.WorkShift
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
@@ -77,6 +81,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		VacationGroupEmployee:     newVacationGroupEmployee(db, opts...),
 		VacationGroupOvertimeRate: newVacationGroupOvertimeRate(db, opts...),
 		VacationSchedule:          newVacationSchedule(db, opts...),
+		WorkSchedule:              newWorkSchedule(db, opts...),
+		WorkShift:                 newWorkShift(db, opts...),
 	}
 }
 
@@ -100,6 +106,8 @@ type Query struct {
 	VacationGroupEmployee     vacationGroupEmployee
 	VacationGroupOvertimeRate vacationGroupOvertimeRate
 	VacationSchedule          vacationSchedule
+	WorkSchedule              workSchedule
+	WorkShift                 workShift
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -124,6 +132,8 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		VacationGroupEmployee:     q.VacationGroupEmployee.clone(db),
 		VacationGroupOvertimeRate: q.VacationGroupOvertimeRate.clone(db),
 		VacationSchedule:          q.VacationSchedule.clone(db),
+		WorkSchedule:              q.WorkSchedule.clone(db),
+		WorkShift:                 q.WorkShift.clone(db),
 	}
 }
 
@@ -155,6 +165,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		VacationGroupEmployee:     q.VacationGroupEmployee.replaceDB(db),
 		VacationGroupOvertimeRate: q.VacationGroupOvertimeRate.replaceDB(db),
 		VacationSchedule:          q.VacationSchedule.replaceDB(db),
+		WorkSchedule:              q.WorkSchedule.replaceDB(db),
+		WorkShift:                 q.WorkShift.replaceDB(db),
 	}
 }
 
@@ -176,6 +188,8 @@ type queryCtx struct {
 	VacationGroupEmployee     IVacationGroupEmployeeDo
 	VacationGroupOvertimeRate IVacationGroupOvertimeRateDo
 	VacationSchedule          IVacationScheduleDo
+	WorkSchedule              IWorkScheduleDo
+	WorkShift                 IWorkShiftDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
@@ -197,6 +211,8 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		VacationGroupEmployee:     q.VacationGroupEmployee.WithContext(ctx),
 		VacationGroupOvertimeRate: q.VacationGroupOvertimeRate.WithContext(ctx),
 		VacationSchedule:          q.VacationSchedule.WithContext(ctx),
+		WorkSchedule:              q.WorkSchedule.WithContext(ctx),
+		WorkShift:                 q.WorkShift.WithContext(ctx),
 	}
 }
 

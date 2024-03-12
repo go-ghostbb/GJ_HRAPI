@@ -39,118 +39,6 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Schedule", "types.VacationSchedule"),
-		Employee: struct {
-			field.RelationField
-			Department struct {
-				field.RelationField
-				Manager struct {
-					field.RelationField
-				}
-			}
-			LoginInformation struct {
-				field.RelationField
-				Employee struct {
-					field.RelationField
-				}
-			}
-			Roles struct {
-				field.RelationField
-				Employees struct {
-					field.RelationField
-				}
-				Permissions struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}
-				Menus struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}
-			}
-		}{
-			RelationField: field.NewRelation("Schedule.Employee", "types.Employee"),
-			Department: struct {
-				field.RelationField
-				Manager struct {
-					field.RelationField
-				}
-			}{
-				RelationField: field.NewRelation("Schedule.Employee.Department", "types.Department"),
-				Manager: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("Schedule.Employee.Department.Manager", "types.Employee"),
-				},
-			},
-			LoginInformation: struct {
-				field.RelationField
-				Employee struct {
-					field.RelationField
-				}
-			}{
-				RelationField: field.NewRelation("Schedule.Employee.LoginInformation", "types.LoginInformation"),
-				Employee: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("Schedule.Employee.LoginInformation.Employee", "types.Employee"),
-				},
-			},
-			Roles: struct {
-				field.RelationField
-				Employees struct {
-					field.RelationField
-				}
-				Permissions struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}
-				Menus struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}
-			}{
-				RelationField: field.NewRelation("Schedule.Employee.Roles", "types.Role"),
-				Employees: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("Schedule.Employee.Roles.Employees", "types.Employee"),
-				},
-				Permissions: struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}{
-					RelationField: field.NewRelation("Schedule.Employee.Roles.Permissions", "types.Permission"),
-					Roles: struct {
-						field.RelationField
-					}{
-						RelationField: field.NewRelation("Schedule.Employee.Roles.Permissions.Roles", "types.Role"),
-					},
-				},
-				Menus: struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}{
-					RelationField: field.NewRelation("Schedule.Employee.Roles.Menus", "types.Menu"),
-					Roles: struct {
-						field.RelationField
-					}{
-						RelationField: field.NewRelation("Schedule.Employee.Roles.Menus.Roles", "types.Role"),
-					},
-				},
-			},
-		},
 		Vacation: struct {
 			field.RelationField
 			Schedule struct {
@@ -179,6 +67,36 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 						}
 						Employee struct {
 							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
 						}
 					}
 				}
@@ -216,6 +134,36 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 						}
 						Employee struct {
 							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
 						}
 					}
 				}
@@ -247,6 +195,36 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 						}
 						Employee struct {
 							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
 						}
 					}
 				}{
@@ -267,6 +245,36 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 						}
 						Employee struct {
 							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
 						}
 					}{
 						RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup", "types.LeaveGroup"),
@@ -298,8 +306,115 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 						},
 						Employee: struct {
 							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
 						}{
 							RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee", "types.Employee"),
+							Department: struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}{
+								RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Department", "types.Department"),
+								Manager: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Department.Manager", "types.Employee"),
+								},
+							},
+							LoginInformation: struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}{
+								RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.LoginInformation", "types.LoginInformation"),
+								Employee: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.LoginInformation.Employee", "types.Employee"),
+								},
+							},
+							Roles: struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}{
+								RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles", "types.Role"),
+								Employees: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Employees", "types.Employee"),
+								},
+								Permissions: struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}{
+									RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Permissions", "types.Permission"),
+									Roles: struct {
+										field.RelationField
+									}{
+										RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Permissions.Roles", "types.Role"),
+									},
+								},
+								Menus: struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}{
+									RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Menus", "types.Menu"),
+									Roles: struct {
+										field.RelationField
+									}{
+										RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Menus.Roles", "types.Role"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -416,39 +531,6 @@ type vacationHasManySchedule struct {
 
 	field.RelationField
 
-	Employee struct {
-		field.RelationField
-		Department struct {
-			field.RelationField
-			Manager struct {
-				field.RelationField
-			}
-		}
-		LoginInformation struct {
-			field.RelationField
-			Employee struct {
-				field.RelationField
-			}
-		}
-		Roles struct {
-			field.RelationField
-			Employees struct {
-				field.RelationField
-			}
-			Permissions struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}
-			Menus struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}
-		}
-	}
 	Vacation struct {
 		field.RelationField
 		Schedule struct {
@@ -477,6 +559,36 @@ type vacationHasManySchedule struct {
 					}
 					Employee struct {
 						field.RelationField
+						Department struct {
+							field.RelationField
+							Manager struct {
+								field.RelationField
+							}
+						}
+						LoginInformation struct {
+							field.RelationField
+							Employee struct {
+								field.RelationField
+							}
+						}
+						Roles struct {
+							field.RelationField
+							Employees struct {
+								field.RelationField
+							}
+							Permissions struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+							Menus struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+						}
 					}
 				}
 			}

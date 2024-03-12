@@ -232,19 +232,11 @@ func newVacationGroup(db *gorm.DB, opts ...gen.DOOption) vacationGroup {
 		RelationField: field.NewRelation("Vacation", "types.Vacation"),
 		Schedule: struct {
 			field.RelationField
-			Employee struct {
-				field.RelationField
-			}
 			Vacation struct {
 				field.RelationField
 			}
 		}{
 			RelationField: field.NewRelation("Vacation.Schedule", "types.VacationSchedule"),
-			Employee: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Vacation.Schedule.Employee", "types.Employee"),
-			},
 			Vacation: struct {
 				field.RelationField
 			}{
@@ -505,9 +497,6 @@ type vacationGroupBelongsToVacation struct {
 
 	Schedule struct {
 		field.RelationField
-		Employee struct {
-			field.RelationField
-		}
 		Vacation struct {
 			field.RelationField
 		}

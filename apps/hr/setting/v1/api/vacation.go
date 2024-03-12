@@ -28,8 +28,14 @@ func (v *VacationApi) Init(group *gin.RouterGroup) {
 	v1.GET("group/:vacationID", v.getVacationGroup)
 	v1.POST("group", v.insertGroup)
 	v1.DELETE("group/:id", v.deleteGroup)
+	v1.PATCH("group/:id/name", v.setVacationGroupName)
 	v1.PATCH("group/:id/employee", v.setVacationGroupEmployee)
 	v1.PATCH("group/:id/condition", v.setVacationGroupCond)
+	// schedule
+	v1.GET("schedule", v.getScheduleByDate)
+	v1.POST("schedule", v.createSchedule)
+	v1.PUT("schedule/:generalKey", v.updateSchedule)
+	v1.DELETE("schedule/:id", v.deleteSchedule)
 }
 
 // 根據keyword, status獲取對應休假日
@@ -173,7 +179,7 @@ func (v *VacationApi) setStatus(c *gin.Context) {
 
 // 獲取休假日的群組
 //
-//	route => GET /api/v1/leave/group/:vacationID
+//	route => GET /api/v1/vacation/group/:vacationID
 func (v *VacationApi) getVacationGroup(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
@@ -218,7 +224,7 @@ func (v *VacationApi) insertGroup(c *gin.Context) {
 
 // 刪除群組
 //
-//	route => DELETE /api/v1/leave/group/:id
+//	route => DELETE /api/v1/vacation/group/:id
 func (v *VacationApi) deleteGroup(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
@@ -236,9 +242,33 @@ func (v *VacationApi) deleteGroup(c *gin.Context) {
 	Responder(Mount(c)).Ok()
 }
 
+// 設置群組名稱
+//
+//	route => PATCH /api/v1/vacation/group/:id/name
+func (v *VacationApi) setVacationGroupName(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetVacationGroupNameReq
+		err error
+	)
+	in.ID = gbconv.Uint(c.Param("id"))
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Vacation(ctx).SetVacationGroupName(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
 // 設置群組的員工
 //
-//	route => PATCH /api/v1/leave/group/:id/employee
+//	route => PATCH /api/v1/vacation/group/:id/employee
 func (v *VacationApi) setVacationGroupEmployee(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
@@ -263,7 +293,7 @@ func (v *VacationApi) setVacationGroupEmployee(c *gin.Context) {
 
 // 設置群組的條件
 //
-//	route => PATCH /api/v1/leave/group/:id/overtimeRate
+//	route => PATCH /api/v1/vacation/group/:id/overtimeRate
 func (v *VacationApi) setVacationGroupCond(c *gin.Context) {
 	var (
 		ctx = gbhttp.Ctx(c)
@@ -278,6 +308,102 @@ func (v *VacationApi) setVacationGroupCond(c *gin.Context) {
 	}
 
 	err = service.Vacation(ctx).SetVacationGroupOvertimeRate(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 根據日期區間查詢schedule
+//
+//	route => GET /api/v1/vacation/schedule
+func (v *VacationApi) getScheduleByDate(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.GetByDateVacationScheduleReq
+		out []*model.GetByDateVacationScheduleRes
+		err error
+	)
+	if err = gbhttp.ParseQuery(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	out, err = service.Vacation(ctx).GetScheduleByDate(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).OkWithData(out)
+}
+
+// 創建schedule
+//
+//	route => POST /api/v1/vacation/schedule
+func (v *VacationApi) createSchedule(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.PostVacationScheduleReq
+		err error
+	)
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Vacation(ctx).CreateSchedule(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 更新schedule
+//
+//	route => PUT /api/v1/vacation/schedule/:generalKey
+func (v *VacationApi) updateSchedule(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.PutVacationScheduleReq
+		err error
+	)
+	in.GeneralKey = c.Param("generalKey")
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Vacation(ctx).UpdateSchedule(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 刪除schedule
+//
+//	route => DELETE /api/v1/vacation/schedule/:id
+func (v *VacationApi) deleteSchedule(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.DeleteVacationScheduleReq
+		err error
+	)
+	in.ID = gbconv.Uint(c.Param("id"))
+	if err = gbhttp.ParseQuery(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	err = service.Vacation(ctx).DeleteSchedule(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

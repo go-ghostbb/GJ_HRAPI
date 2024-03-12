@@ -15,6 +15,8 @@ func Basic() []interface{} {
 		&VacationGroup{},             // vacation_group
 		&VacationGroupOvertimeRate{}, // vacation_group_overtime_rate
 		&VacationSchedule{},          // vacation_schedule
+		&WorkShift{},                 // work_shift
+		&WorkSchedule{},              // work_schedule
 	}
 }
 

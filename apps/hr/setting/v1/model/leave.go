@@ -68,6 +68,13 @@ type DeleteLeaveGroupReq struct {
 
 type DeleteLeaveGroupRes struct{}
 
+type SetLeaveGroupNameReq struct {
+	ID   uint
+	Name string `json:"name"`
+}
+
+type SetLeaveGroupNameRes struct{}
+
 type SetLeaveGroupEmployeeReq struct {
 	ID         uint
 	EmployeeID []uint `json:"employeeId"`

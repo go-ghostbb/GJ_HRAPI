@@ -31,110 +31,24 @@ func newVacationSchedule(db *gorm.DB, opts ...gen.DOOption) vacationSchedule {
 	_vacationSchedule.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_vacationSchedule.DeletedAt = field.NewField(tableName, "deleted_at")
 	_vacationSchedule.ScheduleDate = field.NewTime(tableName, "schedule_date")
-	_vacationSchedule.EmployeeID = field.NewUint(tableName, "employee_id")
+	_vacationSchedule.GeneralKey = field.NewString(tableName, "general_key")
+	_vacationSchedule.Remark = field.NewString(tableName, "remark")
 	_vacationSchedule.VacationID = field.NewUint(tableName, "vacation_id")
-	_vacationSchedule.Employee = vacationScheduleBelongsToEmployee{
-		db: db.Session(&gorm.Session{}),
-
-		RelationField: field.NewRelation("Employee", "types.Employee"),
-		Department: struct {
-			field.RelationField
-			Manager struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("Employee.Department", "types.Department"),
-			Manager: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Employee.Department.Manager", "types.Employee"),
-			},
-		},
-		LoginInformation: struct {
-			field.RelationField
-			Employee struct {
-				field.RelationField
-			}
-		}{
-			RelationField: field.NewRelation("Employee.LoginInformation", "types.LoginInformation"),
-			Employee: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Employee.LoginInformation.Employee", "types.Employee"),
-			},
-		},
-		Roles: struct {
-			field.RelationField
-			Employees struct {
-				field.RelationField
-			}
-			Permissions struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}
-			Menus struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}
-		}{
-			RelationField: field.NewRelation("Employee.Roles", "types.Role"),
-			Employees: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Employee.Roles.Employees", "types.Employee"),
-			},
-			Permissions: struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}{
-				RelationField: field.NewRelation("Employee.Roles.Permissions", "types.Permission"),
-				Roles: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("Employee.Roles.Permissions.Roles", "types.Role"),
-				},
-			},
-			Menus: struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}{
-				RelationField: field.NewRelation("Employee.Roles.Menus", "types.Menu"),
-				Roles: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("Employee.Roles.Menus.Roles", "types.Role"),
-				},
-			},
-		},
-	}
-
+	_vacationSchedule.StartDate = field.NewTime(tableName, "start_date")
+	_vacationSchedule.EndDate = field.NewTime(tableName, "end_date")
+	_vacationSchedule.Repeat = field.NewField(tableName, "repeat")
+	_vacationSchedule.EndRepeat = field.NewTime(tableName, "end_repeat")
 	_vacationSchedule.Vacation = vacationScheduleBelongsToVacation{
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("Vacation", "types.Vacation"),
 		Schedule: struct {
 			field.RelationField
-			Employee struct {
-				field.RelationField
-			}
 			Vacation struct {
 				field.RelationField
 			}
 		}{
 			RelationField: field.NewRelation("Vacation.Schedule", "types.VacationSchedule"),
-			Employee: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("Vacation.Schedule.Employee", "types.Employee"),
-			},
 			Vacation: struct {
 				field.RelationField
 			}{
@@ -164,6 +78,36 @@ func newVacationSchedule(db *gorm.DB, opts ...gen.DOOption) vacationSchedule {
 					}
 					Employee struct {
 						field.RelationField
+						Department struct {
+							field.RelationField
+							Manager struct {
+								field.RelationField
+							}
+						}
+						LoginInformation struct {
+							field.RelationField
+							Employee struct {
+								field.RelationField
+							}
+						}
+						Roles struct {
+							field.RelationField
+							Employees struct {
+								field.RelationField
+							}
+							Permissions struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+							Menus struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+						}
 					}
 				}
 			}
@@ -195,6 +139,36 @@ func newVacationSchedule(db *gorm.DB, opts ...gen.DOOption) vacationSchedule {
 					}
 					Employee struct {
 						field.RelationField
+						Department struct {
+							field.RelationField
+							Manager struct {
+								field.RelationField
+							}
+						}
+						LoginInformation struct {
+							field.RelationField
+							Employee struct {
+								field.RelationField
+							}
+						}
+						Roles struct {
+							field.RelationField
+							Employees struct {
+								field.RelationField
+							}
+							Permissions struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+							Menus struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+						}
 					}
 				}
 			}{
@@ -215,6 +189,36 @@ func newVacationSchedule(db *gorm.DB, opts ...gen.DOOption) vacationSchedule {
 					}
 					Employee struct {
 						field.RelationField
+						Department struct {
+							field.RelationField
+							Manager struct {
+								field.RelationField
+							}
+						}
+						LoginInformation struct {
+							field.RelationField
+							Employee struct {
+								field.RelationField
+							}
+						}
+						Roles struct {
+							field.RelationField
+							Employees struct {
+								field.RelationField
+							}
+							Permissions struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+							Menus struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+						}
 					}
 				}{
 					RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup", "types.LeaveGroup"),
@@ -246,8 +250,115 @@ func newVacationSchedule(db *gorm.DB, opts ...gen.DOOption) vacationSchedule {
 					},
 					Employee: struct {
 						field.RelationField
+						Department struct {
+							field.RelationField
+							Manager struct {
+								field.RelationField
+							}
+						}
+						LoginInformation struct {
+							field.RelationField
+							Employee struct {
+								field.RelationField
+							}
+						}
+						Roles struct {
+							field.RelationField
+							Employees struct {
+								field.RelationField
+							}
+							Permissions struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+							Menus struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+						}
 					}{
 						RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee", "types.Employee"),
+						Department: struct {
+							field.RelationField
+							Manager struct {
+								field.RelationField
+							}
+						}{
+							RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Department", "types.Department"),
+							Manager: struct {
+								field.RelationField
+							}{
+								RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Department.Manager", "types.Employee"),
+							},
+						},
+						LoginInformation: struct {
+							field.RelationField
+							Employee struct {
+								field.RelationField
+							}
+						}{
+							RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.LoginInformation", "types.LoginInformation"),
+							Employee: struct {
+								field.RelationField
+							}{
+								RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.LoginInformation.Employee", "types.Employee"),
+							},
+						},
+						Roles: struct {
+							field.RelationField
+							Employees struct {
+								field.RelationField
+							}
+							Permissions struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+							Menus struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+						}{
+							RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles", "types.Role"),
+							Employees: struct {
+								field.RelationField
+							}{
+								RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Employees", "types.Employee"),
+							},
+							Permissions: struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}{
+								RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Permissions", "types.Permission"),
+								Roles: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Permissions.Roles", "types.Role"),
+								},
+							},
+							Menus: struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}{
+								RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Menus", "types.Menu"),
+								Roles: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Menus.Roles", "types.Role"),
+								},
+							},
+						},
 					},
 				},
 			},
@@ -273,11 +384,14 @@ type vacationSchedule struct {
 	UpdatedAt    field.Time
 	DeletedAt    field.Field
 	ScheduleDate field.Time
-	EmployeeID   field.Uint
+	GeneralKey   field.String
+	Remark       field.String
 	VacationID   field.Uint
-	Employee     vacationScheduleBelongsToEmployee
-
-	Vacation vacationScheduleBelongsToVacation
+	StartDate    field.Time
+	EndDate      field.Time
+	Repeat       field.Field
+	EndRepeat    field.Time
+	Vacation     vacationScheduleBelongsToVacation
 
 	fieldMap map[string]field.Expr
 }
@@ -299,8 +413,13 @@ func (v *vacationSchedule) updateTableName(table string) *vacationSchedule {
 	v.UpdatedAt = field.NewTime(table, "updated_at")
 	v.DeletedAt = field.NewField(table, "deleted_at")
 	v.ScheduleDate = field.NewTime(table, "schedule_date")
-	v.EmployeeID = field.NewUint(table, "employee_id")
+	v.GeneralKey = field.NewString(table, "general_key")
+	v.Remark = field.NewString(table, "remark")
 	v.VacationID = field.NewUint(table, "vacation_id")
+	v.StartDate = field.NewTime(table, "start_date")
+	v.EndDate = field.NewTime(table, "end_date")
+	v.Repeat = field.NewField(table, "repeat")
+	v.EndRepeat = field.NewTime(table, "end_repeat")
 
 	v.fillFieldMap()
 
@@ -329,14 +448,19 @@ func (v *vacationSchedule) GetFieldByName(fieldName string) (field.OrderExpr, bo
 }
 
 func (v *vacationSchedule) fillFieldMap() {
-	v.fieldMap = make(map[string]field.Expr, 9)
+	v.fieldMap = make(map[string]field.Expr, 13)
 	v.fieldMap["id"] = v.ID
 	v.fieldMap["created_at"] = v.CreatedAt
 	v.fieldMap["updated_at"] = v.UpdatedAt
 	v.fieldMap["deleted_at"] = v.DeletedAt
 	v.fieldMap["schedule_date"] = v.ScheduleDate
-	v.fieldMap["employee_id"] = v.EmployeeID
+	v.fieldMap["general_key"] = v.GeneralKey
+	v.fieldMap["remark"] = v.Remark
 	v.fieldMap["vacation_id"] = v.VacationID
+	v.fieldMap["start_date"] = v.StartDate
+	v.fieldMap["end_date"] = v.EndDate
+	v.fieldMap["repeat"] = v.Repeat
+	v.fieldMap["end_repeat"] = v.EndRepeat
 
 }
 
@@ -350,108 +474,6 @@ func (v vacationSchedule) replaceDB(db *gorm.DB) vacationSchedule {
 	return v
 }
 
-type vacationScheduleBelongsToEmployee struct {
-	db *gorm.DB
-
-	field.RelationField
-
-	Department struct {
-		field.RelationField
-		Manager struct {
-			field.RelationField
-		}
-	}
-	LoginInformation struct {
-		field.RelationField
-		Employee struct {
-			field.RelationField
-		}
-	}
-	Roles struct {
-		field.RelationField
-		Employees struct {
-			field.RelationField
-		}
-		Permissions struct {
-			field.RelationField
-			Roles struct {
-				field.RelationField
-			}
-		}
-		Menus struct {
-			field.RelationField
-			Roles struct {
-				field.RelationField
-			}
-		}
-	}
-}
-
-func (a vacationScheduleBelongsToEmployee) Where(conds ...field.Expr) *vacationScheduleBelongsToEmployee {
-	if len(conds) == 0 {
-		return &a
-	}
-
-	exprs := make([]clause.Expression, 0, len(conds))
-	for _, cond := range conds {
-		exprs = append(exprs, cond.BeCond().(clause.Expression))
-	}
-	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
-	return &a
-}
-
-func (a vacationScheduleBelongsToEmployee) WithContext(ctx context.Context) *vacationScheduleBelongsToEmployee {
-	a.db = a.db.WithContext(ctx)
-	return &a
-}
-
-func (a vacationScheduleBelongsToEmployee) Session(session *gorm.Session) *vacationScheduleBelongsToEmployee {
-	a.db = a.db.Session(session)
-	return &a
-}
-
-func (a vacationScheduleBelongsToEmployee) Model(m *types.VacationSchedule) *vacationScheduleBelongsToEmployeeTx {
-	return &vacationScheduleBelongsToEmployeeTx{a.db.Model(m).Association(a.Name())}
-}
-
-type vacationScheduleBelongsToEmployeeTx struct{ tx *gorm.Association }
-
-func (a vacationScheduleBelongsToEmployeeTx) Find() (result *types.Employee, err error) {
-	return result, a.tx.Find(&result)
-}
-
-func (a vacationScheduleBelongsToEmployeeTx) Append(values ...*types.Employee) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Append(targetValues...)
-}
-
-func (a vacationScheduleBelongsToEmployeeTx) Replace(values ...*types.Employee) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Replace(targetValues...)
-}
-
-func (a vacationScheduleBelongsToEmployeeTx) Delete(values ...*types.Employee) (err error) {
-	targetValues := make([]interface{}, len(values))
-	for i, v := range values {
-		targetValues[i] = v
-	}
-	return a.tx.Delete(targetValues...)
-}
-
-func (a vacationScheduleBelongsToEmployeeTx) Clear() error {
-	return a.tx.Clear()
-}
-
-func (a vacationScheduleBelongsToEmployeeTx) Count() int64 {
-	return a.tx.Count()
-}
-
 type vacationScheduleBelongsToVacation struct {
 	db *gorm.DB
 
@@ -459,9 +481,6 @@ type vacationScheduleBelongsToVacation struct {
 
 	Schedule struct {
 		field.RelationField
-		Employee struct {
-			field.RelationField
-		}
 		Vacation struct {
 			field.RelationField
 		}
@@ -489,6 +508,36 @@ type vacationScheduleBelongsToVacation struct {
 				}
 				Employee struct {
 					field.RelationField
+					Department struct {
+						field.RelationField
+						Manager struct {
+							field.RelationField
+						}
+					}
+					LoginInformation struct {
+						field.RelationField
+						Employee struct {
+							field.RelationField
+						}
+					}
+					Roles struct {
+						field.RelationField
+						Employees struct {
+							field.RelationField
+						}
+						Permissions struct {
+							field.RelationField
+							Roles struct {
+								field.RelationField
+							}
+						}
+						Menus struct {
+							field.RelationField
+							Roles struct {
+								field.RelationField
+							}
+						}
+					}
 				}
 			}
 		}
