@@ -41,6 +41,8 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 	_employee.Mobile = field.NewString(tableName, "mobile")
 	_employee.Avatar = field.NewString(tableName, "avatar")
 	_employee.DepartmentId = field.NewUint(tableName, "department_id")
+	_employee.RankID = field.NewUint(tableName, "rank_id")
+	_employee.GradeID = field.NewUint(tableName, "grade_id")
 	_employee.LoginInformation = employeeHasOneLoginInformation{
 		db: db.Session(&gorm.Session{}),
 
@@ -52,6 +54,18 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 				Manager struct {
 					field.RelationField
 				}
+			}
+			Rank struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}
+			Grade struct {
+				field.RelationField
 			}
 			LoginInformation struct {
 				field.RelationField
@@ -88,6 +102,35 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 				}{
 					RelationField: field.NewRelation("LoginInformation.Employee.Department.Manager", "types.Employee"),
 				},
+			},
+			Rank: struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}{
+				RelationField: field.NewRelation("LoginInformation.Employee.Rank", "types.PositionRank"),
+				Grade: struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}{
+					RelationField: field.NewRelation("LoginInformation.Employee.Rank.Grade", "types.PositionGrade"),
+					Rank: struct {
+						field.RelationField
+					}{
+						RelationField: field.NewRelation("LoginInformation.Employee.Rank.Grade.Rank", "types.PositionRank"),
+					},
+				},
+			},
+			Grade: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("LoginInformation.Employee.Grade", "types.PositionGrade"),
 			},
 			LoginInformation: struct {
 				field.RelationField
@@ -154,6 +197,18 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 		RelationField: field.NewRelation("Department", "types.Department"),
 	}
 
+	_employee.Rank = employeeBelongsToRank{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Rank", "types.PositionRank"),
+	}
+
+	_employee.Grade = employeeBelongsToGrade{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Grade", "types.PositionGrade"),
+	}
+
 	_employee.Roles = employeeManyToManyRoles{
 		db: db.Session(&gorm.Session{}),
 
@@ -184,9 +239,15 @@ type employee struct {
 	Mobile           field.String
 	Avatar           field.String
 	DepartmentId     field.Uint
+	RankID           field.Uint
+	GradeID          field.Uint
 	LoginInformation employeeHasOneLoginInformation
 
 	Department employeeBelongsToDepartment
+
+	Rank employeeBelongsToRank
+
+	Grade employeeBelongsToGrade
 
 	Roles employeeManyToManyRoles
 
@@ -220,6 +281,8 @@ func (e *employee) updateTableName(table string) *employee {
 	e.Mobile = field.NewString(table, "mobile")
 	e.Avatar = field.NewString(table, "avatar")
 	e.DepartmentId = field.NewUint(table, "department_id")
+	e.RankID = field.NewUint(table, "rank_id")
+	e.GradeID = field.NewUint(table, "grade_id")
 
 	e.fillFieldMap()
 
@@ -244,7 +307,7 @@ func (e *employee) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (e *employee) fillFieldMap() {
-	e.fieldMap = make(map[string]field.Expr, 18)
+	e.fieldMap = make(map[string]field.Expr, 22)
 	e.fieldMap["id"] = e.ID
 	e.fieldMap["created_at"] = e.CreatedAt
 	e.fieldMap["updated_at"] = e.UpdatedAt
@@ -260,6 +323,8 @@ func (e *employee) fillFieldMap() {
 	e.fieldMap["mobile"] = e.Mobile
 	e.fieldMap["avatar"] = e.Avatar
 	e.fieldMap["department_id"] = e.DepartmentId
+	e.fieldMap["rank_id"] = e.RankID
+	e.fieldMap["grade_id"] = e.GradeID
 
 }
 
@@ -285,6 +350,18 @@ type employeeHasOneLoginInformation struct {
 			Manager struct {
 				field.RelationField
 			}
+		}
+		Rank struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}
+		Grade struct {
+			field.RelationField
 		}
 		LoginInformation struct {
 			field.RelationField
@@ -443,6 +520,148 @@ func (a employeeBelongsToDepartmentTx) Clear() error {
 }
 
 func (a employeeBelongsToDepartmentTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type employeeBelongsToRank struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a employeeBelongsToRank) Where(conds ...field.Expr) *employeeBelongsToRank {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a employeeBelongsToRank) WithContext(ctx context.Context) *employeeBelongsToRank {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a employeeBelongsToRank) Session(session *gorm.Session) *employeeBelongsToRank {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a employeeBelongsToRank) Model(m *types.Employee) *employeeBelongsToRankTx {
+	return &employeeBelongsToRankTx{a.db.Model(m).Association(a.Name())}
+}
+
+type employeeBelongsToRankTx struct{ tx *gorm.Association }
+
+func (a employeeBelongsToRankTx) Find() (result *types.PositionRank, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a employeeBelongsToRankTx) Append(values ...*types.PositionRank) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a employeeBelongsToRankTx) Replace(values ...*types.PositionRank) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a employeeBelongsToRankTx) Delete(values ...*types.PositionRank) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a employeeBelongsToRankTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a employeeBelongsToRankTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type employeeBelongsToGrade struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a employeeBelongsToGrade) Where(conds ...field.Expr) *employeeBelongsToGrade {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a employeeBelongsToGrade) WithContext(ctx context.Context) *employeeBelongsToGrade {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a employeeBelongsToGrade) Session(session *gorm.Session) *employeeBelongsToGrade {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a employeeBelongsToGrade) Model(m *types.Employee) *employeeBelongsToGradeTx {
+	return &employeeBelongsToGradeTx{a.db.Model(m).Association(a.Name())}
+}
+
+type employeeBelongsToGradeTx struct{ tx *gorm.Association }
+
+func (a employeeBelongsToGradeTx) Find() (result *types.PositionGrade, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a employeeBelongsToGradeTx) Append(values ...*types.PositionGrade) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a employeeBelongsToGradeTx) Replace(values ...*types.PositionGrade) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a employeeBelongsToGradeTx) Delete(values ...*types.PositionGrade) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a employeeBelongsToGradeTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a employeeBelongsToGradeTx) Count() int64 {
 	return a.tx.Count()
 }
 

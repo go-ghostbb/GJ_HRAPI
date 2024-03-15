@@ -189,9 +189,11 @@ func (w *workShift) UpdateWorkScheduleBatch(in model.PutBatchWorkScheduleReq) er
 			return err
 		}
 
-		// 將所有ID改為0
+		// 將所有ID改為0 && 更改員工ID
 		for _, schedule := range in.Schedules {
 			schedule.ID = 0
+			schedule.EmployeeID = in.EmployeeID
+			schedule.Employee = nil
 		}
 
 		// 插入新的

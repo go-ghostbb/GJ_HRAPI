@@ -51,6 +51,35 @@ func newRole(db *gorm.DB, opts ...gen.DOOption) role {
 				RelationField: field.NewRelation("Employees.Department.Manager", "types.Employee"),
 			},
 		},
+		Rank: struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}{
+			RelationField: field.NewRelation("Employees.Rank", "types.PositionRank"),
+			Grade: struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("Employees.Rank.Grade", "types.PositionGrade"),
+				Rank: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Employees.Rank.Grade.Rank", "types.PositionRank"),
+				},
+			},
+		},
+		Grade: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Employees.Grade", "types.PositionGrade"),
+		},
 		LoginInformation: struct {
 			field.RelationField
 			Employee struct {
@@ -231,6 +260,18 @@ type roleManyToManyEmployees struct {
 		Manager struct {
 			field.RelationField
 		}
+	}
+	Rank struct {
+		field.RelationField
+		Grade struct {
+			field.RelationField
+			Rank struct {
+				field.RelationField
+			}
+		}
+	}
+	Grade struct {
+		field.RelationField
 	}
 	LoginInformation struct {
 		field.RelationField

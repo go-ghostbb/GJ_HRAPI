@@ -30,6 +30,14 @@ type Employee struct {
 	// --------部門--------
 	DepartmentId uint        `gorm:"default:0;not null;comment:部門ID" json:"departmentId"`
 	Department   *Department `gorm:"foreignKey:DepartmentId;comment:使用者部門" json:"department"`
+
+	// --------職級--------
+	RankID uint          `gorm:"default:0;not null;comment:職級ID" json:"rankId"`
+	Rank   *PositionRank `gorm:"foreignKey:RankID;comment:職級" json:"rank"`
+
+	// --------職等--------
+	GradeID uint           `gorm:"default:0;not null;comment:職等ID" json:"gradeId"`
+	Grade   *PositionGrade `gorm:"foreignKey:GradeID;comment:職等" json:"grade"`
 }
 
 func (e *Employee) TableName() string {

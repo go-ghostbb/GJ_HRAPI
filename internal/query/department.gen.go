@@ -53,6 +53,35 @@ func newDepartment(db *gorm.DB, opts ...gen.DOOption) department {
 				RelationField: field.NewRelation("Manager.Department.Manager", "types.Employee"),
 			},
 		},
+		Rank: struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}{
+			RelationField: field.NewRelation("Manager.Rank", "types.PositionRank"),
+			Grade: struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("Manager.Rank.Grade", "types.PositionGrade"),
+				Rank: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Manager.Rank.Grade.Rank", "types.PositionRank"),
+				},
+			},
+		},
+		Grade: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Manager.Grade", "types.PositionGrade"),
+		},
 		LoginInformation: struct {
 			field.RelationField
 			Employee struct {
@@ -225,6 +254,18 @@ type departmentBelongsToManager struct {
 		Manager struct {
 			field.RelationField
 		}
+	}
+	Rank struct {
+		field.RelationField
+		Grade struct {
+			field.RelationField
+			Rank struct {
+				field.RelationField
+			}
+		}
+	}
+	Grade struct {
+		field.RelationField
 	}
 	LoginInformation struct {
 		field.RelationField

@@ -50,6 +50,35 @@ func newWorkSchedule(db *gorm.DB, opts ...gen.DOOption) workSchedule {
 				RelationField: field.NewRelation("Employee.Department.Manager", "types.Employee"),
 			},
 		},
+		Rank: struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}{
+			RelationField: field.NewRelation("Employee.Rank", "types.PositionRank"),
+			Grade: struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("Employee.Rank.Grade", "types.PositionGrade"),
+				Rank: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Employee.Rank.Grade.Rank", "types.PositionRank"),
+				},
+			},
+		},
+		Grade: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Employee.Grade", "types.PositionGrade"),
+		},
 		LoginInformation: struct {
 			field.RelationField
 			Employee struct {
@@ -223,6 +252,18 @@ type workScheduleBelongsToEmployee struct {
 		Manager struct {
 			field.RelationField
 		}
+	}
+	Rank struct {
+		field.RelationField
+		Grade struct {
+			field.RelationField
+			Rank struct {
+				field.RelationField
+			}
+		}
+	}
+	Grade struct {
+		field.RelationField
 	}
 	LoginInformation struct {
 		field.RelationField

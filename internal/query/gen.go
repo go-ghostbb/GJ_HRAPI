@@ -26,6 +26,8 @@ var (
 	LoginInformation          *loginInformation
 	Menu                      *menu
 	Permission                *permission
+	PositionGrade             *positionGrade
+	PositionRank              *positionRank
 	Role                      *role
 	RoleMenu                  *roleMenu
 	RolePermission            *rolePermission
@@ -49,6 +51,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	LoginInformation = &Q.LoginInformation
 	Menu = &Q.Menu
 	Permission = &Q.Permission
+	PositionGrade = &Q.PositionGrade
+	PositionRank = &Q.PositionRank
 	Role = &Q.Role
 	RoleMenu = &Q.RoleMenu
 	RolePermission = &Q.RolePermission
@@ -73,6 +77,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		LoginInformation:          newLoginInformation(db, opts...),
 		Menu:                      newMenu(db, opts...),
 		Permission:                newPermission(db, opts...),
+		PositionGrade:             newPositionGrade(db, opts...),
+		PositionRank:              newPositionRank(db, opts...),
 		Role:                      newRole(db, opts...),
 		RoleMenu:                  newRoleMenu(db, opts...),
 		RolePermission:            newRolePermission(db, opts...),
@@ -98,6 +104,8 @@ type Query struct {
 	LoginInformation          loginInformation
 	Menu                      menu
 	Permission                permission
+	PositionGrade             positionGrade
+	PositionRank              positionRank
 	Role                      role
 	RoleMenu                  roleMenu
 	RolePermission            rolePermission
@@ -124,6 +132,8 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		LoginInformation:          q.LoginInformation.clone(db),
 		Menu:                      q.Menu.clone(db),
 		Permission:                q.Permission.clone(db),
+		PositionGrade:             q.PositionGrade.clone(db),
+		PositionRank:              q.PositionRank.clone(db),
 		Role:                      q.Role.clone(db),
 		RoleMenu:                  q.RoleMenu.clone(db),
 		RolePermission:            q.RolePermission.clone(db),
@@ -157,6 +167,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		LoginInformation:          q.LoginInformation.replaceDB(db),
 		Menu:                      q.Menu.replaceDB(db),
 		Permission:                q.Permission.replaceDB(db),
+		PositionGrade:             q.PositionGrade.replaceDB(db),
+		PositionRank:              q.PositionRank.replaceDB(db),
 		Role:                      q.Role.replaceDB(db),
 		RoleMenu:                  q.RoleMenu.replaceDB(db),
 		RolePermission:            q.RolePermission.replaceDB(db),
@@ -180,6 +192,8 @@ type queryCtx struct {
 	LoginInformation          ILoginInformationDo
 	Menu                      IMenuDo
 	Permission                IPermissionDo
+	PositionGrade             IPositionGradeDo
+	PositionRank              IPositionRankDo
 	Role                      IRoleDo
 	RoleMenu                  IRoleMenuDo
 	RolePermission            IRolePermissionDo
@@ -203,6 +217,8 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		LoginInformation:          q.LoginInformation.WithContext(ctx),
 		Menu:                      q.Menu.WithContext(ctx),
 		Permission:                q.Permission.WithContext(ctx),
+		PositionGrade:             q.PositionGrade.WithContext(ctx),
+		PositionRank:              q.PositionRank.WithContext(ctx),
 		Role:                      q.Role.WithContext(ctx),
 		RoleMenu:                  q.RoleMenu.WithContext(ctx),
 		RolePermission:            q.RolePermission.WithContext(ctx),

@@ -73,6 +73,18 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 									field.RelationField
 								}
 							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
 							LoginInformation struct {
 								field.RelationField
 								Employee struct {
@@ -140,6 +152,18 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 									field.RelationField
 								}
 							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
 							LoginInformation struct {
 								field.RelationField
 								Employee struct {
@@ -201,6 +225,18 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 									field.RelationField
 								}
 							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
 							LoginInformation struct {
 								field.RelationField
 								Employee struct {
@@ -250,6 +286,18 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 								Manager struct {
 									field.RelationField
 								}
+							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
 							}
 							LoginInformation struct {
 								field.RelationField
@@ -312,6 +360,18 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 									field.RelationField
 								}
 							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
 							LoginInformation struct {
 								field.RelationField
 								Employee struct {
@@ -350,6 +410,35 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 								}{
 									RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Department.Manager", "types.Employee"),
 								},
+							},
+							Rank: struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}{
+								RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Rank", "types.PositionRank"),
+								Grade: struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}{
+									RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Rank.Grade", "types.PositionGrade"),
+									Rank: struct {
+										field.RelationField
+									}{
+										RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Rank.Grade.Rank", "types.PositionRank"),
+									},
+								},
+							},
+							Grade: struct {
+								field.RelationField
+							}{
+								RelationField: field.NewRelation("Schedule.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Grade", "types.PositionGrade"),
 							},
 							LoginInformation: struct {
 								field.RelationField
@@ -564,6 +653,18 @@ type vacationHasManySchedule struct {
 							Manager struct {
 								field.RelationField
 							}
+						}
+						Rank struct {
+							field.RelationField
+							Grade struct {
+								field.RelationField
+								Rank struct {
+									field.RelationField
+								}
+							}
+						}
+						Grade struct {
+							field.RelationField
 						}
 						LoginInformation struct {
 							field.RelationField

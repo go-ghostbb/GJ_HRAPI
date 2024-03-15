@@ -37,8 +37,8 @@ func newWorkShift(db *gorm.DB, opts ...gen.DOOption) workShift {
 	_workShift.WorkStart = field.NewTime(tableName, "work_start")
 	_workShift.WorkEnd = field.NewTime(tableName, "work_end")
 	_workShift.RestStart = field.NewTime(tableName, "rest_start")
-	_workShift.EndStart = field.NewTime(tableName, "end_start")
-	_workShift.TotalHours = field.NewUint(tableName, "total_hours")
+	_workShift.RestEnd = field.NewTime(tableName, "rest_end")
+	_workShift.TotalHours = field.NewFloat64(tableName, "total_hours")
 	_workShift.Color = field.NewString(tableName, "color")
 
 	_workShift.fillFieldMap()
@@ -61,8 +61,8 @@ type workShift struct {
 	WorkStart  field.Time
 	WorkEnd    field.Time
 	RestStart  field.Time
-	EndStart   field.Time
-	TotalHours field.Uint
+	RestEnd    field.Time
+	TotalHours field.Float64
 	Color      field.String
 
 	fieldMap map[string]field.Expr
@@ -91,8 +91,8 @@ func (w *workShift) updateTableName(table string) *workShift {
 	w.WorkStart = field.NewTime(table, "work_start")
 	w.WorkEnd = field.NewTime(table, "work_end")
 	w.RestStart = field.NewTime(table, "rest_start")
-	w.EndStart = field.NewTime(table, "end_start")
-	w.TotalHours = field.NewUint(table, "total_hours")
+	w.RestEnd = field.NewTime(table, "rest_end")
+	w.TotalHours = field.NewFloat64(table, "total_hours")
 	w.Color = field.NewString(table, "color")
 
 	w.fillFieldMap()
@@ -132,7 +132,7 @@ func (w *workShift) fillFieldMap() {
 	w.fieldMap["work_start"] = w.WorkStart
 	w.fieldMap["work_end"] = w.WorkEnd
 	w.fieldMap["rest_start"] = w.RestStart
-	w.fieldMap["end_start"] = w.EndStart
+	w.fieldMap["rest_end"] = w.RestEnd
 	w.fieldMap["total_hours"] = w.TotalHours
 	w.fieldMap["color"] = w.Color
 }

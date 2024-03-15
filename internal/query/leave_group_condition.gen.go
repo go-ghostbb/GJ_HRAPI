@@ -73,6 +73,18 @@ func newLeaveGroupCondition(db *gorm.DB, opts ...gen.DOOption) leaveGroupConditi
 					field.RelationField
 				}
 			}
+			Rank struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}
+			Grade struct {
+				field.RelationField
+			}
 			LoginInformation struct {
 				field.RelationField
 				Employee struct {
@@ -111,6 +123,35 @@ func newLeaveGroupCondition(db *gorm.DB, opts ...gen.DOOption) leaveGroupConditi
 				}{
 					RelationField: field.NewRelation("LeaveGroup.Employee.Department.Manager", "types.Employee"),
 				},
+			},
+			Rank: struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}{
+				RelationField: field.NewRelation("LeaveGroup.Employee.Rank", "types.PositionRank"),
+				Grade: struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}{
+					RelationField: field.NewRelation("LeaveGroup.Employee.Rank.Grade", "types.PositionGrade"),
+					Rank: struct {
+						field.RelationField
+					}{
+						RelationField: field.NewRelation("LeaveGroup.Employee.Rank.Grade.Rank", "types.PositionRank"),
+					},
+				},
+			},
+			Grade: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("LeaveGroup.Employee.Grade", "types.PositionGrade"),
 			},
 			LoginInformation: struct {
 				field.RelationField
@@ -298,6 +339,18 @@ type leaveGroupConditionBelongsToLeaveGroup struct {
 			Manager struct {
 				field.RelationField
 			}
+		}
+		Rank struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}
+		Grade struct {
+			field.RelationField
 		}
 		LoginInformation struct {
 			field.RelationField

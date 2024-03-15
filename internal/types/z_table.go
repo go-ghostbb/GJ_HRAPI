@@ -17,6 +17,8 @@ func Basic() []interface{} {
 		&VacationSchedule{},          // vacation_schedule
 		&WorkShift{},                 // work_shift
 		&WorkSchedule{},              // work_schedule
+		&PositionRank{},              // position_rank
+		&PositionGrade{},             // position_grade
 	}
 }
 

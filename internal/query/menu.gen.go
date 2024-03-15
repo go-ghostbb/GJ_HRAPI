@@ -68,6 +68,18 @@ func newMenu(db *gorm.DB, opts ...gen.DOOption) menu {
 					field.RelationField
 				}
 			}
+			Rank struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}
+			Grade struct {
+				field.RelationField
+			}
 			LoginInformation struct {
 				field.RelationField
 				Employee struct {
@@ -91,6 +103,35 @@ func newMenu(db *gorm.DB, opts ...gen.DOOption) menu {
 				}{
 					RelationField: field.NewRelation("Roles.Employees.Department.Manager", "types.Employee"),
 				},
+			},
+			Rank: struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}{
+				RelationField: field.NewRelation("Roles.Employees.Rank", "types.PositionRank"),
+				Grade: struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}{
+					RelationField: field.NewRelation("Roles.Employees.Rank.Grade", "types.PositionGrade"),
+					Rank: struct {
+						field.RelationField
+					}{
+						RelationField: field.NewRelation("Roles.Employees.Rank.Grade.Rank", "types.PositionRank"),
+					},
+				},
+			},
+			Grade: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("Roles.Employees.Grade", "types.PositionGrade"),
 			},
 			LoginInformation: struct {
 				field.RelationField
@@ -302,6 +343,18 @@ type menuManyToManyRoles struct {
 			Manager struct {
 				field.RelationField
 			}
+		}
+		Rank struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}
+		Grade struct {
+			field.RelationField
 		}
 		LoginInformation struct {
 			field.RelationField
