@@ -18,3 +18,20 @@ type PutBatchLeaveSignOffSettingReq struct {
 }
 
 type PutBatchLeaveSignOffSettingRes struct{}
+
+type GetOvertimeSignOffSettingReq struct {
+	DepartmentID uint `form:"departmentId" binding:"required"`
+	VacationID   uint `form:"vacationId"`
+}
+
+type GetOvertimeSignOffSettingRes struct {
+	*types.OvertimeSignOffSetting
+}
+
+type PutBatchOvertimeSignOffSettingReq struct {
+	DepartmentID   uint
+	VacationID     uint
+	SignOffSetting []*types.OvertimeSignOffSetting `json:"signOffSetting"`
+}
+
+type PutBatchOvertimeSignOffSettingRes struct{}

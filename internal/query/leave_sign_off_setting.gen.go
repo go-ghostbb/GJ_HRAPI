@@ -35,6 +35,7 @@ func newLeaveSignOffSetting(db *gorm.DB, opts ...gen.DOOption) leaveSignOffSetti
 	_leaveSignOffSetting.Level = field.NewUint(tableName, "level")
 	_leaveSignOffSetting.GteDay = field.NewUint(tableName, "gte_day")
 	_leaveSignOffSetting.SignType = field.NewField(tableName, "sign_type")
+	_leaveSignOffSetting.SpecificEmployeeID = field.NewUint(tableName, "specific_employee_id")
 	_leaveSignOffSetting.Notify = field.NewField(tableName, "notify")
 	_leaveSignOffSetting.Remark = field.NewString(tableName, "remark")
 	_leaveSignOffSetting.Department = leaveSignOffSettingBelongsToDepartment{
@@ -231,6 +232,12 @@ func newLeaveSignOffSetting(db *gorm.DB, opts ...gen.DOOption) leaveSignOffSetti
 		},
 	}
 
+	_leaveSignOffSetting.SpecificEmployee = leaveSignOffSettingBelongsToSpecificEmployee{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("SpecificEmployee", "types.Employee"),
+	}
+
 	_leaveSignOffSetting.fillFieldMap()
 
 	return _leaveSignOffSetting
@@ -239,21 +246,24 @@ func newLeaveSignOffSetting(db *gorm.DB, opts ...gen.DOOption) leaveSignOffSetti
 type leaveSignOffSetting struct {
 	leaveSignOffSettingDo leaveSignOffSettingDo
 
-	ALL          field.Asterisk
-	ID           field.Uint
-	CreatedAt    field.Time
-	UpdatedAt    field.Time
-	DeletedAt    field.Field
-	DepartmentID field.Uint
-	LeaveID      field.Uint
-	Level        field.Uint
-	GteDay       field.Uint
-	SignType     field.Field
-	Notify       field.Field
-	Remark       field.String
-	Department   leaveSignOffSettingBelongsToDepartment
+	ALL                field.Asterisk
+	ID                 field.Uint
+	CreatedAt          field.Time
+	UpdatedAt          field.Time
+	DeletedAt          field.Field
+	DepartmentID       field.Uint
+	LeaveID            field.Uint
+	Level              field.Uint
+	GteDay             field.Uint
+	SignType           field.Field
+	SpecificEmployeeID field.Uint
+	Notify             field.Field
+	Remark             field.String
+	Department         leaveSignOffSettingBelongsToDepartment
 
 	Leave leaveSignOffSettingBelongsToLeave
+
+	SpecificEmployee leaveSignOffSettingBelongsToSpecificEmployee
 
 	fieldMap map[string]field.Expr
 }
@@ -279,6 +289,7 @@ func (l *leaveSignOffSetting) updateTableName(table string) *leaveSignOffSetting
 	l.Level = field.NewUint(table, "level")
 	l.GteDay = field.NewUint(table, "gte_day")
 	l.SignType = field.NewField(table, "sign_type")
+	l.SpecificEmployeeID = field.NewUint(table, "specific_employee_id")
 	l.Notify = field.NewField(table, "notify")
 	l.Remark = field.NewString(table, "remark")
 
@@ -309,7 +320,7 @@ func (l *leaveSignOffSetting) GetFieldByName(fieldName string) (field.OrderExpr,
 }
 
 func (l *leaveSignOffSetting) fillFieldMap() {
-	l.fieldMap = make(map[string]field.Expr, 13)
+	l.fieldMap = make(map[string]field.Expr, 15)
 	l.fieldMap["id"] = l.ID
 	l.fieldMap["created_at"] = l.CreatedAt
 	l.fieldMap["updated_at"] = l.UpdatedAt
@@ -319,6 +330,7 @@ func (l *leaveSignOffSetting) fillFieldMap() {
 	l.fieldMap["level"] = l.Level
 	l.fieldMap["gte_day"] = l.GteDay
 	l.fieldMap["sign_type"] = l.SignType
+	l.fieldMap["specific_employee_id"] = l.SpecificEmployeeID
 	l.fieldMap["notify"] = l.Notify
 	l.fieldMap["remark"] = l.Remark
 
@@ -532,6 +544,77 @@ func (a leaveSignOffSettingBelongsToLeaveTx) Clear() error {
 }
 
 func (a leaveSignOffSettingBelongsToLeaveTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type leaveSignOffSettingBelongsToSpecificEmployee struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployee) Where(conds ...field.Expr) *leaveSignOffSettingBelongsToSpecificEmployee {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployee) WithContext(ctx context.Context) *leaveSignOffSettingBelongsToSpecificEmployee {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployee) Session(session *gorm.Session) *leaveSignOffSettingBelongsToSpecificEmployee {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployee) Model(m *types.LeaveSignOffSetting) *leaveSignOffSettingBelongsToSpecificEmployeeTx {
+	return &leaveSignOffSettingBelongsToSpecificEmployeeTx{a.db.Model(m).Association(a.Name())}
+}
+
+type leaveSignOffSettingBelongsToSpecificEmployeeTx struct{ tx *gorm.Association }
+
+func (a leaveSignOffSettingBelongsToSpecificEmployeeTx) Find() (result *types.Employee, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployeeTx) Append(values ...*types.Employee) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployeeTx) Replace(values ...*types.Employee) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployeeTx) Delete(values ...*types.Employee) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployeeTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a leaveSignOffSettingBelongsToSpecificEmployeeTx) Count() int64 {
 	return a.tx.Count()
 }
 

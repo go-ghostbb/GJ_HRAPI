@@ -5,18 +5,18 @@ import (
 	"hrapi/internal/types/enum"
 )
 
-type LeaveSignOffSetting struct {
+type OvertimeSignOffSetting struct {
 	gorm.Model
 	// 部門
 	DepartmentID uint        `gorm:"not null;comment:部門ID" json:"departmentId"`
 	Department   *Department `gorm:"foreignKey:DepartmentID;comment:部門" json:"department"`
 
-	// 假別
-	LeaveID uint   `gorm:"not null;comment:假別ID" json:"leaveId"`
-	Leave   *Leave `gorm:"foreignKey:LeaveID;comment:假別" json:"leave"`
+	// 休假日
+	VacationID uint      `gorm:"not null;comment:休假日ID, 0為工作日" json:"vacationId"`
+	Vacation   *Vacation `gorm:"foreignKey:VacationID;comment:休假日" json:"vacation"`
 
 	Level              uint            `gorm:"type:tinyint;not null;comment:關卡" json:"level"`
-	GteDay             float32         `gorm:"column:gte_day;not null;comment:大於或等於天數" json:"gteDay"`
+	GteHour            float32         `gorm:"column:gte_hour;not null;comment:大於或等於時數" json:"gteHour"`
 	SignType           enum.SignType   `gorm:"size:100;comment:特定員工, 部門主管" json:"signType"`
 	SpecificEmployeeID uint            `gorm:"comment:特定人員ID" json:"specificEmployeeId"`
 	SpecificEmployee   *Employee       `gorm:"foreignKey:SpecificEmployeeID;comment:假別" json:"specificEmployee"`
@@ -24,6 +24,6 @@ type LeaveSignOffSetting struct {
 	Remark             string          `gorm:"comment:備註" json:"remark"`
 }
 
-func (l *LeaveSignOffSetting) TableName() string {
-	return "leave_sign_off_setting"
+func (o *OvertimeSignOffSetting) TableName() string {
+	return "overtime_sign_off_setting"
 }

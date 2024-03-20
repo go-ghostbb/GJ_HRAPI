@@ -21,6 +21,7 @@ func Basic() []interface{} {
 		&PositionGrade{},             // position_grade
 		&CheckInData{},               // check_in_data
 		&LeaveSignOffSetting{},       // leave_sign_off_setting
+		&OvertimeSignOffSetting{},    // overtime_sign_off_setting
 	}
 }
 

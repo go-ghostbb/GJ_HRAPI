@@ -135,6 +135,7 @@ func (v *vacation) Delete(in model.DeleteVacationReq) error {
 			qGroup             = tx.VacationGroup
 			qGroupOvertimeRate = tx.VacationGroupOvertimeRate
 			qGroupEmployee     = tx.VacationGroupEmployee
+			qSignOff           = tx.OvertimeSignOffSetting
 			groupIDs           = make([]uint, 0)
 			err                error
 		)
@@ -171,6 +172,12 @@ func (v *vacation) Delete(in model.DeleteVacationReq) error {
 
 		// 刪除群組員工
 		_, err = qGroupEmployee.WithContext(dbcache.WithCtx(v.ctx)).Where(qGroupEmployee.VacationGroupID.In(groupIDs...)).Unscoped().Delete()
+		if err != nil {
+			return err
+		}
+
+		// 刪除對應簽核設定
+		_, err = qSignOff.WithContext(dbcache.WithCtx(v.ctx)).Where(qSignOff.VacationID.Eq(in.ID)).Unscoped().Delete()
 		if err != nil {
 			return err
 		}

@@ -27,6 +27,7 @@ var (
 	LeaveSignOffSetting       *leaveSignOffSetting
 	LoginInformation          *loginInformation
 	Menu                      *menu
+	OvertimeSignOffSetting    *overtimeSignOffSetting
 	Permission                *permission
 	PositionGrade             *positionGrade
 	PositionRank              *positionRank
@@ -54,6 +55,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	LeaveSignOffSetting = &Q.LeaveSignOffSetting
 	LoginInformation = &Q.LoginInformation
 	Menu = &Q.Menu
+	OvertimeSignOffSetting = &Q.OvertimeSignOffSetting
 	Permission = &Q.Permission
 	PositionGrade = &Q.PositionGrade
 	PositionRank = &Q.PositionRank
@@ -82,6 +84,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		LeaveSignOffSetting:       newLeaveSignOffSetting(db, opts...),
 		LoginInformation:          newLoginInformation(db, opts...),
 		Menu:                      newMenu(db, opts...),
+		OvertimeSignOffSetting:    newOvertimeSignOffSetting(db, opts...),
 		Permission:                newPermission(db, opts...),
 		PositionGrade:             newPositionGrade(db, opts...),
 		PositionRank:              newPositionRank(db, opts...),
@@ -111,6 +114,7 @@ type Query struct {
 	LeaveSignOffSetting       leaveSignOffSetting
 	LoginInformation          loginInformation
 	Menu                      menu
+	OvertimeSignOffSetting    overtimeSignOffSetting
 	Permission                permission
 	PositionGrade             positionGrade
 	PositionRank              positionRank
@@ -141,6 +145,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		LeaveSignOffSetting:       q.LeaveSignOffSetting.clone(db),
 		LoginInformation:          q.LoginInformation.clone(db),
 		Menu:                      q.Menu.clone(db),
+		OvertimeSignOffSetting:    q.OvertimeSignOffSetting.clone(db),
 		Permission:                q.Permission.clone(db),
 		PositionGrade:             q.PositionGrade.clone(db),
 		PositionRank:              q.PositionRank.clone(db),
@@ -178,6 +183,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		LeaveSignOffSetting:       q.LeaveSignOffSetting.replaceDB(db),
 		LoginInformation:          q.LoginInformation.replaceDB(db),
 		Menu:                      q.Menu.replaceDB(db),
+		OvertimeSignOffSetting:    q.OvertimeSignOffSetting.replaceDB(db),
 		Permission:                q.Permission.replaceDB(db),
 		PositionGrade:             q.PositionGrade.replaceDB(db),
 		PositionRank:              q.PositionRank.replaceDB(db),
@@ -205,6 +211,7 @@ type queryCtx struct {
 	LeaveSignOffSetting       ILeaveSignOffSettingDo
 	LoginInformation          ILoginInformationDo
 	Menu                      IMenuDo
+	OvertimeSignOffSetting    IOvertimeSignOffSettingDo
 	Permission                IPermissionDo
 	PositionGrade             IPositionGradeDo
 	PositionRank              IPositionRankDo
@@ -232,6 +239,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		LeaveSignOffSetting:       q.LeaveSignOffSetting.WithContext(ctx),
 		LoginInformation:          q.LoginInformation.WithContext(ctx),
 		Menu:                      q.Menu.WithContext(ctx),
+		OvertimeSignOffSetting:    q.OvertimeSignOffSetting.WithContext(ctx),
 		Permission:                q.Permission.WithContext(ctx),
 		PositionGrade:             q.PositionGrade.WithContext(ctx),
 		PositionRank:              q.PositionRank.WithContext(ctx),

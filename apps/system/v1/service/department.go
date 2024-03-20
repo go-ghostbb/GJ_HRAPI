@@ -86,10 +86,11 @@ func (d *department) Update(in model.PutDepartmentReq) (err error) {
 func (d *department) Delete(in model.DeleteDepartmentReq) (err error) {
 	return query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			qDept         = tx.Department
-			qEmployee     = tx.Employee
-			qLeaveSignOff = tx.LeaveSignOffSetting
-			subQueryPID   = qDept.WithContext(dbcache.WithCtx(d.ctx)).Select(qDept.ParentID).Where(qDept.ID.Eq(in.ID))
+			qDept             = tx.Department
+			qEmployee         = tx.Employee
+			qLeaveSignOff     = tx.LeaveSignOffSetting
+			qOvertimeSignnOff = tx.OvertimeSignOffSetting
+			subQueryPID       = qDept.WithContext(dbcache.WithCtx(d.ctx)).Select(qDept.ParentID).Where(qDept.ID.Eq(in.ID))
 		)
 
 		// 將該部門底下的子部門parent id改為該部門的parent id
@@ -112,6 +113,12 @@ func (d *department) Delete(in model.DeleteDepartmentReq) (err error) {
 
 		// 刪除對應請假簽核設定
 		_, err = qLeaveSignOff.WithContext(dbcache.WithCtx(d.ctx)).Where(qLeaveSignOff.DepartmentID.Eq(in.ID)).Unscoped().Delete()
+		if err != nil {
+			return err
+		}
+
+		// 刪除對應加班請假簽核設定
+		_, err = qOvertimeSignnOff.WithContext(dbcache.WithCtx(d.ctx)).Where(qOvertimeSignnOff.DepartmentID.Eq(in.ID)).Unscoped().Delete()
 		if err != nil {
 			return err
 		}

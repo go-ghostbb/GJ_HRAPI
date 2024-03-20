@@ -21,6 +21,10 @@ func (s *SignOffSettingApi) Init(group *gin.RouterGroup) {
 	// 請假
 	v1.GET("leave", s.getLeaveSignOffSetting)
 	v1.PUT("leave/:departmentID/:leaveID/batch", s.updateLeaveBatch)
+
+	// 加班
+	v1.GET("overtime", s.getOvertimeSignOffSetting)
+	v1.PUT("overtime/:departmentID/:vacationID/batch", s.updateOvertimeBatch)
 }
 
 // 查詢請假謙核流程
@@ -66,6 +70,57 @@ func (s *SignOffSettingApi) updateLeaveBatch(c *gin.Context) {
 	}
 
 	err = service.SignOffSetting(ctx).UpdateLeaveSignOffSettingBatch(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 查詢請假謙核流程
+//
+//	route => GET /api/v1/signOff/overtime
+func (s *SignOffSettingApi) getOvertimeSignOffSetting(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.GetOvertimeSignOffSettingReq
+		out []*model.GetOvertimeSignOffSettingRes
+		err error
+	)
+
+	if err = gbhttp.ParseQuery(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	out, err = service.SignOffSetting(ctx).GetOvertimeSignOffSetting(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).OkWithData(out)
+}
+
+// 批量更新leave sign off setting
+//
+//	route => PUT /api/v1/signOff/overtime/:departmentID/:vacationID/batch
+func (s *SignOffSettingApi) updateOvertimeBatch(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.PutBatchOvertimeSignOffSettingReq
+		err error
+	)
+
+	in.VacationID = gbconv.Uint(c.Param("vacationID"))
+	in.DepartmentID = gbconv.Uint(c.Param("departmentID"))
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.SignOffSetting(ctx).UpdateOvertimeSignOffSettingBatch(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
