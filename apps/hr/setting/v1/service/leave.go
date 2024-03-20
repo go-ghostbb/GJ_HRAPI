@@ -126,6 +126,7 @@ func (l *leave) Delete(in model.DeleteLeaveReq) error {
 			qLeaveGroup     = tx.LeaveGroup
 			qLeaveGroupCond = tx.LeaveGroupCondition
 			qM2M            = tx.LeaveGroupEmployee
+			qSignOffSetting = tx.LeaveSignOffSetting
 			err             error
 		)
 		// 刪除假別
@@ -155,6 +156,12 @@ func (l *leave) Delete(in model.DeleteLeaveReq) error {
 
 		// 刪除多對多表
 		_, err = qM2M.WithContext(dbcache.WithCtx(l.ctx)).Where(qM2M.LeaveGroupID.In(groupIDs...)).Delete()
+		if err != nil {
+			return err
+		}
+
+		// 刪除簽核設定表
+		_, err = qSignOffSetting.WithContext(dbcache.WithCtx(l.ctx)).Where(qSignOffSetting.LeaveID.Eq(in.ID)).Unscoped().Delete()
 		if err != nil {
 			return err
 		}

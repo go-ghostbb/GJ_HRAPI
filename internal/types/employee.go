@@ -8,6 +8,7 @@ import (
 
 type Employee struct {
 	gorm.Model
+	Code             string                `gorm:"size:50;comment:員工編號" json:"code"`
 	HireDate         time.Time             `gorm:"type:date;comment:到職日期" json:"hireDate"`
 	TerminationDate  time.Time             `gorm:"type:date;comment:離職日期" json:"terminationDate"`
 	EmploymentStatus enum.EmploymentStatus `gorm:"size:20;default:active;comment:在職狀態，記錄員工的在職狀態，例如在職、停薪留職、已離職等" json:"employmentStatus"`

@@ -26,5 +26,6 @@ func v1List() []gbhttp.IBind {
 		&v1.WorkShiftApi{},
 		&v1.RankApi{},
 		&v1.GradeApi{},
+		&v1.SignOffSettingApi{},
 	}
 }

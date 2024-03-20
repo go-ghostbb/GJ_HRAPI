@@ -30,6 +30,7 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 	_employee.CreatedAt = field.NewTime(tableName, "created_at")
 	_employee.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_employee.DeletedAt = field.NewField(tableName, "deleted_at")
+	_employee.Code = field.NewString(tableName, "code")
 	_employee.HireDate = field.NewTime(tableName, "hire_date")
 	_employee.TerminationDate = field.NewTime(tableName, "termination_date")
 	_employee.EmploymentStatus = field.NewField(tableName, "employment_status")
@@ -228,6 +229,7 @@ type employee struct {
 	CreatedAt        field.Time
 	UpdatedAt        field.Time
 	DeletedAt        field.Field
+	Code             field.String
 	HireDate         field.Time
 	TerminationDate  field.Time
 	EmploymentStatus field.Field
@@ -270,6 +272,7 @@ func (e *employee) updateTableName(table string) *employee {
 	e.CreatedAt = field.NewTime(table, "created_at")
 	e.UpdatedAt = field.NewTime(table, "updated_at")
 	e.DeletedAt = field.NewField(table, "deleted_at")
+	e.Code = field.NewString(table, "code")
 	e.HireDate = field.NewTime(table, "hire_date")
 	e.TerminationDate = field.NewTime(table, "termination_date")
 	e.EmploymentStatus = field.NewField(table, "employment_status")
@@ -307,11 +310,12 @@ func (e *employee) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (e *employee) fillFieldMap() {
-	e.fieldMap = make(map[string]field.Expr, 22)
+	e.fieldMap = make(map[string]field.Expr, 23)
 	e.fieldMap["id"] = e.ID
 	e.fieldMap["created_at"] = e.CreatedAt
 	e.fieldMap["updated_at"] = e.UpdatedAt
 	e.fieldMap["deleted_at"] = e.DeletedAt
+	e.fieldMap["code"] = e.Code
 	e.fieldMap["hire_date"] = e.HireDate
 	e.fieldMap["termination_date"] = e.TerminationDate
 	e.fieldMap["employment_status"] = e.EmploymentStatus

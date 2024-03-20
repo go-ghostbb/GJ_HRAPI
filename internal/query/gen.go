@@ -17,12 +17,14 @@ import (
 
 var (
 	Q                         = new(Query)
+	CheckInData               *checkInData
 	Department                *department
 	Employee                  *employee
 	Leave                     *leave
 	LeaveGroup                *leaveGroup
 	LeaveGroupCondition       *leaveGroupCondition
 	LeaveGroupEmployee        *leaveGroupEmployee
+	LeaveSignOffSetting       *leaveSignOffSetting
 	LoginInformation          *loginInformation
 	Menu                      *menu
 	Permission                *permission
@@ -42,12 +44,14 @@ var (
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
+	CheckInData = &Q.CheckInData
 	Department = &Q.Department
 	Employee = &Q.Employee
 	Leave = &Q.Leave
 	LeaveGroup = &Q.LeaveGroup
 	LeaveGroupCondition = &Q.LeaveGroupCondition
 	LeaveGroupEmployee = &Q.LeaveGroupEmployee
+	LeaveSignOffSetting = &Q.LeaveSignOffSetting
 	LoginInformation = &Q.LoginInformation
 	Menu = &Q.Menu
 	Permission = &Q.Permission
@@ -68,12 +72,14 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:                        db,
+		CheckInData:               newCheckInData(db, opts...),
 		Department:                newDepartment(db, opts...),
 		Employee:                  newEmployee(db, opts...),
 		Leave:                     newLeave(db, opts...),
 		LeaveGroup:                newLeaveGroup(db, opts...),
 		LeaveGroupCondition:       newLeaveGroupCondition(db, opts...),
 		LeaveGroupEmployee:        newLeaveGroupEmployee(db, opts...),
+		LeaveSignOffSetting:       newLeaveSignOffSetting(db, opts...),
 		LoginInformation:          newLoginInformation(db, opts...),
 		Menu:                      newMenu(db, opts...),
 		Permission:                newPermission(db, opts...),
@@ -95,12 +101,14 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 type Query struct {
 	db *gorm.DB
 
+	CheckInData               checkInData
 	Department                department
 	Employee                  employee
 	Leave                     leave
 	LeaveGroup                leaveGroup
 	LeaveGroupCondition       leaveGroupCondition
 	LeaveGroupEmployee        leaveGroupEmployee
+	LeaveSignOffSetting       leaveSignOffSetting
 	LoginInformation          loginInformation
 	Menu                      menu
 	Permission                permission
@@ -123,12 +131,14 @@ func (q *Query) Available() bool { return q.db != nil }
 func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:                        db,
+		CheckInData:               q.CheckInData.clone(db),
 		Department:                q.Department.clone(db),
 		Employee:                  q.Employee.clone(db),
 		Leave:                     q.Leave.clone(db),
 		LeaveGroup:                q.LeaveGroup.clone(db),
 		LeaveGroupCondition:       q.LeaveGroupCondition.clone(db),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.clone(db),
+		LeaveSignOffSetting:       q.LeaveSignOffSetting.clone(db),
 		LoginInformation:          q.LoginInformation.clone(db),
 		Menu:                      q.Menu.clone(db),
 		Permission:                q.Permission.clone(db),
@@ -158,12 +168,14 @@ func (q *Query) WriteDB() *Query {
 func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:                        db,
+		CheckInData:               q.CheckInData.replaceDB(db),
 		Department:                q.Department.replaceDB(db),
 		Employee:                  q.Employee.replaceDB(db),
 		Leave:                     q.Leave.replaceDB(db),
 		LeaveGroup:                q.LeaveGroup.replaceDB(db),
 		LeaveGroupCondition:       q.LeaveGroupCondition.replaceDB(db),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.replaceDB(db),
+		LeaveSignOffSetting:       q.LeaveSignOffSetting.replaceDB(db),
 		LoginInformation:          q.LoginInformation.replaceDB(db),
 		Menu:                      q.Menu.replaceDB(db),
 		Permission:                q.Permission.replaceDB(db),
@@ -183,12 +195,14 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 }
 
 type queryCtx struct {
+	CheckInData               ICheckInDataDo
 	Department                IDepartmentDo
 	Employee                  IEmployeeDo
 	Leave                     ILeaveDo
 	LeaveGroup                ILeaveGroupDo
 	LeaveGroupCondition       ILeaveGroupConditionDo
 	LeaveGroupEmployee        ILeaveGroupEmployeeDo
+	LeaveSignOffSetting       ILeaveSignOffSettingDo
 	LoginInformation          ILoginInformationDo
 	Menu                      IMenuDo
 	Permission                IPermissionDo
@@ -208,12 +222,14 @@ type queryCtx struct {
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
+		CheckInData:               q.CheckInData.WithContext(ctx),
 		Department:                q.Department.WithContext(ctx),
 		Employee:                  q.Employee.WithContext(ctx),
 		Leave:                     q.Leave.WithContext(ctx),
 		LeaveGroup:                q.LeaveGroup.WithContext(ctx),
 		LeaveGroupCondition:       q.LeaveGroupCondition.WithContext(ctx),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.WithContext(ctx),
+		LeaveSignOffSetting:       q.LeaveSignOffSetting.WithContext(ctx),
 		LoginInformation:          q.LoginInformation.WithContext(ctx),
 		Menu:                      q.Menu.WithContext(ctx),
 		Permission:                q.Permission.WithContext(ctx),
