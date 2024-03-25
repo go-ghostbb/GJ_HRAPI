@@ -2,6 +2,8 @@ package types
 
 func Basic() []interface{} {
 	return []interface{}{
+		&ConfigMap{},                 // config
+		&CheckInStatus{},             // check_in_status
 		&Employee{},                  // employee
 		&LoginInformation{},          // login_information
 		&Role{},                      // role
@@ -19,9 +21,13 @@ func Basic() []interface{} {
 		&WorkSchedule{},              // work_schedule
 		&PositionRank{},              // position_rank
 		&PositionGrade{},             // position_grade
-		&CheckInData{},               // check_in_data
 		&LeaveSignOffSetting{},       // leave_sign_off_setting
 		&OvertimeSignOffSetting{},    // overtime_sign_off_setting
+		&SalaryAddItem{},             // salary_add_item
+		&SalaryReduceItem{},          // salary_reduce_item
+		&CalcSalary{},                // calc_salary
+		&CalcSalaryAdd{},             // calc_salary_add
+		&CalcSalaryReduce{},          // calc_salary_reduce
 	}
 }
 

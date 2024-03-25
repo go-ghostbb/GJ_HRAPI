@@ -33,7 +33,7 @@ func newOvertimeSignOffSetting(db *gorm.DB, opts ...gen.DOOption) overtimeSignOf
 	_overtimeSignOffSetting.DepartmentID = field.NewUint(tableName, "department_id")
 	_overtimeSignOffSetting.VacationID = field.NewUint(tableName, "vacation_id")
 	_overtimeSignOffSetting.Level = field.NewUint(tableName, "level")
-	_overtimeSignOffSetting.GteHour = field.NewUint(tableName, "gte_hour")
+	_overtimeSignOffSetting.GteHour = field.NewFloat32(tableName, "gte_hour")
 	_overtimeSignOffSetting.SignType = field.NewField(tableName, "sign_type")
 	_overtimeSignOffSetting.SpecificEmployeeID = field.NewUint(tableName, "specific_employee_id")
 	_overtimeSignOffSetting.Notify = field.NewField(tableName, "notify")
@@ -343,7 +343,7 @@ type overtimeSignOffSetting struct {
 	DepartmentID       field.Uint
 	VacationID         field.Uint
 	Level              field.Uint
-	GteHour            field.Uint
+	GteHour            field.Float32
 	SignType           field.Field
 	SpecificEmployeeID field.Uint
 	Notify             field.Field
@@ -376,7 +376,7 @@ func (o *overtimeSignOffSetting) updateTableName(table string) *overtimeSignOffS
 	o.DepartmentID = field.NewUint(table, "department_id")
 	o.VacationID = field.NewUint(table, "vacation_id")
 	o.Level = field.NewUint(table, "level")
-	o.GteHour = field.NewUint(table, "gte_hour")
+	o.GteHour = field.NewFloat32(table, "gte_hour")
 	o.SignType = field.NewField(table, "sign_type")
 	o.SpecificEmployeeID = field.NewUint(table, "specific_employee_id")
 	o.Notify = field.NewField(table, "notify")

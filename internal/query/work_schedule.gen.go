@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"hrapi/internal/types"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -488,6 +489,40 @@ type IWorkScheduleDo interface {
 	Returning(value interface{}, columns ...string) IWorkScheduleDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
+
+	QueryByDate(dateOnly string) (result []*types.WorkSchedule, err error)
+	QueryByDateRange(dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error)
+}
+
+// select * from @@table where schedule_date = @dateOnly and deleted_at is null
+func (w workScheduleDo) QueryByDate(dateOnly string) (result []*types.WorkSchedule, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly)
+	generateSQL.WriteString("select * from work_schedule where schedule_date = ? and deleted_at is null ")
+
+	var executeSQL *gorm.DB
+	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select * from @@table where schedule_date between @dateOnly1 and @dateOnly2 and deleted_at is null
+func (w workScheduleDo) QueryByDateRange(dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly1)
+	params = append(params, dateOnly2)
+	generateSQL.WriteString("select * from work_schedule where schedule_date between ? and ? and deleted_at is null ")
+
+	var executeSQL *gorm.DB
+	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
 }
 
 func (w workScheduleDo) Debug() IWorkScheduleDo {

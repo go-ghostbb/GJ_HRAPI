@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"hrapi/internal/types"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -31,6 +32,7 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 	_employee.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_employee.DeletedAt = field.NewField(tableName, "deleted_at")
 	_employee.Code = field.NewString(tableName, "code")
+	_employee.CardNumber = field.NewString(tableName, "card_number")
 	_employee.HireDate = field.NewTime(tableName, "hire_date")
 	_employee.TerminationDate = field.NewTime(tableName, "termination_date")
 	_employee.EmploymentStatus = field.NewField(tableName, "employment_status")
@@ -41,6 +43,8 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 	_employee.Email = field.NewString(tableName, "email")
 	_employee.Mobile = field.NewString(tableName, "mobile")
 	_employee.Avatar = field.NewString(tableName, "avatar")
+	_employee.Salary = field.NewFloat32(tableName, "salary")
+	_employee.SalaryCycle = field.NewField(tableName, "salary_cycle")
 	_employee.DepartmentId = field.NewUint(tableName, "department_id")
 	_employee.RankID = field.NewUint(tableName, "rank_id")
 	_employee.GradeID = field.NewUint(tableName, "grade_id")
@@ -230,6 +234,7 @@ type employee struct {
 	UpdatedAt        field.Time
 	DeletedAt        field.Field
 	Code             field.String
+	CardNumber       field.String
 	HireDate         field.Time
 	TerminationDate  field.Time
 	EmploymentStatus field.Field
@@ -240,6 +245,8 @@ type employee struct {
 	Email            field.String
 	Mobile           field.String
 	Avatar           field.String
+	Salary           field.Float32
+	SalaryCycle      field.Field
 	DepartmentId     field.Uint
 	RankID           field.Uint
 	GradeID          field.Uint
@@ -273,6 +280,7 @@ func (e *employee) updateTableName(table string) *employee {
 	e.UpdatedAt = field.NewTime(table, "updated_at")
 	e.DeletedAt = field.NewField(table, "deleted_at")
 	e.Code = field.NewString(table, "code")
+	e.CardNumber = field.NewString(table, "card_number")
 	e.HireDate = field.NewTime(table, "hire_date")
 	e.TerminationDate = field.NewTime(table, "termination_date")
 	e.EmploymentStatus = field.NewField(table, "employment_status")
@@ -283,6 +291,8 @@ func (e *employee) updateTableName(table string) *employee {
 	e.Email = field.NewString(table, "email")
 	e.Mobile = field.NewString(table, "mobile")
 	e.Avatar = field.NewString(table, "avatar")
+	e.Salary = field.NewFloat32(table, "salary")
+	e.SalaryCycle = field.NewField(table, "salary_cycle")
 	e.DepartmentId = field.NewUint(table, "department_id")
 	e.RankID = field.NewUint(table, "rank_id")
 	e.GradeID = field.NewUint(table, "grade_id")
@@ -310,12 +320,13 @@ func (e *employee) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (e *employee) fillFieldMap() {
-	e.fieldMap = make(map[string]field.Expr, 23)
+	e.fieldMap = make(map[string]field.Expr, 26)
 	e.fieldMap["id"] = e.ID
 	e.fieldMap["created_at"] = e.CreatedAt
 	e.fieldMap["updated_at"] = e.UpdatedAt
 	e.fieldMap["deleted_at"] = e.DeletedAt
 	e.fieldMap["code"] = e.Code
+	e.fieldMap["card_number"] = e.CardNumber
 	e.fieldMap["hire_date"] = e.HireDate
 	e.fieldMap["termination_date"] = e.TerminationDate
 	e.fieldMap["employment_status"] = e.EmploymentStatus
@@ -326,6 +337,8 @@ func (e *employee) fillFieldMap() {
 	e.fieldMap["email"] = e.Email
 	e.fieldMap["mobile"] = e.Mobile
 	e.fieldMap["avatar"] = e.Avatar
+	e.fieldMap["salary"] = e.Salary
+	e.fieldMap["salary_cycle"] = e.SalaryCycle
 	e.fieldMap["department_id"] = e.DepartmentId
 	e.fieldMap["rank_id"] = e.RankID
 	e.fieldMap["grade_id"] = e.GradeID
@@ -801,6 +814,23 @@ type IEmployeeDo interface {
 	Returning(value interface{}, columns ...string) IEmployeeDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
+
+	QueryIDWhereCardNum(cardNums []string) (result []map[string]interface{}, err error)
+}
+
+// select id, card_number from @@table where card_number in (@cardNums);
+func (e employeeDo) QueryIDWhereCardNum(cardNums []string) (result []map[string]interface{}, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, cardNums)
+	generateSQL.WriteString("select id, card_number from employee where card_number in (?); ")
+
+	var executeSQL *gorm.DB
+	executeSQL = e.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
 }
 
 func (e employeeDo) Debug() IEmployeeDo {

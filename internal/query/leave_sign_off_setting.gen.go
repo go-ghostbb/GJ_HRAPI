@@ -33,7 +33,7 @@ func newLeaveSignOffSetting(db *gorm.DB, opts ...gen.DOOption) leaveSignOffSetti
 	_leaveSignOffSetting.DepartmentID = field.NewUint(tableName, "department_id")
 	_leaveSignOffSetting.LeaveID = field.NewUint(tableName, "leave_id")
 	_leaveSignOffSetting.Level = field.NewUint(tableName, "level")
-	_leaveSignOffSetting.GteDay = field.NewUint(tableName, "gte_day")
+	_leaveSignOffSetting.GteDay = field.NewFloat32(tableName, "gte_day")
 	_leaveSignOffSetting.SignType = field.NewField(tableName, "sign_type")
 	_leaveSignOffSetting.SpecificEmployeeID = field.NewUint(tableName, "specific_employee_id")
 	_leaveSignOffSetting.Notify = field.NewField(tableName, "notify")
@@ -254,7 +254,7 @@ type leaveSignOffSetting struct {
 	DepartmentID       field.Uint
 	LeaveID            field.Uint
 	Level              field.Uint
-	GteDay             field.Uint
+	GteDay             field.Float32
 	SignType           field.Field
 	SpecificEmployeeID field.Uint
 	Notify             field.Field
@@ -287,7 +287,7 @@ func (l *leaveSignOffSetting) updateTableName(table string) *leaveSignOffSetting
 	l.DepartmentID = field.NewUint(table, "department_id")
 	l.LeaveID = field.NewUint(table, "leave_id")
 	l.Level = field.NewUint(table, "level")
-	l.GteDay = field.NewUint(table, "gte_day")
+	l.GteDay = field.NewFloat32(table, "gte_day")
 	l.SignType = field.NewField(table, "sign_type")
 	l.SpecificEmployeeID = field.NewUint(table, "specific_employee_id")
 	l.Notify = field.NewField(table, "notify")

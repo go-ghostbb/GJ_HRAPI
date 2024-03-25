@@ -93,7 +93,17 @@ func (w *workShift) Insert(in model.PostWorkShiftReq) (err error) {
 
 	// 計算總時數
 	workTotal := in.WorkStart.Unix() - in.WorkEnd.Unix()
+	if in.WorkStart.Unix() > in.WorkEnd.Unix() {
+		// 如果隔夜, 時間反轉
+		workTotal = 24*60*60 - workTotal
+	}
+
 	restTotal := in.RestStart.Unix() - in.RestEnd.Unix()
+	if in.RestStart.Unix() > in.RestEnd.Unix() {
+		// 如果隔夜, 時間反轉
+		restTotal = 24*60*60 - restTotal
+	}
+
 	in.TotalHours = mathx.Round(float64(workTotal-restTotal)/60/60, 2)
 	in.TotalHours = math.Abs(in.TotalHours)
 
@@ -109,7 +119,17 @@ func (w *workShift) Update(in model.PutWorkShiftReq) (err error) {
 
 	// 計算總時數
 	workTotal := in.WorkStart.Unix() - in.WorkEnd.Unix()
+	if in.WorkStart.Unix() > in.WorkEnd.Unix() {
+		// 如果隔夜, 時間反轉
+		workTotal = 24*60*60 - workTotal
+	}
+
 	restTotal := in.RestStart.Unix() - in.RestEnd.Unix()
+	if in.RestStart.Unix() > in.RestEnd.Unix() {
+		// 如果隔夜, 時間反轉
+		restTotal = 24*60*60 - restTotal
+	}
+
 	in.TotalHours = mathx.Round(float64(workTotal-restTotal)/60/60, 2)
 	in.TotalHours = math.Abs(in.TotalHours)
 

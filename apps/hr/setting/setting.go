@@ -27,5 +27,6 @@ func v1List() []gbhttp.IBind {
 		&v1.RankApi{},
 		&v1.GradeApi{},
 		&v1.SignOffSettingApi{},
+		&v1.SalaryItemApi{},
 	}
 }

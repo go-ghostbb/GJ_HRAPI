@@ -62,6 +62,9 @@ func main() {
 	g.ApplyBasic(types.Basic()...)
 	g.ApplyBasic(types.M2M()...)
 	g.ApplyInterface(func(method.Menu) {}, types.Menu{})
+	g.ApplyInterface(func(method.Employee) {}, types.Employee{})
+	g.ApplyInterface(func(method.WorkSchedule) {}, types.WorkSchedule{})
+	g.ApplyInterface(func(method.CheckInStatus) {}, types.CheckInStatus{})
 
 	// 執行並生成程式碼
 	g.Execute()
