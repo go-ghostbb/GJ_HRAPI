@@ -36,35 +36,79 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 		var (
 			qWorkSchedule    = tx.WorkSchedule
 			qCheckInStatus   = tx.CheckInStatus
+			qEmployee        = tx.Employee
 			schedules        []*types.WorkSchedule
 			newCheckInStatus = make([]*types.CheckInStatus, 0)
 			err              error
 		)
 
+		// 查詢區間內所有班表
 		schedules, err = qWorkSchedule.WithContext(c.ctx).Preload(qWorkSchedule.WorkShift).QueryByDateRange(in.DateRange[0], in.DateRange[1])
 		if err != nil {
 			return err
 		}
 
+		// 建立employee和schedule map表
+		// map[empID]map[date]*types.WorkSchedule
+		var empScheMap = make(map[uint]map[string]*types.WorkSchedule)
 		for _, schedule := range schedules {
-			// 計算預計下班日期
-			offWork := gbconv.Time(fmt.Sprintf("%s %s", schedule.ScheduleDate.Format(time.DateOnly), schedule.WorkShift.WorkStart.Format(time.TimeOnly)))
-			// 換算分鐘並四捨五入, 為了精準
-			mins := time.Duration(math.Round(schedule.WorkShift.TotalHours * 60))
-			// 加上上班總時數
-			offWork = offWork.Add(mins * time.Minute)
+			if _, ok := empScheMap[schedule.EmployeeID]; !ok {
+				// 不存在empID map
+				empScheMap[schedule.EmployeeID] = make(map[string]*types.WorkSchedule)
+			}
+			empScheMap[schedule.EmployeeID][schedule.ScheduleDate.Format(time.DateOnly)] = schedule
+		}
 
-			newCheckInStatus = append(newCheckInStatus, &types.CheckInStatus{
-				EmployeeID:              schedule.EmployeeID,
-				WorkShiftID:             schedule.WorkShiftID,
-				WorkCheckInDate:         schedule.ScheduleDate, // 上班時間
-				WorkAttendStatus:        enum.WorkNotSwiped,    // 上班狀態, 未刷卡
-				WorkAttendProcStatus:    enum.NotProcessed,     // 處理狀態, 未處理
-				OffWorkCheckInDate:      offWork,               // 下班時間
-				OffWorkAttendStatus:     enum.OffWorkNotSwiped, // 下班狀態, 未刷卡
-				OffWorkAttendProcStatus: enum.NotProcessed,     // 處理狀態, 未處理
-				AbsenceHours:            float32(schedule.WorkShift.TotalHours),
-			})
+		// 查詢所有在職員工id
+		var empIDs []uint
+		err = qEmployee.WithContext(c.ctx).Select(qEmployee.ID).Where(qEmployee.EmploymentStatus.Eq(enum.Active)).Scan(&empIDs)
+		if err != nil {
+			return err
+		}
+
+		// 遍歷時間區間
+		startDate := gbconv.Time(in.DateRange[0])
+		endDate := gbconv.Time(in.DateRange[1])
+		for endDate.After(startDate) {
+			tmpDate := startDate.Format(time.DateOnly) // 暫存日期(string)
+			// 遍歷所有員工
+			for _, empID := range empIDs {
+				// 查詢該名員工是否有班表
+				if v, ok := empScheMap[empID][tmpDate]; ok {
+					// 存在
+					// 計算預計下班日期
+					offWork := gbconv.Time(fmt.Sprintf("%s %s", v.ScheduleDate.Format(time.DateOnly), v.WorkShift.WorkStart.Format(time.TimeOnly)))
+					// 換算分鐘並四捨五入, 為了精準
+					mins := time.Duration(math.Round(v.WorkShift.TotalHours * 60))
+					// 加上上班總時數
+					offWork = offWork.Add(mins * time.Minute)
+
+					newCheckInStatus = append(newCheckInStatus, &types.CheckInStatus{
+						EmployeeID:              empID,
+						WorkShiftID:             v.WorkShiftID,
+						WorkCheckInDate:         v.ScheduleDate,        // 上班時間
+						WorkAttendStatus:        enum.WorkNotSwiped,    // 上班狀態, 未刷卡
+						WorkAttendProcStatus:    enum.NotProcessed,     // 處理狀態, 未處理
+						OffWorkCheckInDate:      offWork,               // 下班時間
+						OffWorkAttendStatus:     enum.OffWorkNotSwiped, // 下班狀態, 未刷卡
+						OffWorkAttendProcStatus: enum.NotProcessed,     // 處理狀態, 未處理
+						AbsenceHours:            float32(v.WorkShift.TotalHours),
+					})
+				} else {
+					// 不存在, 代表休息日
+					newCheckInStatus = append(newCheckInStatus, &types.CheckInStatus{
+						EmployeeID:              empID,
+						WorkCheckInDate:         startDate,
+						WorkAttendStatus:        enum.WorkOffDay, // 休息日
+						WorkAttendProcStatus:    enum.ProcNormal, // 處理狀態, 正常
+						OffWorkCheckInDate:      startDate,
+						OffWorkAttendStatus:     enum.OffWorkOffDay, // 休息日
+						OffWorkAttendProcStatus: enum.ProcNormal,    // 處理狀態, 正常
+					})
+				}
+			}
+
+			startDate = startDate.AddDate(0, 0, 1)
 		}
 
 		// 刪除原有, 避免資料重複
@@ -73,7 +117,7 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 		}
 
 		// 建立
-		if err = qCheckInStatus.WithContext(c.ctx).Create(newCheckInStatus...); err != nil {
+		if err = qCheckInStatus.WithContext(c.ctx).CreateInBatches(newCheckInStatus, 100); err != nil {
 			return err
 		}
 

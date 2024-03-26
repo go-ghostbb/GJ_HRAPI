@@ -9,6 +9,7 @@ import (
 	gbrand "ghostbb.io/gb/util/gb_rand"
 	"github.com/jinzhu/copier"
 	"gorm.io/gen"
+	"gorm.io/gen/field"
 	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
@@ -34,6 +35,7 @@ type (
 		ResetPassword(in model.ResetPasswordReq) (err error)
 		SetEmploymentStatus(in model.SetEmploymentStatusReq) (err error)
 		SetLoginStatus(in model.SetLoginStatusReq) (err error)
+		GetByDateRangeCheckInStatus(in model.GetByDateRangeCheckInStatusReq) (out []model.GetByDateRangeCheckInStatusRes, err error)
 	}
 
 	employee struct {
@@ -224,4 +226,22 @@ func (e *employee) SetEmploymentStatus(in model.SetEmploymentStatusReq) (err err
 func (e *employee) SetLoginStatus(in model.SetLoginStatusReq) (err error) {
 	_, err = query.LoginInformation.WithContext(dbcache.WithCtx(e.ctx)).Where(query.LoginInformation.EmployeeID.Eq(in.ID)).Update(query.LoginInformation.Status, in.Status)
 	return err
+}
+
+func (e *employee) GetByDateRangeCheckInStatus(in model.GetByDateRangeCheckInStatusReq) (out []model.GetByDateRangeCheckInStatusRes, err error) {
+	var (
+		qCheckInStatus = query.CheckInStatus
+		result         []*types.CheckInStatus
+	)
+
+	result, err = qCheckInStatus.WithContext(dbcache.WithCtx(e.ctx)).Preload(field.Associations, qCheckInStatus.Employee.Department).QueryByDateRangeAndEmpID(in.EmployeeID, in.DateRangeStart, in.DateRangeEnd, in.Abnormal)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = copier.Copy(&out, result); err != nil {
+		return nil, err
+	}
+
+	return out, nil
 }

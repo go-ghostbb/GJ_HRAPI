@@ -27,7 +27,7 @@ func (e *EmployeeApi) Init(group *gin.RouterGroup) {
 	v1.PATCH(":id/password", e.resetPassword)
 	v1.PATCH(":id/employmentStatus", e.setEmploymentStatus)
 	v1.PATCH(":id/login/status", e.setLoginStatus)
-	v1.POST("upload/avatar")
+	v1.GET(":id/checkInStatus", e.getByDateRangeCheckInStatus)
 }
 
 // 根據keyword獲取employee資料
@@ -228,4 +228,31 @@ func (e *EmployeeApi) setLoginStatus(c *gin.Context) {
 	}
 
 	Responder(Mount(c)).Ok()
+}
+
+// 獲取員工打卡狀態
+//
+//	route => GET /api/v1/employee/:id/checkInStatus
+func (e *EmployeeApi) getByDateRangeCheckInStatus(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.GetByDateRangeCheckInStatusReq
+		out []model.GetByDateRangeCheckInStatusRes
+		err error
+	)
+
+	in.EmployeeID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseQuery(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	out, err = service.Employee(ctx).GetByDateRangeCheckInStatus(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).OkWithData(out)
 }

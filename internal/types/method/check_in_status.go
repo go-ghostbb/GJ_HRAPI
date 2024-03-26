@@ -3,6 +3,14 @@ package method
 import "gorm.io/gen"
 
 type CheckInStatus interface {
+	// select * from @@table
+	//     where work_check_in_date between @dateOnly1 and @dateOnly2 and
+	//           employee_id = @empID and
+	//  		 {{if abnormal}}
+	//           	(work_attend_proc_status = 'not processed' or off_work_attend_proc_status = 'not processed') and
+	// 			 {{end}}
+	//           deleted_at is null
+	QueryByDateRangeAndEmpID(empID uint, dateOnly1, dateOnly2 string, abnormal bool) ([]*gen.T, error)
 	// delete @@table where work_check_in_date = @dateOnly
 	DeleteByDate(dateOnly string) (gen.RowsAffected, error)
 	// delete @@table where work_check_in_date between @dateOnly1 and @dateOnly2

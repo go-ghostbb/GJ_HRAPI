@@ -27,6 +27,8 @@ const (
 )
 
 func Start(ctx context.Context) {
+	g.Log().Info(ctx, "執行同步打卡程序")
+
 	if dataPath == "" {
 		g.Log().Error(ctx, "path is empty")
 		return

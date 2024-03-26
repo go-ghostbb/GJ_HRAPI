@@ -69,3 +69,14 @@ type SetLoginStatusReq struct {
 }
 
 type SetLoginStatusRes struct{}
+
+type GetByDateRangeCheckInStatusReq struct {
+	DateRangeStart string `form:"dateRangeStart" binding:"required"`
+	DateRangeEnd   string `form:"dateRangeEnd" binding:"required"`
+	EmployeeID     uint   `form:"employeeId"`
+	Abnormal       bool   `form:"abnormal"`
+}
+
+type GetByDateRangeCheckInStatusRes struct {
+	*types.CheckInStatus
+}

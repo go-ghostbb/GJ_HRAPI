@@ -538,10 +538,39 @@ type ICheckInStatusDo interface {
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 
+	QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string, abnormal bool) (result []*types.CheckInStatus, err error)
 	DeleteByDate(dateOnly string) (rowsAffected int64, err error)
 	DeleteByDateRange(dateOnly1 string, dateOnly2 string) (rowsAffected int64, err error)
 	UpdateStatus(dateOnly []string) (rowsAffected int64, err error)
 	UpdateTime(timeOnly string, dateOnly string, workShiftCode string, cardNum string, isWork bool) (rowsAffected int64, err error)
+}
+
+// select * from @@table
+//
+//	   where work_check_in_date between @dateOnly1 and @dateOnly2 and
+//	         employee_id = @empID and
+//			 {{if abnormal}}
+//	         	(work_attend_proc_status = 'not processed' or off_work_attend_proc_status = 'not processed') and
+//				 {{end}}
+//	         deleted_at is null
+func (c checkInStatusDo) QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string, abnormal bool) (result []*types.CheckInStatus, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly1)
+	params = append(params, dateOnly2)
+	params = append(params, empID)
+	generateSQL.WriteString("select * from check_in_status where work_check_in_date between ? and ? and employee_id = ? and ")
+	if abnormal {
+		generateSQL.WriteString("(work_attend_proc_status = 'not processed' or off_work_attend_proc_status = 'not processed') and ")
+	}
+	generateSQL.WriteString("deleted_at is null ")
+
+	var executeSQL *gorm.DB
+	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
 }
 
 // delete @@table where work_check_in_date = @dateOnly

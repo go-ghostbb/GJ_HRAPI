@@ -8,6 +8,7 @@ const (
 	OffWorkNormal    OffWorkAttendStatus = "normal"
 	OffWorkNotSwiped OffWorkAttendStatus = "not swiped"
 	OffWorkEarly     OffWorkAttendStatus = "early"
+	OffWorkOffDay    OffWorkAttendStatus = "off day"
 )
 
 func (e *OffWorkAttendStatus) Scan(value interface{}) error {

@@ -11,6 +11,7 @@ import (
 	"hrapi/apps/upload"
 	"hrapi/internal/middleware"
 	"hrapi/internal/query"
+	"hrapi/internal/task"
 	"hrapi/internal/utils"
 	"hrapi/internal/utils/response"
 )
@@ -41,6 +42,9 @@ func mainFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 	// Register static resource
 	utils.MkdirIfNotExist("assets")
 	s.Static("/assets", "./assets")
+
+	// 定時任務
+	task.Init()
 
 	// 執行
 	s.Run()
