@@ -19,6 +19,7 @@ var (
 	Q                         = new(Query)
 	CalcSalary                *calcSalary
 	CalcSalaryAdd             *calcSalaryAdd
+	CalcSalaryEmployee        *calcSalaryEmployee
 	CalcSalaryReduce          *calcSalaryReduce
 	CheckInStatus             *checkInStatus
 	ConfigMap                 *configMap
@@ -39,7 +40,9 @@ var (
 	RoleMenu                  *roleMenu
 	RolePermission            *rolePermission
 	SalaryAddItem             *salaryAddItem
+	SalaryAddItemEmployee     *salaryAddItemEmployee
 	SalaryReduceItem          *salaryReduceItem
+	SalaryReduceItemEmployee  *salaryReduceItemEmployee
 	Vacation                  *vacation
 	VacationGroup             *vacationGroup
 	VacationGroupEmployee     *vacationGroupEmployee
@@ -53,6 +56,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	CalcSalary = &Q.CalcSalary
 	CalcSalaryAdd = &Q.CalcSalaryAdd
+	CalcSalaryEmployee = &Q.CalcSalaryEmployee
 	CalcSalaryReduce = &Q.CalcSalaryReduce
 	CheckInStatus = &Q.CheckInStatus
 	ConfigMap = &Q.ConfigMap
@@ -73,7 +77,9 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	RoleMenu = &Q.RoleMenu
 	RolePermission = &Q.RolePermission
 	SalaryAddItem = &Q.SalaryAddItem
+	SalaryAddItemEmployee = &Q.SalaryAddItemEmployee
 	SalaryReduceItem = &Q.SalaryReduceItem
+	SalaryReduceItemEmployee = &Q.SalaryReduceItemEmployee
 	Vacation = &Q.Vacation
 	VacationGroup = &Q.VacationGroup
 	VacationGroupEmployee = &Q.VacationGroupEmployee
@@ -88,6 +94,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		db:                        db,
 		CalcSalary:                newCalcSalary(db, opts...),
 		CalcSalaryAdd:             newCalcSalaryAdd(db, opts...),
+		CalcSalaryEmployee:        newCalcSalaryEmployee(db, opts...),
 		CalcSalaryReduce:          newCalcSalaryReduce(db, opts...),
 		CheckInStatus:             newCheckInStatus(db, opts...),
 		ConfigMap:                 newConfigMap(db, opts...),
@@ -108,7 +115,9 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		RoleMenu:                  newRoleMenu(db, opts...),
 		RolePermission:            newRolePermission(db, opts...),
 		SalaryAddItem:             newSalaryAddItem(db, opts...),
+		SalaryAddItemEmployee:     newSalaryAddItemEmployee(db, opts...),
 		SalaryReduceItem:          newSalaryReduceItem(db, opts...),
+		SalaryReduceItemEmployee:  newSalaryReduceItemEmployee(db, opts...),
 		Vacation:                  newVacation(db, opts...),
 		VacationGroup:             newVacationGroup(db, opts...),
 		VacationGroupEmployee:     newVacationGroupEmployee(db, opts...),
@@ -124,6 +133,7 @@ type Query struct {
 
 	CalcSalary                calcSalary
 	CalcSalaryAdd             calcSalaryAdd
+	CalcSalaryEmployee        calcSalaryEmployee
 	CalcSalaryReduce          calcSalaryReduce
 	CheckInStatus             checkInStatus
 	ConfigMap                 configMap
@@ -144,7 +154,9 @@ type Query struct {
 	RoleMenu                  roleMenu
 	RolePermission            rolePermission
 	SalaryAddItem             salaryAddItem
+	SalaryAddItemEmployee     salaryAddItemEmployee
 	SalaryReduceItem          salaryReduceItem
+	SalaryReduceItemEmployee  salaryReduceItemEmployee
 	Vacation                  vacation
 	VacationGroup             vacationGroup
 	VacationGroupEmployee     vacationGroupEmployee
@@ -161,6 +173,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		db:                        db,
 		CalcSalary:                q.CalcSalary.clone(db),
 		CalcSalaryAdd:             q.CalcSalaryAdd.clone(db),
+		CalcSalaryEmployee:        q.CalcSalaryEmployee.clone(db),
 		CalcSalaryReduce:          q.CalcSalaryReduce.clone(db),
 		CheckInStatus:             q.CheckInStatus.clone(db),
 		ConfigMap:                 q.ConfigMap.clone(db),
@@ -181,7 +194,9 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		RoleMenu:                  q.RoleMenu.clone(db),
 		RolePermission:            q.RolePermission.clone(db),
 		SalaryAddItem:             q.SalaryAddItem.clone(db),
+		SalaryAddItemEmployee:     q.SalaryAddItemEmployee.clone(db),
 		SalaryReduceItem:          q.SalaryReduceItem.clone(db),
+		SalaryReduceItemEmployee:  q.SalaryReduceItemEmployee.clone(db),
 		Vacation:                  q.Vacation.clone(db),
 		VacationGroup:             q.VacationGroup.clone(db),
 		VacationGroupEmployee:     q.VacationGroupEmployee.clone(db),
@@ -205,6 +220,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		db:                        db,
 		CalcSalary:                q.CalcSalary.replaceDB(db),
 		CalcSalaryAdd:             q.CalcSalaryAdd.replaceDB(db),
+		CalcSalaryEmployee:        q.CalcSalaryEmployee.replaceDB(db),
 		CalcSalaryReduce:          q.CalcSalaryReduce.replaceDB(db),
 		CheckInStatus:             q.CheckInStatus.replaceDB(db),
 		ConfigMap:                 q.ConfigMap.replaceDB(db),
@@ -225,7 +241,9 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		RoleMenu:                  q.RoleMenu.replaceDB(db),
 		RolePermission:            q.RolePermission.replaceDB(db),
 		SalaryAddItem:             q.SalaryAddItem.replaceDB(db),
+		SalaryAddItemEmployee:     q.SalaryAddItemEmployee.replaceDB(db),
 		SalaryReduceItem:          q.SalaryReduceItem.replaceDB(db),
+		SalaryReduceItemEmployee:  q.SalaryReduceItemEmployee.replaceDB(db),
 		Vacation:                  q.Vacation.replaceDB(db),
 		VacationGroup:             q.VacationGroup.replaceDB(db),
 		VacationGroupEmployee:     q.VacationGroupEmployee.replaceDB(db),
@@ -239,6 +257,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 type queryCtx struct {
 	CalcSalary                ICalcSalaryDo
 	CalcSalaryAdd             ICalcSalaryAddDo
+	CalcSalaryEmployee        ICalcSalaryEmployeeDo
 	CalcSalaryReduce          ICalcSalaryReduceDo
 	CheckInStatus             ICheckInStatusDo
 	ConfigMap                 IConfigMapDo
@@ -259,7 +278,9 @@ type queryCtx struct {
 	RoleMenu                  IRoleMenuDo
 	RolePermission            IRolePermissionDo
 	SalaryAddItem             ISalaryAddItemDo
+	SalaryAddItemEmployee     ISalaryAddItemEmployeeDo
 	SalaryReduceItem          ISalaryReduceItemDo
+	SalaryReduceItemEmployee  ISalaryReduceItemEmployeeDo
 	Vacation                  IVacationDo
 	VacationGroup             IVacationGroupDo
 	VacationGroupEmployee     IVacationGroupEmployeeDo
@@ -273,6 +294,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		CalcSalary:                q.CalcSalary.WithContext(ctx),
 		CalcSalaryAdd:             q.CalcSalaryAdd.WithContext(ctx),
+		CalcSalaryEmployee:        q.CalcSalaryEmployee.WithContext(ctx),
 		CalcSalaryReduce:          q.CalcSalaryReduce.WithContext(ctx),
 		CheckInStatus:             q.CheckInStatus.WithContext(ctx),
 		ConfigMap:                 q.ConfigMap.WithContext(ctx),
@@ -293,7 +315,9 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		RoleMenu:                  q.RoleMenu.WithContext(ctx),
 		RolePermission:            q.RolePermission.WithContext(ctx),
 		SalaryAddItem:             q.SalaryAddItem.WithContext(ctx),
+		SalaryAddItemEmployee:     q.SalaryAddItemEmployee.WithContext(ctx),
 		SalaryReduceItem:          q.SalaryReduceItem.WithContext(ctx),
+		SalaryReduceItemEmployee:  q.SalaryReduceItemEmployee.WithContext(ctx),
 		Vacation:                  q.Vacation.WithContext(ctx),
 		VacationGroup:             q.VacationGroup.WithContext(ctx),
 		VacationGroupEmployee:     q.VacationGroupEmployee.WithContext(ctx),

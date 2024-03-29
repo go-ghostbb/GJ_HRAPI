@@ -204,7 +204,7 @@ func (w *workShift) UpdateWorkScheduleBatch(in model.PutBatchWorkScheduleReq) er
 			err       error
 		)
 		// 刪除
-		_, err = qSchedule.WithContext(dbcache.WithCtx(w.ctx)).Where(qSchedule.EmployeeID.Eq(in.EmployeeID)).Unscoped().Delete()
+		_, err = qSchedule.WithContext(dbcache.WithCtx(w.ctx)).DeleteByDateRange(in.EmployeeID, in.YearMonth+"-%")
 		if err != nil {
 			return err
 		}

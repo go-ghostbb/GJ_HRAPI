@@ -4,11 +4,15 @@ import "gorm.io/gorm"
 
 type CalcSalaryReduce struct {
 	gorm.Model
-	CalcSalaryID uint        `gorm:"not null;comment:calc_salary id" json:"calcSalaryId"`
-	CalcSalary   *CalcSalary `gorm:"foreignKey:CalcSalaryID" json:"calcSalary"`
+	CalcSalaryEmployeeID uint                `gorm:"not null;comment:calc_salary_employee id" json:"calcSalaryEmployeeId"`
+	CalcSalaryEmployee   *CalcSalaryEmployee `gorm:"foreignKey:CalcSalaryEmployeeID" json:"calcSalary"`
 
-	Name   string  `gorm:"comment:加項名稱" json:"name"`
+	SalaryReduceItemID uint              `gorm:"comment:加項ID" json:"salaryReduceItemId"`
+	SalaryReduceItem   *SalaryReduceItem `gorm:"foreignKey:SalaryReduceItemID" json:"salaryReduceItem"`
+
 	Amount float32 `gorm:"comment:金額" json:"amount"`
+
+	IncomeTax bool `gorm:"not null;comment:所得稅" json:"incomeTax"`
 }
 
 func (c *CalcSalaryReduce) TableName() string {

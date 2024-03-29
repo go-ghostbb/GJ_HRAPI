@@ -30,39 +30,261 @@ func newCalcSalaryAdd(db *gorm.DB, opts ...gen.DOOption) calcSalaryAdd {
 	_calcSalaryAdd.CreatedAt = field.NewTime(tableName, "created_at")
 	_calcSalaryAdd.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_calcSalaryAdd.DeletedAt = field.NewField(tableName, "deleted_at")
-	_calcSalaryAdd.CalcSalaryID = field.NewUint(tableName, "calc_salary_id")
-	_calcSalaryAdd.Name = field.NewString(tableName, "name")
+	_calcSalaryAdd.CalcSalaryEmployeeID = field.NewUint(tableName, "calc_salary_employee_id")
+	_calcSalaryAdd.SalaryAddItemID = field.NewUint(tableName, "salary_add_item_id")
 	_calcSalaryAdd.Amount = field.NewFloat32(tableName, "amount")
-	_calcSalaryAdd.CalcSalary = calcSalaryAddBelongsToCalcSalary{
+	_calcSalaryAdd.SalaryType = field.NewField(tableName, "salary_type")
+	_calcSalaryAdd.IncomeTax = field.NewBool(tableName, "income_tax")
+	_calcSalaryAdd.Benefits = field.NewBool(tableName, "benefits")
+	_calcSalaryAdd.Premiums = field.NewBool(tableName, "premiums")
+	_calcSalaryAdd.CalcSalaryEmployee = calcSalaryAddBelongsToCalcSalaryEmployee{
 		db: db.Session(&gorm.Session{}),
 
-		RelationField: field.NewRelation("CalcSalary", "types.CalcSalary"),
-		SalaryAdd: struct {
+		RelationField: field.NewRelation("CalcSalaryEmployee", "types.CalcSalaryEmployee"),
+		Employee: struct {
 			field.RelationField
-			CalcSalary struct {
+			Department struct {
+				field.RelationField
+				Manager struct {
+					field.RelationField
+				}
+			}
+			Rank struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}
+			Grade struct {
+				field.RelationField
+			}
+			LoginInformation struct {
+				field.RelationField
+				Employee struct {
+					field.RelationField
+				}
+			}
+			Roles struct {
+				field.RelationField
+				Employees struct {
+					field.RelationField
+				}
+				Permissions struct {
+					field.RelationField
+					Roles struct {
+						field.RelationField
+					}
+				}
+				Menus struct {
+					field.RelationField
+					Roles struct {
+						field.RelationField
+					}
+				}
+			}
+		}{
+			RelationField: field.NewRelation("CalcSalaryEmployee.Employee", "types.Employee"),
+			Department: struct {
+				field.RelationField
+				Manager struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Department", "types.Department"),
+				Manager: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Department.Manager", "types.Employee"),
+				},
+			},
+			Rank: struct {
+				field.RelationField
+				Grade struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Rank", "types.PositionRank"),
+				Grade: struct {
+					field.RelationField
+					Rank struct {
+						field.RelationField
+					}
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Rank.Grade", "types.PositionGrade"),
+					Rank: struct {
+						field.RelationField
+					}{
+						RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Rank.Grade.Rank", "types.PositionRank"),
+					},
+				},
+			},
+			Grade: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Grade", "types.PositionGrade"),
+			},
+			LoginInformation: struct {
+				field.RelationField
+				Employee struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.Employee.LoginInformation", "types.LoginInformation"),
+				Employee: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.Employee.LoginInformation.Employee", "types.Employee"),
+				},
+			},
+			Roles: struct {
+				field.RelationField
+				Employees struct {
+					field.RelationField
+				}
+				Permissions struct {
+					field.RelationField
+					Roles struct {
+						field.RelationField
+					}
+				}
+				Menus struct {
+					field.RelationField
+					Roles struct {
+						field.RelationField
+					}
+				}
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Roles", "types.Role"),
+				Employees: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Roles.Employees", "types.Employee"),
+				},
+				Permissions: struct {
+					field.RelationField
+					Roles struct {
+						field.RelationField
+					}
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Roles.Permissions", "types.Permission"),
+					Roles: struct {
+						field.RelationField
+					}{
+						RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Roles.Permissions.Roles", "types.Role"),
+					},
+				},
+				Menus: struct {
+					field.RelationField
+					Roles struct {
+						field.RelationField
+					}
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Roles.Menus", "types.Menu"),
+					Roles: struct {
+						field.RelationField
+					}{
+						RelationField: field.NewRelation("CalcSalaryEmployee.Employee.Roles.Menus.Roles", "types.Role"),
+					},
+				},
+			},
+		},
+		CalcSalary: struct {
+			field.RelationField
+			Founder struct {
+				field.RelationField
+			}
+			CalcSalaryEmployee struct {
 				field.RelationField
 			}
 		}{
-			RelationField: field.NewRelation("CalcSalary.SalaryAdd", "types.CalcSalaryAdd"),
-			CalcSalary: struct {
+			RelationField: field.NewRelation("CalcSalaryEmployee.CalcSalary", "types.CalcSalary"),
+			Founder: struct {
 				field.RelationField
 			}{
-				RelationField: field.NewRelation("CalcSalary.SalaryAdd.CalcSalary", "types.CalcSalary"),
+				RelationField: field.NewRelation("CalcSalaryEmployee.CalcSalary.Founder", "types.Employee"),
+			},
+			CalcSalaryEmployee: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.CalcSalary.CalcSalaryEmployee", "types.CalcSalaryEmployee"),
+			},
+		},
+		SalaryAdd: struct {
+			field.RelationField
+			CalcSalaryEmployee struct {
+				field.RelationField
+			}
+			SalaryAddItem struct {
+				field.RelationField
+				Employee struct {
+					field.RelationField
+				}
+			}
+		}{
+			RelationField: field.NewRelation("CalcSalaryEmployee.SalaryAdd", "types.CalcSalaryAdd"),
+			CalcSalaryEmployee: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.SalaryAdd.CalcSalaryEmployee", "types.CalcSalaryEmployee"),
+			},
+			SalaryAddItem: struct {
+				field.RelationField
+				Employee struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.SalaryAdd.SalaryAddItem", "types.SalaryAddItem"),
+				Employee: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.SalaryAdd.SalaryAddItem.Employee", "types.Employee"),
+				},
 			},
 		},
 		SalaryReduce: struct {
 			field.RelationField
-			CalcSalary struct {
+			CalcSalaryEmployee struct {
 				field.RelationField
 			}
+			SalaryReduceItem struct {
+				field.RelationField
+				Employee struct {
+					field.RelationField
+				}
+			}
 		}{
-			RelationField: field.NewRelation("CalcSalary.SalaryReduce", "types.CalcSalaryReduce"),
-			CalcSalary: struct {
+			RelationField: field.NewRelation("CalcSalaryEmployee.SalaryReduce", "types.CalcSalaryReduce"),
+			CalcSalaryEmployee: struct {
 				field.RelationField
 			}{
-				RelationField: field.NewRelation("CalcSalary.SalaryReduce.CalcSalary", "types.CalcSalary"),
+				RelationField: field.NewRelation("CalcSalaryEmployee.SalaryReduce.CalcSalaryEmployee", "types.CalcSalaryEmployee"),
+			},
+			SalaryReduceItem: struct {
+				field.RelationField
+				Employee struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("CalcSalaryEmployee.SalaryReduce.SalaryReduceItem", "types.SalaryReduceItem"),
+				Employee: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("CalcSalaryEmployee.SalaryReduce.SalaryReduceItem.Employee", "types.Employee"),
+				},
 			},
 		},
+	}
+
+	_calcSalaryAdd.SalaryAddItem = calcSalaryAddBelongsToSalaryAddItem{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("SalaryAddItem", "types.SalaryAddItem"),
 	}
 
 	_calcSalaryAdd.fillFieldMap()
@@ -73,15 +295,21 @@ func newCalcSalaryAdd(db *gorm.DB, opts ...gen.DOOption) calcSalaryAdd {
 type calcSalaryAdd struct {
 	calcSalaryAddDo calcSalaryAddDo
 
-	ALL          field.Asterisk
-	ID           field.Uint
-	CreatedAt    field.Time
-	UpdatedAt    field.Time
-	DeletedAt    field.Field
-	CalcSalaryID field.Uint
-	Name         field.String
-	Amount       field.Float32
-	CalcSalary   calcSalaryAddBelongsToCalcSalary
+	ALL                  field.Asterisk
+	ID                   field.Uint
+	CreatedAt            field.Time
+	UpdatedAt            field.Time
+	DeletedAt            field.Field
+	CalcSalaryEmployeeID field.Uint
+	SalaryAddItemID      field.Uint
+	Amount               field.Float32
+	SalaryType           field.Field
+	IncomeTax            field.Bool
+	Benefits             field.Bool
+	Premiums             field.Bool
+	CalcSalaryEmployee   calcSalaryAddBelongsToCalcSalaryEmployee
+
+	SalaryAddItem calcSalaryAddBelongsToSalaryAddItem
 
 	fieldMap map[string]field.Expr
 }
@@ -102,9 +330,13 @@ func (c *calcSalaryAdd) updateTableName(table string) *calcSalaryAdd {
 	c.CreatedAt = field.NewTime(table, "created_at")
 	c.UpdatedAt = field.NewTime(table, "updated_at")
 	c.DeletedAt = field.NewField(table, "deleted_at")
-	c.CalcSalaryID = field.NewUint(table, "calc_salary_id")
-	c.Name = field.NewString(table, "name")
+	c.CalcSalaryEmployeeID = field.NewUint(table, "calc_salary_employee_id")
+	c.SalaryAddItemID = field.NewUint(table, "salary_add_item_id")
 	c.Amount = field.NewFloat32(table, "amount")
+	c.SalaryType = field.NewField(table, "salary_type")
+	c.IncomeTax = field.NewBool(table, "income_tax")
+	c.Benefits = field.NewBool(table, "benefits")
+	c.Premiums = field.NewBool(table, "premiums")
 
 	c.fillFieldMap()
 
@@ -133,14 +365,18 @@ func (c *calcSalaryAdd) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (c *calcSalaryAdd) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 8)
+	c.fieldMap = make(map[string]field.Expr, 13)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["deleted_at"] = c.DeletedAt
-	c.fieldMap["calc_salary_id"] = c.CalcSalaryID
-	c.fieldMap["name"] = c.Name
+	c.fieldMap["calc_salary_employee_id"] = c.CalcSalaryEmployeeID
+	c.fieldMap["salary_add_item_id"] = c.SalaryAddItemID
 	c.fieldMap["amount"] = c.Amount
+	c.fieldMap["salary_type"] = c.SalaryType
+	c.fieldMap["income_tax"] = c.IncomeTax
+	c.fieldMap["benefits"] = c.Benefits
+	c.fieldMap["premiums"] = c.Premiums
 
 }
 
@@ -154,26 +390,92 @@ func (c calcSalaryAdd) replaceDB(db *gorm.DB) calcSalaryAdd {
 	return c
 }
 
-type calcSalaryAddBelongsToCalcSalary struct {
+type calcSalaryAddBelongsToCalcSalaryEmployee struct {
 	db *gorm.DB
 
 	field.RelationField
 
+	Employee struct {
+		field.RelationField
+		Department struct {
+			field.RelationField
+			Manager struct {
+				field.RelationField
+			}
+		}
+		Rank struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}
+		Grade struct {
+			field.RelationField
+		}
+		LoginInformation struct {
+			field.RelationField
+			Employee struct {
+				field.RelationField
+			}
+		}
+		Roles struct {
+			field.RelationField
+			Employees struct {
+				field.RelationField
+			}
+			Permissions struct {
+				field.RelationField
+				Roles struct {
+					field.RelationField
+				}
+			}
+			Menus struct {
+				field.RelationField
+				Roles struct {
+					field.RelationField
+				}
+			}
+		}
+	}
+	CalcSalary struct {
+		field.RelationField
+		Founder struct {
+			field.RelationField
+		}
+		CalcSalaryEmployee struct {
+			field.RelationField
+		}
+	}
 	SalaryAdd struct {
 		field.RelationField
-		CalcSalary struct {
+		CalcSalaryEmployee struct {
 			field.RelationField
+		}
+		SalaryAddItem struct {
+			field.RelationField
+			Employee struct {
+				field.RelationField
+			}
 		}
 	}
 	SalaryReduce struct {
 		field.RelationField
-		CalcSalary struct {
+		CalcSalaryEmployee struct {
 			field.RelationField
+		}
+		SalaryReduceItem struct {
+			field.RelationField
+			Employee struct {
+				field.RelationField
+			}
 		}
 	}
 }
 
-func (a calcSalaryAddBelongsToCalcSalary) Where(conds ...field.Expr) *calcSalaryAddBelongsToCalcSalary {
+func (a calcSalaryAddBelongsToCalcSalaryEmployee) Where(conds ...field.Expr) *calcSalaryAddBelongsToCalcSalaryEmployee {
 	if len(conds) == 0 {
 		return &a
 	}
@@ -186,27 +488,27 @@ func (a calcSalaryAddBelongsToCalcSalary) Where(conds ...field.Expr) *calcSalary
 	return &a
 }
 
-func (a calcSalaryAddBelongsToCalcSalary) WithContext(ctx context.Context) *calcSalaryAddBelongsToCalcSalary {
+func (a calcSalaryAddBelongsToCalcSalaryEmployee) WithContext(ctx context.Context) *calcSalaryAddBelongsToCalcSalaryEmployee {
 	a.db = a.db.WithContext(ctx)
 	return &a
 }
 
-func (a calcSalaryAddBelongsToCalcSalary) Session(session *gorm.Session) *calcSalaryAddBelongsToCalcSalary {
+func (a calcSalaryAddBelongsToCalcSalaryEmployee) Session(session *gorm.Session) *calcSalaryAddBelongsToCalcSalaryEmployee {
 	a.db = a.db.Session(session)
 	return &a
 }
 
-func (a calcSalaryAddBelongsToCalcSalary) Model(m *types.CalcSalaryAdd) *calcSalaryAddBelongsToCalcSalaryTx {
-	return &calcSalaryAddBelongsToCalcSalaryTx{a.db.Model(m).Association(a.Name())}
+func (a calcSalaryAddBelongsToCalcSalaryEmployee) Model(m *types.CalcSalaryAdd) *calcSalaryAddBelongsToCalcSalaryEmployeeTx {
+	return &calcSalaryAddBelongsToCalcSalaryEmployeeTx{a.db.Model(m).Association(a.Name())}
 }
 
-type calcSalaryAddBelongsToCalcSalaryTx struct{ tx *gorm.Association }
+type calcSalaryAddBelongsToCalcSalaryEmployeeTx struct{ tx *gorm.Association }
 
-func (a calcSalaryAddBelongsToCalcSalaryTx) Find() (result *types.CalcSalary, err error) {
+func (a calcSalaryAddBelongsToCalcSalaryEmployeeTx) Find() (result *types.CalcSalaryEmployee, err error) {
 	return result, a.tx.Find(&result)
 }
 
-func (a calcSalaryAddBelongsToCalcSalaryTx) Append(values ...*types.CalcSalary) (err error) {
+func (a calcSalaryAddBelongsToCalcSalaryEmployeeTx) Append(values ...*types.CalcSalaryEmployee) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -214,7 +516,7 @@ func (a calcSalaryAddBelongsToCalcSalaryTx) Append(values ...*types.CalcSalary) 
 	return a.tx.Append(targetValues...)
 }
 
-func (a calcSalaryAddBelongsToCalcSalaryTx) Replace(values ...*types.CalcSalary) (err error) {
+func (a calcSalaryAddBelongsToCalcSalaryEmployeeTx) Replace(values ...*types.CalcSalaryEmployee) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -222,7 +524,7 @@ func (a calcSalaryAddBelongsToCalcSalaryTx) Replace(values ...*types.CalcSalary)
 	return a.tx.Replace(targetValues...)
 }
 
-func (a calcSalaryAddBelongsToCalcSalaryTx) Delete(values ...*types.CalcSalary) (err error) {
+func (a calcSalaryAddBelongsToCalcSalaryEmployeeTx) Delete(values ...*types.CalcSalaryEmployee) (err error) {
 	targetValues := make([]interface{}, len(values))
 	for i, v := range values {
 		targetValues[i] = v
@@ -230,11 +532,82 @@ func (a calcSalaryAddBelongsToCalcSalaryTx) Delete(values ...*types.CalcSalary) 
 	return a.tx.Delete(targetValues...)
 }
 
-func (a calcSalaryAddBelongsToCalcSalaryTx) Clear() error {
+func (a calcSalaryAddBelongsToCalcSalaryEmployeeTx) Clear() error {
 	return a.tx.Clear()
 }
 
-func (a calcSalaryAddBelongsToCalcSalaryTx) Count() int64 {
+func (a calcSalaryAddBelongsToCalcSalaryEmployeeTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type calcSalaryAddBelongsToSalaryAddItem struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItem) Where(conds ...field.Expr) *calcSalaryAddBelongsToSalaryAddItem {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItem) WithContext(ctx context.Context) *calcSalaryAddBelongsToSalaryAddItem {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItem) Session(session *gorm.Session) *calcSalaryAddBelongsToSalaryAddItem {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItem) Model(m *types.CalcSalaryAdd) *calcSalaryAddBelongsToSalaryAddItemTx {
+	return &calcSalaryAddBelongsToSalaryAddItemTx{a.db.Model(m).Association(a.Name())}
+}
+
+type calcSalaryAddBelongsToSalaryAddItemTx struct{ tx *gorm.Association }
+
+func (a calcSalaryAddBelongsToSalaryAddItemTx) Find() (result *types.SalaryAddItem, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItemTx) Append(values ...*types.SalaryAddItem) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItemTx) Replace(values ...*types.SalaryAddItem) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItemTx) Delete(values ...*types.SalaryAddItem) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItemTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a calcSalaryAddBelongsToSalaryAddItemTx) Count() int64 {
 	return a.tx.Count()
 }
 

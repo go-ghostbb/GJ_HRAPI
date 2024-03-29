@@ -4,6 +4,7 @@ import (
 	"context"
 	"ghostbb.io/gb/frame/g"
 	gbenv "ghostbb.io/gb/os/gb_env"
+	gbstr "ghostbb.io/gb/text/gb_str"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/xuri/excelize/v2"
 	"hrapi/internal/query"
@@ -105,7 +106,7 @@ func Start(ctx context.Context) {
 	}
 
 	// 計算狀態
-	if _, err = qCheckInStatus.WithContext(ctx).UpdateStatus(updateDates); err != nil {
+	if err = qCheckInStatus.WithContext(ctx).UpdateStatus(gbstr.Join(updateDates, ",")); err != nil {
 		g.Log().Error(ctx, "sync check_in data err:", err)
 		return
 	}

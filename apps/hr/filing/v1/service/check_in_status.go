@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"ghostbb.io/gb/frame/g"
+	gbstr "ghostbb.io/gb/text/gb_str"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"hrapi/apps/hr/filing/v1/model"
 	"hrapi/internal/query"
@@ -68,7 +69,7 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 
 		// 遍歷時間區間
 		startDate := gbconv.Time(in.DateRange[0])
-		endDate := gbconv.Time(in.DateRange[1])
+		endDate := gbconv.Time(in.DateRange[1]).AddDate(0, 0, 1)
 		for endDate.After(startDate) {
 			tmpDate := startDate.Format(time.DateOnly) // 暫存日期(string)
 			// 遍歷所有員工
@@ -169,7 +170,7 @@ func (c *checkInStatus) UploadData(in []*model.UploadDataReq) error {
 		}
 
 		// 計算狀態
-		if _, err = qCheckInStatus.WithContext(c.ctx).UpdateStatus(updateDates); err != nil {
+		if err = qCheckInStatus.WithContext(c.ctx).UpdateStatus(gbstr.Join(updateDates, ",")); err != nil {
 			return err
 		}
 

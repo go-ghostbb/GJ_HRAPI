@@ -541,8 +541,9 @@ type ICheckInStatusDo interface {
 	QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string, abnormal bool) (result []*types.CheckInStatus, err error)
 	DeleteByDate(dateOnly string) (rowsAffected int64, err error)
 	DeleteByDateRange(dateOnly1 string, dateOnly2 string) (rowsAffected int64, err error)
-	UpdateStatus(dateOnly []string) (rowsAffected int64, err error)
+	UpdateStatus(dateOnly string) (err error)
 	UpdateTime(timeOnly string, dateOnly string, workShiftCode string, cardNum string, isWork bool) (rowsAffected int64, err error)
+	QueryTotalAttendHours(empID uint, dateOnly1 string, dateOnly2 string) (result float32, err error)
 }
 
 // select * from @@table
@@ -606,75 +607,16 @@ func (c checkInStatusDo) DeleteByDateRange(dateOnly1 string, dateOnly2 string) (
 	return
 }
 
-// update @@table
-// set
-//
-//	work_attend_status = (
-//	    select
-//	        case
-//	            when check_in_status.work_attend_time = '00:00:00' then 'not swiped'
-//	            when work_start >= convert(varchar(5), check_in_status.work_attend_time, 108) then 'normal'
-//	            when work_start < convert(varchar(5), check_in_status.work_attend_time, 108) then 'late'
-//	            end
-//	    from work_shift
-//	    where id = work_shift_id
-//	),
-//	work_attend_proc_status = (
-//	    select
-//	        case
-//	            when check_in_status.work_attend_time = '00:00:00' then 'not processed'
-//	            when work_start >= convert(varchar(5), check_in_status.work_attend_time, 108) then 'normal'
-//	            when work_start < convert(varchar(5), check_in_status.work_attend_time, 108) then 'not processed'
-//	            end
-//	    from work_shift
-//	    where id = work_shift_id
-//	),
-//	off_work_attend_status = (
-//	    select
-//	        case
-//	            when check_in_status.off_work_attend_time = '00:00:00' then 'not swiped'
-//	            when work_end <= check_in_status.off_work_attend_time then 'normal'
-//	            when work_end > check_in_status.off_work_attend_time then 'early'
-//	            end
-//	    from work_shift
-//	    where id = work_shift_id
-//	),
-//	off_work_attend_proc_status = (
-//	    select
-//	        case
-//	            when check_in_status.off_work_attend_time = '00:00:00' then 'not processed'
-//	            when work_end <= check_in_status.off_work_attend_time then 'normal'
-//	            when work_end > check_in_status.off_work_attend_time then 'not processed'
-//	            end
-//	    from work_shift
-//	    where id = work_shift_id
-//	),
-//	absence_hours = (
-//	    select
-//	        iif(check_in_status.work_attend_time != '00:00:00' and check_in_status.off_work_attend_time != '00:00:00',
-//	            iif(work_start < convert(varchar(5), check_in_status.work_attend_time, 108),
-//	                convert(float, datediff(second, work_start, work_attend_time)) / 60 / 60,
-//	                0)
-//	                +
-//	            iif(work_end > check_in_status.off_work_attend_time,
-//	                convert(float, datediff(second , off_work_attend_time, '17:00:00')) / 60 / 60,
-//	                0)
-//	            , absence_hours)
-//	    from work_shift
-//	    where id = work_shift_id
-//	)
-//
-// where work_check_in_date in (@dateOnly)
-func (c checkInStatusDo) UpdateStatus(dateOnly []string) (rowsAffected int64, err error) {
+// exec P_C_CheckInStatusUpdateStatus @dateOnly
+func (c checkInStatusDo) UpdateStatus(dateOnly string) (err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, dateOnly)
-	generateSQL.WriteString("update check_in_status set work_attend_status = ( select case when check_in_status.work_attend_time = '00:00:00' then 'not swiped' when work_start >= convert(varchar(5), check_in_status.work_attend_time, 108) then 'normal' when work_start < convert(varchar(5), check_in_status.work_attend_time, 108) then 'late' end from work_shift where id = work_shift_id ), work_attend_proc_status = ( select case when check_in_status.work_attend_time = '00:00:00' then 'not processed' when work_start >= convert(varchar(5), check_in_status.work_attend_time, 108) then 'normal' when work_start < convert(varchar(5), check_in_status.work_attend_time, 108) then 'not processed' end from work_shift where id = work_shift_id ), off_work_attend_status = ( select case when check_in_status.off_work_attend_time = '00:00:00' then 'not swiped' when work_end <= check_in_status.off_work_attend_time then 'normal' when work_end > check_in_status.off_work_attend_time then 'early' end from work_shift where id = work_shift_id ), off_work_attend_proc_status = ( select case when check_in_status.off_work_attend_time = '00:00:00' then 'not processed' when work_end <= check_in_status.off_work_attend_time then 'normal' when work_end > check_in_status.off_work_attend_time then 'not processed' end from work_shift where id = work_shift_id ), absence_hours = ( select iif(check_in_status.work_attend_time != '00:00:00' and check_in_status.off_work_attend_time != '00:00:00', iif(work_start < convert(varchar(5), check_in_status.work_attend_time, 108), convert(float, datediff(second, work_start, work_attend_time)) / 60 / 60, 0) + iif(work_end > check_in_status.off_work_attend_time, convert(float, datediff(second , off_work_attend_time, '17:00:00')) / 60 / 60, 0) , absence_hours) from work_shift where id = work_shift_id ) where work_check_in_date in (?) ")
+	generateSQL.WriteString("exec P_C_CheckInStatusUpdateStatus ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
-	rowsAffected = executeSQL.RowsAffected
 	err = executeSQL.Error
 
 	return
@@ -725,6 +667,33 @@ func (c checkInStatusDo) UpdateTime(timeOnly string, dateOnly string, workShiftC
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
 	rowsAffected = executeSQL.RowsAffected
+	err = executeSQL.Error
+
+	return
+}
+
+// select sum(w.total_hours) - sum(c.absence_hours) - sum(c.leave_hours) from check_in_status c
+//
+//	join work_shift w on (c.work_shift_id = w.id)
+//	join employee e on (c.employee_id = e.id)
+//
+// where
+//
+//	c.work_shift_id != 0 and
+//	work_check_in_date between @dateOnly1 and @dateOnly2 and
+//	c.employee_id = @empID and
+//	e.salary_cycle = 'hour'
+func (c checkInStatusDo) QueryTotalAttendHours(empID uint, dateOnly1 string, dateOnly2 string) (result float32, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly1)
+	params = append(params, dateOnly2)
+	params = append(params, empID)
+	generateSQL.WriteString("select sum(w.total_hours) - sum(c.absence_hours) - sum(c.leave_hours) from check_in_status c join work_shift w on (c.work_shift_id = w.id) join employee e on (c.employee_id = e.id) where c.work_shift_id != 0 and work_check_in_date between ? and ? and c.employee_id = ? and e.salary_cycle = 'hour' ")
+
+	var executeSQL *gorm.DB
+	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

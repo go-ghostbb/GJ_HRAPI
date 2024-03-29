@@ -65,6 +65,8 @@ func main() {
 	g.ApplyInterface(func(method.Employee) {}, types.Employee{})
 	g.ApplyInterface(func(method.WorkSchedule) {}, types.WorkSchedule{})
 	g.ApplyInterface(func(method.CheckInStatus) {}, types.CheckInStatus{})
+	g.ApplyInterface(func(method.SalaryAddItem) {}, types.SalaryAddItem{})
+	g.ApplyInterface(func(method.SalaryReduceItem) {}, types.SalaryReduceItem{})
 
 	// 執行並生成程式碼
 	g.Execute()

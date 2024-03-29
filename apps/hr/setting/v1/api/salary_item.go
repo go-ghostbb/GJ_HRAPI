@@ -22,11 +22,13 @@ func (s *SalaryItemApi) Init(group *gin.RouterGroup) {
 	v1.POST("add", s.insertAdd)
 	v1.PUT("add/:id", s.updateAdd)
 	v1.DELETE("add/:id", s.deleteAdd)
+	v1.PATCH("add/:id/employee", s.setAddEmployee)
 
 	v1.GET("reduce", middleware.Paginator(), s.getByKeywordReduce)
 	v1.POST("reduce", s.insertReduce)
 	v1.PUT("reduce/:id", s.updateReduce)
 	v1.DELETE("reduce/:id", s.deleteReduce)
+	v1.PATCH("reduce/:id/employee", s.setReduceEmployee)
 }
 
 // 根據keyword獲取薪資加項設定
@@ -123,6 +125,32 @@ func (s *SalaryItemApi) deleteAdd(c *gin.Context) {
 	Responder(Mount(c)).Ok()
 }
 
+// 設定加項套用員工
+//
+//	route => PATCH /api/v1/salary/add/:id/employee
+func (s *SalaryItemApi) setAddEmployee(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetSalaryAddItemEmployeeReq
+		err error
+	)
+
+	in.ID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.SalaryItem(ctx).SetAddEmployee(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
 // 根據keyword獲取薪資減項設定
 //
 //	route => GET /api/v1/salary/reduce
@@ -209,6 +237,32 @@ func (s *SalaryItemApi) deleteReduce(c *gin.Context) {
 	in.ID = gbconv.Uint(c.Param("id"))
 
 	err = service.SalaryItem(ctx).DeleteReduce(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 設定減項套用員工
+//
+//	route => PATCH /api/v1/salary/reduce/:id/employee
+func (s *SalaryItemApi) setReduceEmployee(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetSalaryReduceItemEmployeeReq
+		err error
+	)
+
+	in.ID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.SalaryItem(ctx).SetReduceEmployee(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

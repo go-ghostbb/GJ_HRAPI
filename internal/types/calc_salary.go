@@ -7,13 +7,15 @@ import (
 
 type CalcSalary struct {
 	gorm.Model
-	Start  time.Time `gorm:"comment:開始時間" json:"start"`
-	End    time.Time `gorm:"comment:結束時間" json:"end"`
-	Salary float32   `gorm:"comment:本薪" json:"salary"`
-	Stage  uint      `gorm:"type:tinyint;;comment:當前階段" json:"stage"`
 
-	SalaryAdd    []*CalcSalaryAdd    `gorm:"foreignKey:CalcSalaryID;comment:加項" json:"salaryAdd"`
-	SalaryReduce []*CalcSalaryReduce `gorm:"foreignKey:CalcSalaryID;comment:減項" json:"salaryReduce"`
+	FounderEmployeeID uint      `gorm:"comment:創建人ID" json:"founderEmployeeId"`
+	Founder           *Employee `gorm:"foreignKey:FounderEmployeeID;comment:創建人" json:"founder"`
+
+	Start time.Time `gorm:"type:date;comment:開始時間" json:"start"`
+	End   time.Time `gorm:"type:date;comment:結束時間" json:"end"`
+	Stage uint      `gorm:"type:tinyint;;comment:當前階段" json:"stage"`
+
+	CalcSalaryEmployee []*CalcSalaryEmployee `gorm:"foreignKey:CalcSalaryID;comment:員工" json:"calcSalaryEmployee"`
 }
 
 func (c *CalcSalary) TableName() string {

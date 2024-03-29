@@ -6,6 +6,7 @@ import (
 	"ghostbb.io/gb/frame/g"
 	gbcmd "ghostbb.io/gb/os/gb_cmd"
 	"hrapi/apps/hr/filing"
+	"hrapi/apps/hr/salary"
 	"hrapi/apps/hr/setting"
 	"hrapi/apps/system"
 	"hrapi/apps/upload"
@@ -37,6 +38,7 @@ func mainFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 		upload.New(),
 		setting.New(),
 		filing.New(),
+		salary.New(),
 	)
 
 	// Register static resource

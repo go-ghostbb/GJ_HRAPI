@@ -5,14 +5,14 @@ CREATE function [dbo].[FN_C_EmployeeSeniorityWithEndDate] (@endDate smalldatetim
     returns @retDateDuration table
                              (
                                  employee_id     int  null ,
-                                 arrived     smalldatetime null ,
+                                 hire_date     smalldatetime null ,
                                  year        int  null ,
                                  month       int  null
                              )
 as
 begin
     -- 定義Cursor並打開
-    declare idCursor cursor for select id, arrived from employee
+    declare idCursor cursor for select id, hire_date from employee
     open idCursor
 
     declare @id bigint
@@ -40,7 +40,7 @@ begin
             set @monthDiff = @monthDiff - 12 * @yearDiff
 
             -- 回傳年資(id,年,月)
-            insert @retDateDuration( employee_id , arrived , year, month )
+            insert @retDateDuration( employee_id , hire_date , year, month )
             select @id , @arrived , IIF( @yearDiff < 0, 0, @yearDiff ), IIF( @yearDiff < 0 OR @monthDiff < 0, 0, @monthDiff )
 
             -- 抓取下一個

@@ -60,6 +60,7 @@ type GetByDateWorkScheduleRes struct {
 
 type PutBatchWorkScheduleReq struct {
 	EmployeeID uint
+	YearMonth  string                `json:"yearMonth"`
 	Schedules  []*types.WorkSchedule `json:"schedules"`
 }
 

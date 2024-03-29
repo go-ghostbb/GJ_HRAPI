@@ -30,6 +30,11 @@ type DeleteSalaryAddItemReq struct {
 	ID uint
 }
 
+type SetSalaryAddItemEmployeeReq struct {
+	ID         uint
+	EmployeeID []uint `json:"employeeId"`
+}
+
 type DeleteSalaryAddItemRes struct{}
 
 type GetByKeywordSalaryReduceItemReq struct {
@@ -58,3 +63,8 @@ type DeleteSalaryReduceItemReq struct {
 }
 
 type DeleteSalaryReduceItemRes struct{}
+
+type SetSalaryReduceItemEmployeeReq struct {
+	ID         uint
+	EmployeeID []uint `json:"employeeId"`
+}

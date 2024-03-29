@@ -26,6 +26,7 @@ func Basic() []interface{} {
 		&SalaryAddItem{},             // salary_add_item
 		&SalaryReduceItem{},          // salary_reduce_item
 		&CalcSalary{},                // calc_salary
+		&CalcSalaryEmployee{},        // calc_salary_employee
 		&CalcSalaryAdd{},             // calc_salary_add
 		&CalcSalaryReduce{},          // calc_salary_reduce
 	}
@@ -37,5 +38,7 @@ func M2M() []interface{} {
 		&RolePermission{},
 		&LeaveGroupEmployee{},
 		&VacationGroupEmployee{},
+		&SalaryAddItemEmployee{},
+		&SalaryReduceItemEmployee{},
 	}
 }

@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"hrapi/internal/types"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -41,6 +42,117 @@ func newSalaryAddItem(db *gorm.DB, opts ...gen.DOOption) salaryAddItem {
 	_salaryAddItem.Unit = field.NewField(tableName, "unit")
 	_salaryAddItem.Operator = field.NewField(tableName, "operator")
 	_salaryAddItem.Argument = field.NewFloat32(tableName, "argument")
+	_salaryAddItem.Employee = salaryAddItemManyToManyEmployee{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Employee", "types.Employee"),
+		Department: struct {
+			field.RelationField
+			Manager struct {
+				field.RelationField
+			}
+		}{
+			RelationField: field.NewRelation("Employee.Department", "types.Department"),
+			Manager: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("Employee.Department.Manager", "types.Employee"),
+			},
+		},
+		Rank: struct {
+			field.RelationField
+			Grade struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}
+		}{
+			RelationField: field.NewRelation("Employee.Rank", "types.PositionRank"),
+			Grade: struct {
+				field.RelationField
+				Rank struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("Employee.Rank.Grade", "types.PositionGrade"),
+				Rank: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Employee.Rank.Grade.Rank", "types.PositionRank"),
+				},
+			},
+		},
+		Grade: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("Employee.Grade", "types.PositionGrade"),
+		},
+		LoginInformation: struct {
+			field.RelationField
+			Employee struct {
+				field.RelationField
+			}
+		}{
+			RelationField: field.NewRelation("Employee.LoginInformation", "types.LoginInformation"),
+			Employee: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("Employee.LoginInformation.Employee", "types.Employee"),
+			},
+		},
+		Roles: struct {
+			field.RelationField
+			Employees struct {
+				field.RelationField
+			}
+			Permissions struct {
+				field.RelationField
+				Roles struct {
+					field.RelationField
+				}
+			}
+			Menus struct {
+				field.RelationField
+				Roles struct {
+					field.RelationField
+				}
+			}
+		}{
+			RelationField: field.NewRelation("Employee.Roles", "types.Role"),
+			Employees: struct {
+				field.RelationField
+			}{
+				RelationField: field.NewRelation("Employee.Roles.Employees", "types.Employee"),
+			},
+			Permissions: struct {
+				field.RelationField
+				Roles struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("Employee.Roles.Permissions", "types.Permission"),
+				Roles: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Employee.Roles.Permissions.Roles", "types.Role"),
+				},
+			},
+			Menus: struct {
+				field.RelationField
+				Roles struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("Employee.Roles.Menus", "types.Menu"),
+				Roles: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("Employee.Roles.Menus.Roles", "types.Role"),
+				},
+			},
+		},
+	}
 
 	_salaryAddItem.fillFieldMap()
 
@@ -66,6 +178,7 @@ type salaryAddItem struct {
 	Unit       field.Field
 	Operator   field.Field
 	Argument   field.Float32
+	Employee   salaryAddItemManyToManyEmployee
 
 	fieldMap map[string]field.Expr
 }
@@ -125,7 +238,7 @@ func (s *salaryAddItem) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (s *salaryAddItem) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 15)
+	s.fieldMap = make(map[string]field.Expr, 16)
 	s.fieldMap["id"] = s.ID
 	s.fieldMap["created_at"] = s.CreatedAt
 	s.fieldMap["updated_at"] = s.UpdatedAt
@@ -141,6 +254,7 @@ func (s *salaryAddItem) fillFieldMap() {
 	s.fieldMap["unit"] = s.Unit
 	s.fieldMap["operator"] = s.Operator
 	s.fieldMap["argument"] = s.Argument
+
 }
 
 func (s salaryAddItem) clone(db *gorm.DB) salaryAddItem {
@@ -151,6 +265,120 @@ func (s salaryAddItem) clone(db *gorm.DB) salaryAddItem {
 func (s salaryAddItem) replaceDB(db *gorm.DB) salaryAddItem {
 	s.salaryAddItemDo.ReplaceDB(db)
 	return s
+}
+
+type salaryAddItemManyToManyEmployee struct {
+	db *gorm.DB
+
+	field.RelationField
+
+	Department struct {
+		field.RelationField
+		Manager struct {
+			field.RelationField
+		}
+	}
+	Rank struct {
+		field.RelationField
+		Grade struct {
+			field.RelationField
+			Rank struct {
+				field.RelationField
+			}
+		}
+	}
+	Grade struct {
+		field.RelationField
+	}
+	LoginInformation struct {
+		field.RelationField
+		Employee struct {
+			field.RelationField
+		}
+	}
+	Roles struct {
+		field.RelationField
+		Employees struct {
+			field.RelationField
+		}
+		Permissions struct {
+			field.RelationField
+			Roles struct {
+				field.RelationField
+			}
+		}
+		Menus struct {
+			field.RelationField
+			Roles struct {
+				field.RelationField
+			}
+		}
+	}
+}
+
+func (a salaryAddItemManyToManyEmployee) Where(conds ...field.Expr) *salaryAddItemManyToManyEmployee {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a salaryAddItemManyToManyEmployee) WithContext(ctx context.Context) *salaryAddItemManyToManyEmployee {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a salaryAddItemManyToManyEmployee) Session(session *gorm.Session) *salaryAddItemManyToManyEmployee {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a salaryAddItemManyToManyEmployee) Model(m *types.SalaryAddItem) *salaryAddItemManyToManyEmployeeTx {
+	return &salaryAddItemManyToManyEmployeeTx{a.db.Model(m).Association(a.Name())}
+}
+
+type salaryAddItemManyToManyEmployeeTx struct{ tx *gorm.Association }
+
+func (a salaryAddItemManyToManyEmployeeTx) Find() (result []*types.Employee, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a salaryAddItemManyToManyEmployeeTx) Append(values ...*types.Employee) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a salaryAddItemManyToManyEmployeeTx) Replace(values ...*types.Employee) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a salaryAddItemManyToManyEmployeeTx) Delete(values ...*types.Employee) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a salaryAddItemManyToManyEmployeeTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a salaryAddItemManyToManyEmployeeTx) Count() int64 {
+	return a.tx.Count()
 }
 
 type salaryAddItemDo struct{ gen.DO }
@@ -214,6 +442,25 @@ type ISalaryAddItemDo interface {
 	Returning(value interface{}, columns ...string) ISalaryAddItemDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
+
+	QueryByEmployeeID(empIDs string, dateOnly1 string, dateOnly2 string) (result []map[string]interface{}, err error)
+}
+
+// select * from FN_C_SalaryAddItemMultiply (@empIDs, @dateOnly1, @dateOnly2)
+func (s salaryAddItemDo) QueryByEmployeeID(empIDs string, dateOnly1 string, dateOnly2 string) (result []map[string]interface{}, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, empIDs)
+	params = append(params, dateOnly1)
+	params = append(params, dateOnly2)
+	generateSQL.WriteString("select * from FN_C_SalaryAddItemMultiply (?, ?, ?) ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
 }
 
 func (s salaryAddItemDo) Debug() ISalaryAddItemDo {

@@ -17,6 +17,8 @@ type SalaryReduceItem struct {
 	Unit      enum.SalaryCalcUnit `gorm:"comment:單位：天, 小時" json:"unit"`
 	Operator  enum.Operator       `gorm:"comment:運算子, 條件用(>, <, <=...)" json:"operator"`
 	Argument  float32             `gorm:"comment:條件參數" json:"argument"`
+
+	Employee []*Employee `gorm:"many2many:salary_reduce_item_employee" json:"employee"`
 }
 
 func (s *SalaryReduceItem) TableName() string {
