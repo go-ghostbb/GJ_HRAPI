@@ -28,6 +28,8 @@ func newSalaryAddItemEmployee(db *gorm.DB, opts ...gen.DOOption) salaryAddItemEm
 	_salaryAddItemEmployee.ALL = field.NewAsterisk(tableName)
 	_salaryAddItemEmployee.SalaryAddItemID = field.NewUint(tableName, "salary_add_item_id")
 	_salaryAddItemEmployee.EmployeeID = field.NewUint(tableName, "employee_id")
+	_salaryAddItemEmployee.UseCustom = field.NewBool(tableName, "use_custom")
+	_salaryAddItemEmployee.CustomAmount = field.NewFloat32(tableName, "custom_amount")
 
 	_salaryAddItemEmployee.fillFieldMap()
 
@@ -40,6 +42,8 @@ type salaryAddItemEmployee struct {
 	ALL             field.Asterisk
 	SalaryAddItemID field.Uint
 	EmployeeID      field.Uint
+	UseCustom       field.Bool
+	CustomAmount    field.Float32
 
 	fieldMap map[string]field.Expr
 }
@@ -58,6 +62,8 @@ func (s *salaryAddItemEmployee) updateTableName(table string) *salaryAddItemEmpl
 	s.ALL = field.NewAsterisk(table)
 	s.SalaryAddItemID = field.NewUint(table, "salary_add_item_id")
 	s.EmployeeID = field.NewUint(table, "employee_id")
+	s.UseCustom = field.NewBool(table, "use_custom")
+	s.CustomAmount = field.NewFloat32(table, "custom_amount")
 
 	s.fillFieldMap()
 
@@ -86,9 +92,11 @@ func (s *salaryAddItemEmployee) GetFieldByName(fieldName string) (field.OrderExp
 }
 
 func (s *salaryAddItemEmployee) fillFieldMap() {
-	s.fieldMap = make(map[string]field.Expr, 2)
+	s.fieldMap = make(map[string]field.Expr, 4)
 	s.fieldMap["salary_add_item_id"] = s.SalaryAddItemID
 	s.fieldMap["employee_id"] = s.EmployeeID
+	s.fieldMap["use_custom"] = s.UseCustom
+	s.fieldMap["custom_amount"] = s.CustomAmount
 }
 
 func (s salaryAddItemEmployee) clone(db *gorm.DB) salaryAddItemEmployee {

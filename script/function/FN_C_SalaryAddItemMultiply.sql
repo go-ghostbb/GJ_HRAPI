@@ -17,7 +17,7 @@ as
 begin
     insert into @result (employee_id, salary_add_item_id, salary_type, income_tax, benefits, premiums, amount, multiply)
     select
-        e.id as 'employee_id', s.id, s.salary_type, s.income_tax, s.benefits, s.premiums, s.amount,
+        e.id as 'employee_id', s.id, s.salary_type, s.income_tax, s.benefits, s.premiums, iif(se.use_custom = 1, se.custom_amount, s.amount),
         case
             when s.calc_type = 'default' then
                 -- 在計算條件為預設金額時

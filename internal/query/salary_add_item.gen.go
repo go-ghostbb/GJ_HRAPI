@@ -443,11 +443,12 @@ type ISalaryAddItemDo interface {
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 
-	QueryByEmployeeID(empIDs string, dateOnly1 string, dateOnly2 string) (result []map[string]interface{}, err error)
+	QueryByEmployeeIDMultiply(empIDs string, dateOnly1 string, dateOnly2 string) (result []map[string]interface{}, err error)
+	QueryByEmployeeID(empID uint, keyword string) (result []map[string]interface{}, err error)
 }
 
 // select * from FN_C_SalaryAddItemMultiply (@empIDs, @dateOnly1, @dateOnly2)
-func (s salaryAddItemDo) QueryByEmployeeID(empIDs string, dateOnly1 string, dateOnly2 string) (result []map[string]interface{}, err error) {
+func (s salaryAddItemDo) QueryByEmployeeIDMultiply(empIDs string, dateOnly1 string, dateOnly2 string) (result []map[string]interface{}, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
@@ -455,6 +456,25 @@ func (s salaryAddItemDo) QueryByEmployeeID(empIDs string, dateOnly1 string, date
 	params = append(params, dateOnly1)
 	params = append(params, dateOnly2)
 	generateSQL.WriteString("select * from FN_C_SalaryAddItemMultiply (?, ?, ?) ")
+
+	var executeSQL *gorm.DB
+	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select sa.*, sae.use_custom, sae.custom_amount from salary_add_item_employee sae
+//
+//	join salary_add_item sa on (sa.id = sae.salary_add_item_id)
+//	where sae.employee_id = @empID and sa.name like @keyword
+func (s salaryAddItemDo) QueryByEmployeeID(empID uint, keyword string) (result []map[string]interface{}, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, empID)
+	params = append(params, keyword)
+	generateSQL.WriteString("select sa.*, sae.use_custom, sae.custom_amount from salary_add_item_employee sae join salary_add_item sa on (sa.id = sae.salary_add_item_id) where sae.employee_id = ? and sa.name like ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = s.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert

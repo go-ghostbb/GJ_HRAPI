@@ -28,6 +28,8 @@ func (e *EmployeeApi) Init(group *gin.RouterGroup) {
 	v1.PATCH(":id/employmentStatus", e.setEmploymentStatus)
 	v1.PATCH(":id/login/status", e.setLoginStatus)
 	v1.GET(":id/checkInStatus", e.getByDateRangeCheckInStatus)
+	v1.GET(":id/salaryAddItem", e.getByKeywordSalaryAddItem)
+	v1.PATCH(":id/salaryAddItem", e.setAmountSalaryAddItem)
 }
 
 // 根據keyword獲取employee資料
@@ -255,4 +257,57 @@ func (e *EmployeeApi) getByDateRangeCheckInStatus(c *gin.Context) {
 	}
 
 	Responder(Mount(c)).OkWithData(out)
+}
+
+// 查詢員工的加項
+//
+//	route => GET /api/v1/employee/:id/salaryAddItem
+func (e *EmployeeApi) getByKeywordSalaryAddItem(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.GetByKeywordSalaryAddItemReq
+		out []*model.GetByKeywordSalaryAddItemRes
+		err error
+	)
+
+	in.EmployeeID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseQuery(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	out, err = service.Employee(ctx).GetByKeywordSalaryAddItem(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).OkWithData(out)
+}
+
+// 設定員工加項金額
+//
+//	route => PATCH /api/v1/employee/:id/salaryAddItem
+func (e *EmployeeApi) setAmountSalaryAddItem(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetAmountSalaryAddItemReq
+		err error
+	)
+
+	in.EmployeeID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Employee(ctx).SetAmountSalaryAddItem(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
 }

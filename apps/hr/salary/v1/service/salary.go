@@ -153,7 +153,7 @@ func (s *salary) appendAddItem(in model.SalaryCalcReq, calc *types.CalcSalary) (
 		empIDCalcMap = make(map[uint]*types.CalcSalaryEmployee)
 	)
 
-	queryRes, err = qAddItem.WithContext(s.ctx).QueryByEmployeeID(gbstr.JoinAny(in.EmployeeID, ","), in.DateRangeStart, in.DateRangeEnd)
+	queryRes, err = qAddItem.WithContext(s.ctx).QueryByEmployeeIDMultiply(gbstr.JoinAny(in.EmployeeID, ","), in.DateRangeStart, in.DateRangeEnd)
 	if err != nil {
 		return err
 	}

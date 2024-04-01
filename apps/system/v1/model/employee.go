@@ -80,3 +80,27 @@ type GetByDateRangeCheckInStatusReq struct {
 type GetByDateRangeCheckInStatusRes struct {
 	*types.CheckInStatus
 }
+
+type GetByKeywordSalaryAddItemReq struct {
+	Keyword    string `form:"keyword"`
+	EmployeeID uint   `form:"employeeId"`
+}
+
+type GetByKeywordSalaryAddItemRes struct {
+	ID           uint            `json:"ID"`
+	Name         string          `json:"name"`
+	SalaryType   enum.SalaryType `json:"salaryType"`
+	IncomeTax    bool            `json:"incomeTax"`
+	Benefits     bool            `json:"benefits"`
+	Premiums     bool            `json:"premiums"`
+	Amount       float32         `json:"amount"`
+	UseCustom    bool            `json:"useCustom"`
+	CustomAmount float32         `json:"customAmount"`
+}
+
+type SetAmountSalaryAddItemReq struct {
+	EmployeeID      uint
+	SalaryAddItemID uint    `json:"salaryAddItemId"`
+	UseCustom       bool    `json:"useCustom"`
+	CustomAmount    float32 `json:"customAmount"`
+}

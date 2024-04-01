@@ -36,6 +36,8 @@ type (
 		SetEmploymentStatus(in model.SetEmploymentStatusReq) (err error)
 		SetLoginStatus(in model.SetLoginStatusReq) (err error)
 		GetByDateRangeCheckInStatus(in model.GetByDateRangeCheckInStatusReq) (out []model.GetByDateRangeCheckInStatusRes, err error)
+		GetByKeywordSalaryAddItem(in model.GetByKeywordSalaryAddItemReq) (out []*model.GetByKeywordSalaryAddItemRes, err error)
+		SetAmountSalaryAddItem(in model.SetAmountSalaryAddItemReq) (err error)
 	}
 
 	employee struct {
@@ -244,4 +246,43 @@ func (e *employee) GetByDateRangeCheckInStatus(in model.GetByDateRangeCheckInSta
 	}
 
 	return out, nil
+}
+
+// GetByKeywordSalaryAddItem 查詢員工的加項
+func (e *employee) GetByKeywordSalaryAddItem(in model.GetByKeywordSalaryAddItemReq) (out []*model.GetByKeywordSalaryAddItemRes, err error) {
+	var (
+		qSalaryAddItem = query.SalaryAddItem
+		queryRes       []g.Map
+	)
+
+	queryRes, err = qSalaryAddItem.WithContext(e.ctx).QueryByEmployeeID(in.EmployeeID, "%"+in.Keyword+"%")
+	if err != nil {
+		return nil, err
+	}
+
+	if err = gbconv.Structs(queryRes, &out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+// SetAmountSalaryAddItem 設定加項金額
+func (e *employee) SetAmountSalaryAddItem(in model.SetAmountSalaryAddItemReq) (err error) {
+	var (
+		qSalaryAddItemEmployee = query.SalaryAddItemEmployee
+		saie                   *types.SalaryAddItemEmployee
+	)
+
+	saie, err = qSalaryAddItemEmployee.WithContext(dbcache.WithCtx(e.ctx)).
+		Where(qSalaryAddItemEmployee.SalaryAddItemID.Eq(in.SalaryAddItemID), qSalaryAddItemEmployee.EmployeeID.Eq(in.EmployeeID)).
+		First()
+	if err != nil {
+		return err
+	}
+
+	saie.UseCustom = in.UseCustom
+	saie.CustomAmount = in.CustomAmount
+
+	return qSalaryAddItemEmployee.WithContext(dbcache.WithCtx(e.ctx)).Save(saie)
 }
