@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"hrapi/internal/types"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -419,6 +420,27 @@ type IDepartmentDo interface {
 	Returning(value interface{}, columns ...string) IDepartmentDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
+
+	QueryUp(id uint) (result []*types.Department, err error)
+}
+
+// WITH tree AS (
+// SELECT * from @@table WHERE id = @id
+// UNION ALL
+// SELECT b.* FROM tree INNER JOIN @@table b ON b.id = tree.parent_id)
+// SELECT * FROM tree
+func (d departmentDo) QueryUp(id uint) (result []*types.Department, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, id)
+	generateSQL.WriteString("WITH tree AS ( SELECT * from department WHERE id = ? UNION ALL SELECT b.* FROM tree INNER JOIN department b ON b.id = tree.parent_id) SELECT * FROM tree ")
+
+	var executeSQL *gorm.DB
+	executeSQL = d.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
 }
 
 func (d departmentDo) Debug() IDepartmentDo {

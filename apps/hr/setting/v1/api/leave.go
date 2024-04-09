@@ -17,20 +17,21 @@ type LeaveApi struct{}
 
 func (l *LeaveApi) Init(group *gin.RouterGroup) {
 	// 需要有後台權限 (middleware.Software())
-	v1 := group.Group("leave").Use(middleware.Auth(), middleware.Software())
+	v1 := group.Group("leave").Use(middleware.Auth())
 	v1.GET("", middleware.Paginator(), l.getByKeyword)
-	v1.GET(":id", l.getByID)
-	v1.POST("", l.insert)
-	v1.PUT(":id", l.update)
-	v1.DELETE(":id", l.delete)
-	v1.PATCH(":id/status", l.setStatus)
+	v1.GET(":id", middleware.Software(), l.getByID)
+	v1.POST("", middleware.Software(), l.insert)
+	v1.PUT(":id", middleware.Software(), l.update)
+	v1.DELETE(":id", middleware.Software(), l.delete)
+	v1.PATCH(":id/status", middleware.Software(), l.setStatus)
+	v1.POST("reset/available", middleware.Software(), l.resetEmployeeAvailable)
 	// 群組操作
-	v1.GET("group/:leaveID", l.getLeaveGroup)
-	v1.POST("group", l.insertGroup)
-	v1.DELETE("group/:id", l.deleteGroup)
-	v1.PATCH("group/:id/name", l.setLeaveGroupName)
-	v1.PATCH("group/:id/employee", l.setLeaveGroupEmployee)
-	v1.PATCH("group/:id/condition", l.setLeaveGroupCond)
+	v1.GET("group/:leaveID", middleware.Software(), l.getLeaveGroup)
+	v1.POST("group", middleware.Software(), l.insertGroup)
+	v1.DELETE("group/:id", middleware.Software(), l.deleteGroup)
+	v1.PATCH("group/:id/name", middleware.Software(), l.setLeaveGroupName)
+	v1.PATCH("group/:id/employee", middleware.Software(), l.setLeaveGroupEmployee)
+	v1.PATCH("group/:id/condition", middleware.Software(), l.setLeaveGroupCond)
 }
 
 // 根據keyword, status獲取對應假別
@@ -303,6 +304,30 @@ func (l *LeaveApi) setLeaveGroupCond(c *gin.Context) {
 	}
 
 	err = service.Leave(ctx).SetLeaveGroupCond(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 重新計算請假可用天數
+//
+//	route => POST /api/v1/leave/reset/available
+func (l *LeaveApi) resetEmployeeAvailable(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.ResetEmployeeAvailableReq
+		err error
+	)
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Leave(ctx).ResetEmployeeAvailable(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

@@ -6,7 +6,7 @@ type LeaveCycle string
 
 const (
 	Default  LeaveCycle = "year"
-	Annual   LeaveCycle = "half"
+	Annual   LeaveCycle = "annual"
 	Calendar LeaveCycle = "calendar"
 )
 

@@ -18,18 +18,18 @@ type EmployeeApi struct{}
 
 func (e *EmployeeApi) Init(group *gin.RouterGroup) {
 	// 需要有後台權限 (middleware.Software())
-	v1 := group.Group("employee").Use(middleware.Auth(), middleware.Software())
+	v1 := group.Group("employee").Use(middleware.Auth())
 	v1.GET("", middleware.Paginator(), e.getByKeyword)
-	v1.GET(":id", e.getByID)
-	v1.POST("", e.insert)
-	v1.PUT(":id", e.update)
-	v1.DELETE(":id", e.delete)
-	v1.PATCH(":id/password", e.resetPassword)
-	v1.PATCH(":id/employmentStatus", e.setEmploymentStatus)
-	v1.PATCH(":id/login/status", e.setLoginStatus)
-	v1.GET(":id/checkInStatus", e.getByDateRangeCheckInStatus)
-	v1.GET(":id/salaryAddItem", e.getByKeywordSalaryAddItem)
-	v1.PATCH(":id/salaryAddItem", e.setAmountSalaryAddItem)
+	v1.GET(":id", middleware.Software(), e.getByID)
+	v1.POST("", middleware.Software(), e.insert)
+	v1.PUT(":id", middleware.Software(), e.update)
+	v1.DELETE(":id", middleware.Software(), e.delete)
+	v1.PATCH(":id/password", middleware.Software(), e.resetPassword)
+	v1.PATCH(":id/employmentStatus", middleware.Software(), e.setEmploymentStatus)
+	v1.PATCH(":id/login/status", middleware.Software(), e.setLoginStatus)
+	v1.GET(":id/checkInStatus", middleware.Software(), e.getByDateRangeCheckInStatus)
+	v1.GET(":id/salaryAddItem", middleware.Software(), e.getByKeywordSalaryAddItem)
+	v1.PATCH(":id/salaryAddItem", middleware.Software(), e.setAmountSalaryAddItem)
 }
 
 // 根據keyword獲取employee資料

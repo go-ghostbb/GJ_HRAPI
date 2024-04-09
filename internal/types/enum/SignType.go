@@ -7,6 +7,7 @@ type SignType string
 const (
 	DepartmentManager SignType = "department manager"
 	SpecificEmployee  SignType = "specific employee"
+	Agent             SignType = "agent"
 )
 
 func (l *SignType) Scan(value interface{}) error {

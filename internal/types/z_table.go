@@ -29,6 +29,10 @@ func Basic() []interface{} {
 		&CalcSalaryEmployee{},        // calc_salary_employee
 		&CalcSalaryAdd{},             // calc_salary_add
 		&CalcSalaryReduce{},          // calc_salary_reduce
+		&LeaveRequestForm{},          // leave_request_form
+		&LeaveSignOffFlow{},          // leave_sign_off_flow
+		&LeaveCorrect{},              // leave_correct
+		&LeaveDefer{},                // leave_defer
 	}
 }
 

@@ -26,9 +26,13 @@ var (
 	Department                *department
 	Employee                  *employee
 	Leave                     *leave
+	LeaveCorrect              *leaveCorrect
+	LeaveDefer                *leaveDefer
 	LeaveGroup                *leaveGroup
 	LeaveGroupCondition       *leaveGroupCondition
 	LeaveGroupEmployee        *leaveGroupEmployee
+	LeaveRequestForm          *leaveRequestForm
+	LeaveSignOffFlow          *leaveSignOffFlow
 	LeaveSignOffSetting       *leaveSignOffSetting
 	LoginInformation          *loginInformation
 	Menu                      *menu
@@ -63,9 +67,13 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Department = &Q.Department
 	Employee = &Q.Employee
 	Leave = &Q.Leave
+	LeaveCorrect = &Q.LeaveCorrect
+	LeaveDefer = &Q.LeaveDefer
 	LeaveGroup = &Q.LeaveGroup
 	LeaveGroupCondition = &Q.LeaveGroupCondition
 	LeaveGroupEmployee = &Q.LeaveGroupEmployee
+	LeaveRequestForm = &Q.LeaveRequestForm
+	LeaveSignOffFlow = &Q.LeaveSignOffFlow
 	LeaveSignOffSetting = &Q.LeaveSignOffSetting
 	LoginInformation = &Q.LoginInformation
 	Menu = &Q.Menu
@@ -101,9 +109,13 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Department:                newDepartment(db, opts...),
 		Employee:                  newEmployee(db, opts...),
 		Leave:                     newLeave(db, opts...),
+		LeaveCorrect:              newLeaveCorrect(db, opts...),
+		LeaveDefer:                newLeaveDefer(db, opts...),
 		LeaveGroup:                newLeaveGroup(db, opts...),
 		LeaveGroupCondition:       newLeaveGroupCondition(db, opts...),
 		LeaveGroupEmployee:        newLeaveGroupEmployee(db, opts...),
+		LeaveRequestForm:          newLeaveRequestForm(db, opts...),
+		LeaveSignOffFlow:          newLeaveSignOffFlow(db, opts...),
 		LeaveSignOffSetting:       newLeaveSignOffSetting(db, opts...),
 		LoginInformation:          newLoginInformation(db, opts...),
 		Menu:                      newMenu(db, opts...),
@@ -140,9 +152,13 @@ type Query struct {
 	Department                department
 	Employee                  employee
 	Leave                     leave
+	LeaveCorrect              leaveCorrect
+	LeaveDefer                leaveDefer
 	LeaveGroup                leaveGroup
 	LeaveGroupCondition       leaveGroupCondition
 	LeaveGroupEmployee        leaveGroupEmployee
+	LeaveRequestForm          leaveRequestForm
+	LeaveSignOffFlow          leaveSignOffFlow
 	LeaveSignOffSetting       leaveSignOffSetting
 	LoginInformation          loginInformation
 	Menu                      menu
@@ -180,9 +196,13 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Department:                q.Department.clone(db),
 		Employee:                  q.Employee.clone(db),
 		Leave:                     q.Leave.clone(db),
+		LeaveCorrect:              q.LeaveCorrect.clone(db),
+		LeaveDefer:                q.LeaveDefer.clone(db),
 		LeaveGroup:                q.LeaveGroup.clone(db),
 		LeaveGroupCondition:       q.LeaveGroupCondition.clone(db),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.clone(db),
+		LeaveRequestForm:          q.LeaveRequestForm.clone(db),
+		LeaveSignOffFlow:          q.LeaveSignOffFlow.clone(db),
 		LeaveSignOffSetting:       q.LeaveSignOffSetting.clone(db),
 		LoginInformation:          q.LoginInformation.clone(db),
 		Menu:                      q.Menu.clone(db),
@@ -227,9 +247,13 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Department:                q.Department.replaceDB(db),
 		Employee:                  q.Employee.replaceDB(db),
 		Leave:                     q.Leave.replaceDB(db),
+		LeaveCorrect:              q.LeaveCorrect.replaceDB(db),
+		LeaveDefer:                q.LeaveDefer.replaceDB(db),
 		LeaveGroup:                q.LeaveGroup.replaceDB(db),
 		LeaveGroupCondition:       q.LeaveGroupCondition.replaceDB(db),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.replaceDB(db),
+		LeaveRequestForm:          q.LeaveRequestForm.replaceDB(db),
+		LeaveSignOffFlow:          q.LeaveSignOffFlow.replaceDB(db),
 		LeaveSignOffSetting:       q.LeaveSignOffSetting.replaceDB(db),
 		LoginInformation:          q.LoginInformation.replaceDB(db),
 		Menu:                      q.Menu.replaceDB(db),
@@ -264,9 +288,13 @@ type queryCtx struct {
 	Department                IDepartmentDo
 	Employee                  IEmployeeDo
 	Leave                     ILeaveDo
+	LeaveCorrect              ILeaveCorrectDo
+	LeaveDefer                ILeaveDeferDo
 	LeaveGroup                ILeaveGroupDo
 	LeaveGroupCondition       ILeaveGroupConditionDo
 	LeaveGroupEmployee        ILeaveGroupEmployeeDo
+	LeaveRequestForm          ILeaveRequestFormDo
+	LeaveSignOffFlow          ILeaveSignOffFlowDo
 	LeaveSignOffSetting       ILeaveSignOffSettingDo
 	LoginInformation          ILoginInformationDo
 	Menu                      IMenuDo
@@ -301,9 +329,13 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Department:                q.Department.WithContext(ctx),
 		Employee:                  q.Employee.WithContext(ctx),
 		Leave:                     q.Leave.WithContext(ctx),
+		LeaveCorrect:              q.LeaveCorrect.WithContext(ctx),
+		LeaveDefer:                q.LeaveDefer.WithContext(ctx),
 		LeaveGroup:                q.LeaveGroup.WithContext(ctx),
 		LeaveGroupCondition:       q.LeaveGroupCondition.WithContext(ctx),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.WithContext(ctx),
+		LeaveRequestForm:          q.LeaveRequestForm.WithContext(ctx),
+		LeaveSignOffFlow:          q.LeaveSignOffFlow.WithContext(ctx),
 		LeaveSignOffSetting:       q.LeaveSignOffSetting.WithContext(ctx),
 		LoginInformation:          q.LoginInformation.WithContext(ctx),
 		Menu:                      q.Menu.WithContext(ctx),

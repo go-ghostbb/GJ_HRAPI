@@ -816,6 +816,8 @@ type IEmployeeDo interface {
 	schema.Tabler
 
 	QueryIDWhereCardNum(cardNums []string) (result []map[string]interface{}, err error)
+	CalculateEmployeeSeniority() (result []map[string]interface{}, err error)
+	CalculateEmployeeSeniorityWithEndDate(dateOnly string) (result []map[string]interface{}, err error)
 }
 
 // select id, card_number from @@table where card_number in (@cardNums);
@@ -825,6 +827,33 @@ func (e employeeDo) QueryIDWhereCardNum(cardNums []string) (result []map[string]
 	var generateSQL strings.Builder
 	params = append(params, cardNums)
 	generateSQL.WriteString("select id, card_number from employee where card_number in (?); ")
+
+	var executeSQL *gorm.DB
+	executeSQL = e.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select * from FN_C_EmployeeSeniority()
+func (e employeeDo) CalculateEmployeeSeniority() (result []map[string]interface{}, err error) {
+	var generateSQL strings.Builder
+	generateSQL.WriteString("select * from FN_C_EmployeeSeniority() ")
+
+	var executeSQL *gorm.DB
+	executeSQL = e.UnderlyingDB().Raw(generateSQL.String()).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select * from FN_C_EmployeeSeniorityWithEndDate(@dateOnly)
+func (e employeeDo) CalculateEmployeeSeniorityWithEndDate(dateOnly string) (result []map[string]interface{}, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly)
+	generateSQL.WriteString("select * from FN_C_EmployeeSeniorityWithEndDate(?) ")
 
 	var executeSQL *gorm.DB
 	executeSQL = e.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert

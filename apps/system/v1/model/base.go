@@ -15,12 +15,13 @@ type GetEmployeeInfoReq struct {
 }
 
 type GetEmployeeInfoRes struct {
-	EmployeeId   uint        `json:"employeeId" copier:"ID"`
-	DepartmentId uint        `json:"departmentId" copier:"DepartmentId"`
-	Account      string      `json:"account"`
-	RealName     string      `json:"realName" copier:"RealName"`
-	Avatar       string      `json:"avatar" copier:"Avatar"`
-	Roles        []*RoleInfo `json:"roles" copier:"Roles"`
+	EmployeeId   uint              `json:"employeeId" copier:"ID"`
+	DepartmentId uint              `json:"departmentId" copier:"DepartmentId"`
+	Department   *types.Department `json:"department" copier:"Department"`
+	Account      string            `json:"account"`
+	RealName     string            `json:"realName" copier:"RealName"`
+	Avatar       string            `json:"avatar" copier:"Avatar"`
+	Roles        []*RoleInfo       `json:"roles" copier:"Roles"`
 }
 
 func (g *GetEmployeeInfoRes) LoginInformation(info *types.LoginInformation) {

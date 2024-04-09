@@ -1,3 +1,5 @@
+domain: "127.0.0.1"
+
 server:
   logger:
     path: "./log/server"
@@ -38,8 +40,9 @@ database:
     record-not-found-err: false
 
 viewer:
-  path: ["resource/template"]
+  paths: ["resource/template"]
   leaveSign:
+    paths: ["resource/template/mail"]
     default-file: "leaveSign.html"
 
 cors:

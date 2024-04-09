@@ -49,3 +49,8 @@ type Employee struct {
 func (e *Employee) TableName() string {
 	return "employee"
 }
+
+// DepartmentName for copier
+func (e *Employee) DepartmentName() string {
+	return e.Department.Name
+}

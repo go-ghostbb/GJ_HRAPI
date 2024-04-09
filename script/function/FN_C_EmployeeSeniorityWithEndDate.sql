@@ -1,11 +1,11 @@
 DROP FUNCTION IF EXISTS [dbo].[FN_C_EmployeeSeniorityWithEndDate]
     GO
 
-CREATE function [dbo].[FN_C_EmployeeSeniorityWithEndDate] (@endDate smalldatetime)
+CREATE function [dbo].[FN_C_EmployeeSeniorityWithEndDate] (@endDate date)
     returns @retDateDuration table
                              (
                                  employee_id     int  null ,
-                                 hire_date     smalldatetime null ,
+                                 hire_date     date null ,
                                  year        int  null ,
                                  month       int  null
                              )

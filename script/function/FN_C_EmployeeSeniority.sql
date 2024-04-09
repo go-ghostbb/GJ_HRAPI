@@ -5,7 +5,7 @@ create function [dbo].[FN_C_EmployeeSeniority] ()
     returns @retDateDuration table
                              (
                                  employee_id     int  null ,
-                                 hire_date     smalldatetime null ,
+                                 hire_date     date null ,
                                  year        int  null ,
                                  month       int  null
                              )
@@ -20,8 +20,8 @@ begin
     declare @arrived smalldatetime
 
     -- 今天日期
-    declare @today smalldatetime
-    set @today = getdate()
+    declare @today date
+    set @today = convert(varchar, year(getdate())) + '-01-01'
 
     -- 迴圈跑Cursor
     fetch next from idCursor into @id, @arrived

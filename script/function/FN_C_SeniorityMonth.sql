@@ -1,7 +1,7 @@
 DROP FUNCTION IF EXISTS [dbo].[FN_C_SeniorityMonth]
 GO
 
-CREATE FUNCTION [dbo].[FN_C_SeniorityMonth] (@startDate SMALLDATETIME, @endDate SMALLDATETIME)
+CREATE FUNCTION [dbo].[FN_C_SeniorityMonth] (@startDate date, @endDate date)
     RETURNS int
 AS
 BEGIN

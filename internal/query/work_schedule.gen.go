@@ -493,6 +493,7 @@ type IWorkScheduleDo interface {
 	QueryByDate(dateOnly string) (result []*types.WorkSchedule, err error)
 	QueryByDateRange(dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error)
 	DeleteByDateRange(empID uint, likeDate string) (rowsAffected int64, err error)
+	QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error)
 }
 
 // select * from @@table where schedule_date = @dateOnly and deleted_at is null
@@ -538,6 +539,23 @@ func (w workScheduleDo) DeleteByDateRange(empID uint, likeDate string) (rowsAffe
 	var executeSQL *gorm.DB
 	executeSQL = w.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
 	rowsAffected = executeSQL.RowsAffected
+	err = executeSQL.Error
+
+	return
+}
+
+// select * from @@table where schedule_date between @dateOnly1 and @dateOnly2 and employee_id = @empID and deleted_at is null
+func (w workScheduleDo) QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly1)
+	params = append(params, dateOnly2)
+	params = append(params, empID)
+	generateSQL.WriteString("select * from work_schedule where schedule_date between ? and ? and employee_id = ? and deleted_at is null ")
+
+	var executeSQL *gorm.DB
+	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return
