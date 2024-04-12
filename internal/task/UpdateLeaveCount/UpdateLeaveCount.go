@@ -344,7 +344,7 @@ func (l *LeaveCheck) doDefer(ctx context.Context, tx *query.Query, employeeID em
 	newDefer := &types.LeaveDefer{
 		EmployeeID: uint(employeeID),
 		LeaveID:    uint(leaveID),
-		Effective:  driver.Date(l.now),
+		Effective:  driver.Date(l.now.Unix()),
 		Available:  left,
 		Extra:      extra,
 		ThisTime:   thisTime,
@@ -352,14 +352,14 @@ func (l *LeaveCheck) doDefer(ctx context.Context, tx *query.Query, employeeID em
 	}
 	if l.core[employeeID][leaveID].isMaturity {
 		// 自訂過期?
-		newDefer.Expired = driver.Date(time.Now().AddDate(0, int(l.core[employeeID][leaveID].maturity), 0))
+		newDefer.Expired = driver.Date(time.Now().AddDate(0, int(l.core[employeeID][leaveID].maturity), 0).Unix())
 	}
 	// 將新遞延結果放進資料庫
 	if err = qDefer.WithContext(ctx).Create(newDefer); err != nil {
 		return err
 	}
 	// 更新舊遞延
-	if _, err = qDefer.WithContext(ctx).Where(qDefer.ID.Eq(leaveDefer.ID)).UpdateSimple(qDefer.NextID.Value(newDefer.ID), qDefer.Expired.Value(driver.Date(l.now))); err != nil {
+	if _, err = qDefer.WithContext(ctx).Where(qDefer.ID.Eq(leaveDefer.ID)).UpdateSimple(qDefer.NextID.Value(newDefer.ID), qDefer.Expired.Value(driver.Date(l.now.Unix()))); err != nil {
 		return err
 	}
 	if _, err = qDefer.WithContext(ctx).Where(qDefer.ID.Eq(leaveDefer.ID)).Delete(); err != nil {

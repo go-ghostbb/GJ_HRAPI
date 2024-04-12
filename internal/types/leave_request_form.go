@@ -10,10 +10,10 @@ import (
 type LeaveRequestForm struct {
 	gorm.Model
 	Order            string          `gorm:"size:50;uniqueIndex;comment:單號" json:"order"`
-	StartDate        driver.Date     `gorm:"type:date;size:50;not null;comment:起始日期" json:"startDate" dbcache:"true"`
-	StartTime        driver.Time     `gorm:"type:time(0);size:50;not null;comment:起始時間" json:"startTime" dbcache:"true"`
-	EndDate          driver.Date     `gorm:"type:date;size:50;not null;comment:結束日期" json:"endDate" dbcache:"true"`
-	EndTime          driver.Time     `gorm:"type:time(0);size:50;not null;comment:結束時間" json:"endTime" dbcache:"true"`
+	StartDate        driver.Date     `gorm:"type:date;size:50;not null;comment:起始日期" json:"startDate"`
+	StartTime        driver.Time     `gorm:"type:time(0);size:50;not null;comment:起始時間" json:"startTime"`
+	EndDate          driver.Date     `gorm:"type:date;size:50;not null;comment:結束日期" json:"endDate"`
+	EndTime          driver.Time     `gorm:"type:time(0);size:50;not null;comment:結束時間" json:"endTime"`
 	Remark           string          `gorm:"comment:備註" json:"remark"`
 	SignStatus       enum.SignStatus `gorm:"type:tinyint;not null;default:0;comment:0 送簽中, 1 簽核中, 2 通過, 3 拒絕" json:"signStatus"`
 	LeaveMinuteCount float32         `gorm:"comment:請假分鐘數" json:"leaveMinuteCount"`

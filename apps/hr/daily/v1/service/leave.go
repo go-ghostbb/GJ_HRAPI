@@ -63,10 +63,15 @@ func (l *leave) GetLeaveFormByEmployee(in model.GetLeaveFormByEmployeeReq) (out 
 		qForm = query.LeaveRequestForm
 		start = gbconv.Time(in.StartDate)
 		end   = gbconv.Time(in.EndDate)
+		conds = []gen.Condition{qForm.EmployeeID.Eq(in.EmployeeID)}
 	)
 
+	if in.StartDate != "" && in.EndDate != "" {
+		conds = append(conds, qForm.CreatedAt.Between(start, end.AddDate(0, 0, 1)))
+	}
+
 	out.Items, err = qForm.WithContext(dbcache.WithCtx(l.ctx)).
-		Scopes(l.page.Where(qForm.EmployeeID.Eq(in.EmployeeID), qForm.CreatedAt.Between(start, end.AddDate(0, 0, 1)))).
+		Scopes(l.page.Where(conds...)).
 		Preload(field.Associations).
 		Order(qForm.CreatedAt.Desc()).Find()
 	if err != nil {
@@ -82,10 +87,11 @@ func (l *leave) GetLeaveFormByEmployee(in model.GetLeaveFormByEmployeeReq) (out 
 func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 	return query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			qForm = tx.LeaveRequestForm
-			qFlow = tx.LeaveSignOffFlow
-			form  *types.LeaveRequestForm
-			err   error
+			qForm          = tx.LeaveRequestForm
+			qFlow          = tx.LeaveSignOffFlow
+			qCheckInStatus = tx.CheckInStatus
+			form           *types.LeaveRequestForm
+			err            error
 		)
 
 		// 查詢此表單內容
@@ -95,13 +101,13 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 		}
 
 		// 刪除此表單
-		_, err = qForm.WithContext(dbcache.WithCtx(l.ctx)).Where(qForm.ID.Eq(in.ID)).Unscoped().Delete()
+		_, err = qForm.WithContext(dbcache.WithCtx(l.ctx)).Where(qForm.ID.Eq(in.ID)).Delete()
 		if err != nil {
 			return err
 		}
 
 		// 刪除流程
-		_, err = qFlow.WithContext(dbcache.WithCtx(l.ctx)).Where(qFlow.LeaveRequestFormID.Eq(in.ID)).Unscoped().Delete()
+		_, err = qFlow.WithContext(dbcache.WithCtx(l.ctx)).Where(qFlow.LeaveRequestFormID.Eq(in.ID)).Delete()
 		if err != nil {
 			return err
 		}
@@ -116,6 +122,12 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 			return err
 		}
 
+		// 更新出勤狀態表
+		err = qCheckInStatus.WithContext(l.ctx).UpdateHourByLeave(form.EmployeeID, form.ID)
+		if err != nil {
+			return err
+		}
+
 		// commit
 		return nil
 	})
@@ -124,8 +136,9 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 // SaveLeaveForm is to insert or update leave request form
 func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFormRes, err error) {
 	var (
-		qForm     = query.LeaveRequestForm
-		leaveForm = new(types.LeaveRequestForm)
+		qForm      = query.LeaveRequestForm
+		leaveForm  = new(types.LeaveRequestForm)
+		originDays float64
 	)
 
 	if in.ID != 0 {
@@ -135,6 +148,7 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 		if err != nil {
 			return
 		}
+		originDays = float64(leaveForm.LeaveDayCount)
 	}
 
 	// 複製form(request body)到database model
@@ -165,9 +179,10 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 	// 開始資料庫操作，開啟事務
 	err = query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			qForm = tx.LeaveRequestForm
-			qFlow = tx.LeaveSignOffFlow
-			err   error
+			qForm          = tx.LeaveRequestForm
+			qFlow          = tx.LeaveSignOffFlow
+			qCheckInStatus = tx.CheckInStatus
+			err            error
 		)
 
 		// 如果form id為0，先建立資料獲取id
@@ -180,6 +195,16 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			// maybe A20240131000010
 			// A + 今天日期 + (id % 1000000)補全6位數
 			leaveForm.Order = "A" + time.Now().Format("20060102") + fmt.Sprintf("%06d", leaveForm.ID%1000000)
+		} else {
+			// 如果不為0, 請假可用表或遞延表必須減去原本的簽核中時數
+			if leaveForm.IsDefer {
+				err = l.updateDeferSigning(tx, leaveForm, float64(originDays)*-1)
+			} else {
+				err = l.updateCorrectSigning(tx, leaveForm, float64(originDays)*-1)
+			}
+			if err != nil {
+				return err
+			}
 		}
 
 		// 刪除該form的簽核流程並且建立新的
@@ -215,6 +240,12 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			// 如果不是從遞延表裡面使用的話
 			err = l.updateCorrectSigning(tx, leaveForm, float64(leaveForm.LeaveDayCount))
 		}
+		if err != nil {
+			return err
+		}
+
+		// 更新出勤狀態表的簽核中時數
+		err = qCheckInStatus.WithContext(l.ctx).UpdateHourByLeave(leaveForm.EmployeeID, leaveForm.ID)
 		if err != nil {
 			return err
 		}
@@ -563,45 +594,61 @@ func (l *leave) attachSave(order string, paths []string) ([]string, error) {
 	return result, nil
 }
 
-// 更新遞延表簽核中時數
-func (l *leave) updateDeferSigning(tx *query.Query, form *types.LeaveRequestForm, hours float64) (err error) {
+// 更新遞延表簽核中天數
+func (l *leave) updateDeferSigning(tx *query.Query, form *types.LeaveRequestForm, days float64) (err error) {
 	var (
 		qDefer    = tx.LeaveDefer
-		updateCol = qDefer.Signing.Add(hours)
+		updateCol = qDefer.Signing.Add(days)
 		info      gen.ResultInfo
 	)
+
+	if days < 0 {
+		updateCol = qDefer.Signing.Sub(days * -1)
+	}
+
+	// 如果這張單子已核准
+	if form.SignStatus == enum.SignStatusApprove {
+		updateCol = qDefer.Used.Sub(days * -1)
+	}
 
 	info, err = qDefer.WithContext(l.ctx).Where(
 		qDefer.EmployeeID.Eq(form.EmployeeID),
 		qDefer.LeaveID.Eq(form.LeaveID),
-		// 請假日期區間必須在生效時間內
-		qDefer.Effective.Lte(form.StartDate),
-		qDefer.Expired.Gte(form.EndDate),
 	).UpdateSimple(updateCol)
 	if err != nil {
 		return err
 	}
-
 	if info.RowsAffected == 0 {
-		return gberror.New("update leave_defer signing error: affected rows is 0")
+		return gberror.New("update leave_correct signing error: affected rows is 0")
 	}
 
 	return nil
 }
 
-// 更新可用請假表簽核中時數
-func (l *leave) updateCorrectSigning(tx *query.Query, form *types.LeaveRequestForm, hours float64) (err error) {
+// 更新可用請假表簽核中天數
+func (l *leave) updateCorrectSigning(tx *query.Query, form *types.LeaveRequestForm, days float64) (err error) {
 	var (
 		qCorrect  = tx.LeaveCorrect
-		updateCol = qCorrect.Signing.Add(hours)
+		updateCol = qCorrect.Signing.Add(days)
 		info      gen.ResultInfo
 	)
+
+	if days < 0 {
+		updateCol = qCorrect.Signing.Sub(days * -1)
+	}
+
+	// 如果這張單子已核准
+	if form.SignStatus == enum.SignStatusApprove {
+		updateCol = qCorrect.Used.Sub(days * -1)
+	}
 
 	info, err = qCorrect.WithContext(l.ctx).Where(
 		qCorrect.EmployeeID.Eq(form.EmployeeID),
 		qCorrect.LeaveID.Eq(form.LeaveID),
 	).UpdateSimple(updateCol)
-
+	if err != nil {
+		return err
+	}
 	if info.RowsAffected == 0 {
 		return gberror.New("update leave_correct signing error: affected rows is 0")
 	}
@@ -632,6 +679,8 @@ func (l *leave) sendEmail(form *types.LeaveRequestForm) {
 		g.Log().Error(l.ctx, "get url error:", err.Error())
 		return
 	}
+
+	url = fmt.Sprintf("%s?uuid=%s&locale=%s", url, form.SignOffFlow[0].UUID, form.SignOffFlow[0].Locale)
 
 	// template
 	view := g.View("leaveSign")

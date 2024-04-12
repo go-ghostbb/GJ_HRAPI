@@ -4,15 +4,14 @@ import (
 	"database/sql/driver"
 	"fmt"
 	gbstr "ghostbb.io/gb/text/gb_str"
-	gbconv "ghostbb.io/gb/util/gb_conv"
 	"time"
 )
 
-type Time time.Time
+type Time int64
 
 func (t *Time) Scan(value interface{}) error {
 	temp, _ := time.Parse(time.TimeOnly, value.(time.Time).Format(time.TimeOnly))
-	*t = Time(gbconv.Time(temp))
+	*t = Time(temp.Unix())
 	return nil
 }
 
@@ -21,11 +20,11 @@ func (t Time) Value() (driver.Value, error) {
 }
 
 func (t Time) Format() string {
-	return time.Time(t).Format(time.TimeOnly)
+	return time.Unix(int64(t), 0).UTC().Format(time.TimeOnly)
 }
 
 func (t Time) Unix() int64 {
-	return time.Time(t).Unix()
+	return int64(t)
 }
 
 func (t Time) MarshalJSON() ([]byte, error) {
@@ -38,7 +37,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*t = Time(tt)
+	*t = Time(tt.Unix())
 
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 	"hrapi/apps/hr/filing"
 	"hrapi/apps/hr/salary"
 	"hrapi/apps/hr/setting"
+	signoff "hrapi/apps/hr/sign-off"
 	"hrapi/apps/system"
 	"hrapi/apps/upload"
 	"hrapi/internal/middleware"
@@ -41,6 +42,7 @@ func mainFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 		filing.New(),
 		salary.New(),
 		daily.New(),
+		signoff.New(),
 	)
 
 	// Register static resource

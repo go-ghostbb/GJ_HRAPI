@@ -7,10 +7,11 @@ import (
 	"time"
 )
 
-type Date time.Time
+type Date int64
 
 func (d *Date) Scan(value interface{}) error {
-	*d = Date(value.(time.Time))
+	v := value.(time.Time)
+	*d = Date(v.Unix())
 	return nil
 }
 
@@ -19,11 +20,11 @@ func (d Date) Value() (driver.Value, error) {
 }
 
 func (d Date) Format() string {
-	return time.Time(d).Format(time.DateOnly)
+	return time.Unix(int64(d), 0).UTC().Format(time.DateOnly)
 }
 
 func (d Date) Unix() int64 {
-	return time.Time(d).Unix()
+	return int64(d)
 }
 
 func (d Date) MarshalJSON() ([]byte, error) {
@@ -36,7 +37,7 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*d = Date(t)
+	*d = Date(t.Unix())
 
 	return nil
 }

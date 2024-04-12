@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="hrapi" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="test" />
+    <envs>
+      <env name="GB_DEBUG" value="true" />
+      <env name="GB_CFG_FILE" value="config.dev.yaml" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="hrapi" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <method v="2" />
+  </configuration>
+</component>

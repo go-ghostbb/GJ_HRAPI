@@ -544,6 +544,7 @@ type ICheckInStatusDo interface {
 	UpdateStatus(dateOnly string) (err error)
 	UpdateTime(timeOnly string, dateOnly string, workShiftCode string, cardNum string, isWork bool) (rowsAffected int64, err error)
 	QueryTotalAttendHours(empID uint, dateOnly1 string, dateOnly2 string) (result float32, err error)
+	UpdateHourByLeave(empID uint, leaveRequestFromID uint) (err error)
 }
 
 // select * from @@table
@@ -694,6 +695,22 @@ func (c checkInStatusDo) QueryTotalAttendHours(empID uint, dateOnly1 string, dat
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// exec P_C_CheckInHourUpdateByLeave @empID, @leaveRequestFromID
+func (c checkInStatusDo) UpdateHourByLeave(empID uint, leaveRequestFromID uint) (err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, empID)
+	params = append(params, leaveRequestFromID)
+	generateSQL.WriteString("exec P_C_CheckInHourUpdateByLeave ?, ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

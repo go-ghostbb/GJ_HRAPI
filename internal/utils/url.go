@@ -19,7 +19,7 @@ func GetURL(route string) (string, error) {
 
 	if domain.IsEmpty() {
 		// 如果資料為空，給一個預設網域
-		domain.Set("127.0.0.1")
+		domain.Set("127.0.0.1:5180")
 	}
 
 	return fmt.Sprintf("http://%s/%s", domain.String(), route), nil
