@@ -44,6 +44,9 @@ viewer:
   leaveSign:
     paths: ["resource/template/mail"]
     default-file: "leaveSign.html"
+  checkSign:
+    paths: [ "resource/template/mail" ]
+    default-file: "checkInSign.html"
 
 cors:
   # mode說明

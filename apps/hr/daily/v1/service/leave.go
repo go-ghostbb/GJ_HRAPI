@@ -139,6 +139,7 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 		qForm      = query.LeaveRequestForm
 		leaveForm  = new(types.LeaveRequestForm)
 		originDays float64
+		originForm = new(types.LeaveRequestForm)
 	)
 
 	if in.ID != 0 {
@@ -149,6 +150,9 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			return
 		}
 		originDays = float64(leaveForm.LeaveDayCount)
+
+		// 複製一份
+		*originForm = *leaveForm
 	}
 
 	// 複製form(request body)到database model
@@ -198,10 +202,15 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 		} else {
 			// 如果不為0, 請假可用表或遞延表必須減去原本的簽核中時數
 			if leaveForm.IsDefer {
-				err = l.updateDeferSigning(tx, leaveForm, float64(originDays)*-1)
+				err = l.updateDeferSigning(tx, leaveForm, originDays*-1)
 			} else {
-				err = l.updateCorrectSigning(tx, leaveForm, float64(originDays)*-1)
+				err = l.updateCorrectSigning(tx, leaveForm, originDays*-1)
 			}
+			if err != nil {
+				return err
+			}
+			// 出勤狀態表扣除
+			err = qCheckInStatus.WithContext(dbcache.WithCtx(l.ctx)).SubHourByLeave(leaveForm.EmployeeID, leaveForm.ID)
 			if err != nil {
 				return err
 			}

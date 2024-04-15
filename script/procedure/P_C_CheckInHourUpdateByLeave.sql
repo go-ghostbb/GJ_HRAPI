@@ -1,3 +1,6 @@
+-- 請假單新增、刪除時觸發此procedure
+-- 會依照請假單內容更新出勤時數
+
 DROP PROCEDURE IF EXISTS [dbo].[P_C_CheckInHourUpdateByLeave]
 GO
 

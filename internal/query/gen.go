@@ -21,6 +21,10 @@ var (
 	CalcSalaryAdd             *calcSalaryAdd
 	CalcSalaryEmployee        *calcSalaryEmployee
 	CalcSalaryReduce          *calcSalaryReduce
+	CheckInRequestForm        *checkInRequestForm
+	CheckInRequestFormDetail  *checkInRequestFormDetail
+	CheckInSignOffFlow        *checkInSignOffFlow
+	CheckInSignOffSetting     *checkInSignOffSetting
 	CheckInStatus             *checkInStatus
 	ConfigMap                 *configMap
 	Department                *department
@@ -62,6 +66,10 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	CalcSalaryAdd = &Q.CalcSalaryAdd
 	CalcSalaryEmployee = &Q.CalcSalaryEmployee
 	CalcSalaryReduce = &Q.CalcSalaryReduce
+	CheckInRequestForm = &Q.CheckInRequestForm
+	CheckInRequestFormDetail = &Q.CheckInRequestFormDetail
+	CheckInSignOffFlow = &Q.CheckInSignOffFlow
+	CheckInSignOffSetting = &Q.CheckInSignOffSetting
 	CheckInStatus = &Q.CheckInStatus
 	ConfigMap = &Q.ConfigMap
 	Department = &Q.Department
@@ -104,6 +112,10 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		CalcSalaryAdd:             newCalcSalaryAdd(db, opts...),
 		CalcSalaryEmployee:        newCalcSalaryEmployee(db, opts...),
 		CalcSalaryReduce:          newCalcSalaryReduce(db, opts...),
+		CheckInRequestForm:        newCheckInRequestForm(db, opts...),
+		CheckInRequestFormDetail:  newCheckInRequestFormDetail(db, opts...),
+		CheckInSignOffFlow:        newCheckInSignOffFlow(db, opts...),
+		CheckInSignOffSetting:     newCheckInSignOffSetting(db, opts...),
 		CheckInStatus:             newCheckInStatus(db, opts...),
 		ConfigMap:                 newConfigMap(db, opts...),
 		Department:                newDepartment(db, opts...),
@@ -147,6 +159,10 @@ type Query struct {
 	CalcSalaryAdd             calcSalaryAdd
 	CalcSalaryEmployee        calcSalaryEmployee
 	CalcSalaryReduce          calcSalaryReduce
+	CheckInRequestForm        checkInRequestForm
+	CheckInRequestFormDetail  checkInRequestFormDetail
+	CheckInSignOffFlow        checkInSignOffFlow
+	CheckInSignOffSetting     checkInSignOffSetting
 	CheckInStatus             checkInStatus
 	ConfigMap                 configMap
 	Department                department
@@ -191,6 +207,10 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		CalcSalaryAdd:             q.CalcSalaryAdd.clone(db),
 		CalcSalaryEmployee:        q.CalcSalaryEmployee.clone(db),
 		CalcSalaryReduce:          q.CalcSalaryReduce.clone(db),
+		CheckInRequestForm:        q.CheckInRequestForm.clone(db),
+		CheckInRequestFormDetail:  q.CheckInRequestFormDetail.clone(db),
+		CheckInSignOffFlow:        q.CheckInSignOffFlow.clone(db),
+		CheckInSignOffSetting:     q.CheckInSignOffSetting.clone(db),
 		CheckInStatus:             q.CheckInStatus.clone(db),
 		ConfigMap:                 q.ConfigMap.clone(db),
 		Department:                q.Department.clone(db),
@@ -242,6 +262,10 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		CalcSalaryAdd:             q.CalcSalaryAdd.replaceDB(db),
 		CalcSalaryEmployee:        q.CalcSalaryEmployee.replaceDB(db),
 		CalcSalaryReduce:          q.CalcSalaryReduce.replaceDB(db),
+		CheckInRequestForm:        q.CheckInRequestForm.replaceDB(db),
+		CheckInRequestFormDetail:  q.CheckInRequestFormDetail.replaceDB(db),
+		CheckInSignOffFlow:        q.CheckInSignOffFlow.replaceDB(db),
+		CheckInSignOffSetting:     q.CheckInSignOffSetting.replaceDB(db),
 		CheckInStatus:             q.CheckInStatus.replaceDB(db),
 		ConfigMap:                 q.ConfigMap.replaceDB(db),
 		Department:                q.Department.replaceDB(db),
@@ -283,6 +307,10 @@ type queryCtx struct {
 	CalcSalaryAdd             ICalcSalaryAddDo
 	CalcSalaryEmployee        ICalcSalaryEmployeeDo
 	CalcSalaryReduce          ICalcSalaryReduceDo
+	CheckInRequestForm        ICheckInRequestFormDo
+	CheckInRequestFormDetail  ICheckInRequestFormDetailDo
+	CheckInSignOffFlow        ICheckInSignOffFlowDo
+	CheckInSignOffSetting     ICheckInSignOffSettingDo
 	CheckInStatus             ICheckInStatusDo
 	ConfigMap                 IConfigMapDo
 	Department                IDepartmentDo
@@ -324,6 +352,10 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		CalcSalaryAdd:             q.CalcSalaryAdd.WithContext(ctx),
 		CalcSalaryEmployee:        q.CalcSalaryEmployee.WithContext(ctx),
 		CalcSalaryReduce:          q.CalcSalaryReduce.WithContext(ctx),
+		CheckInRequestForm:        q.CheckInRequestForm.WithContext(ctx),
+		CheckInRequestFormDetail:  q.CheckInRequestFormDetail.WithContext(ctx),
+		CheckInSignOffFlow:        q.CheckInSignOffFlow.WithContext(ctx),
+		CheckInSignOffSetting:     q.CheckInSignOffSetting.WithContext(ctx),
 		CheckInStatus:             q.CheckInStatus.WithContext(ctx),
 		ConfigMap:                 q.ConfigMap.WithContext(ctx),
 		Department:                q.Department.WithContext(ctx),

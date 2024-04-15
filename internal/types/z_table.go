@@ -3,13 +3,17 @@ package types
 func Basic() []interface{} {
 	return []interface{}{
 		&ConfigMap{},                 // config
+		&CheckInRequestForm{},        // check_in_request_form
+		&CheckInRequestFormDetail{},  // check_in_request_form_detail
+		&CheckInSignOffFlow{},        // check_in_sign_off_flow
+		&CheckInSignOffSetting{},     // check_in_sign_off_setting
 		&CheckInStatus{},             // check_in_status
 		&Employee{},                  // employee
 		&LoginInformation{},          // login_information
 		&Role{},                      // role
 		&Permission{},                // permission
 		&Menu{},                      // menu
-		&Department{},                //department
+		&Department{},                // department
 		&Leave{},                     // leave
 		&LeaveGroup{},                // leave_group
 		&LeaveGroupCondition{},       // leave_group_condition

@@ -25,6 +25,10 @@ func (s *SignOffSettingApi) Init(group *gin.RouterGroup) {
 	// 加班
 	v1.GET("overtime", s.getOvertimeSignOffSetting)
 	v1.PUT("overtime/:departmentID/:vacationID/batch", s.updateOvertimeBatch)
+
+	// 補打卡
+	v1.GET("checkIn", s.getCheckInSignOffSetting)
+	v1.PUT("checkIn/batch", s.updateCheckInSignOff)
 }
 
 // 查詢請假謙核流程
@@ -121,6 +125,49 @@ func (s *SignOffSettingApi) updateOvertimeBatch(c *gin.Context) {
 	}
 
 	err = service.SignOffSetting(ctx).UpdateOvertimeSignOffSettingBatch(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 查詢補打卡簽核流程設定
+//
+//	route => GET /api/v1/signOff/checkIn
+func (s *SignOffSettingApi) getCheckInSignOffSetting(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		out []*model.GetCheckInSignOffSettingRes
+		err error
+	)
+
+	out, err = service.SignOffSetting(ctx).GetCheckInSignOffSetting()
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).OkWithData(out)
+}
+
+// 批量更新補打卡簽核流程設定
+//
+//	route => PUT /api/v1/signOff/checkIn/batch
+func (s *SignOffSettingApi) updateCheckInSignOff(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.PutBatchCheckInSignOffSettingReq
+		err error
+	)
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.SignOffSetting(ctx).UpdateCheckInSignOffSettingBatch(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return

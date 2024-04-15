@@ -221,8 +221,9 @@ func (l *leave) handleSignOffPlusNotify(form *types.LeaveRequestForm, uuid strin
 	}
 
 	// send email
-	l.sendEmail(&model.EmailOption{
+	l.sendEmail(&model.EmailOption[types.LeaveRequestForm]{
 		Form:    form,
+		UUID:    uuid,
 		Subject: fmt.Sprintf("待簽核【請假單】- %s", form.Order),
 		Msg:     "請假單簽核",
 	})
@@ -236,8 +237,9 @@ func (l *leave) handleNotifyOnly(form *types.LeaveRequestForm, uuid string) {
 	)
 
 	// send email
-	emailOption := &model.EmailOption{
+	emailOption := &model.EmailOption[types.LeaveRequestForm]{
 		Form:    form,
+		UUID:    uuid,
 		Subject: fmt.Sprintf("通知【請假單】- %s", form.Order),
 		Msg:     "請假單通知",
 	}
@@ -356,7 +358,7 @@ func (l *leave) updateCorrect(tx *query.Query, form *types.LeaveRequestForm, isA
 }
 
 // 寄信通知
-func (l *leave) sendEmail(option *model.EmailOption) {
+func (l *leave) sendEmail(option *model.EmailOption[types.LeaveRequestForm]) {
 	var (
 		qEmployee     = query.Employee
 		employeeEmail string
@@ -379,7 +381,7 @@ func (l *leave) sendEmail(option *model.EmailOption) {
 		return
 	}
 
-	url = fmt.Sprintf("%s?uuid=%s&locale=%s", url, option.Form.SignOffFlow[0].UUID, option.Form.SignOffFlow[0].Locale)
+	url = fmt.Sprintf("%s?uuid=%s&locale=%s", url, option.UUID, option.Form.SignOffFlow[0].Locale)
 
 	// template
 	view := g.View("leaveSign")

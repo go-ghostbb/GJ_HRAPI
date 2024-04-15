@@ -35,3 +35,15 @@ type PutBatchOvertimeSignOffSettingReq struct {
 }
 
 type PutBatchOvertimeSignOffSettingRes struct{}
+
+type GetCheckInSignOffSettingReq struct{}
+
+type GetCheckInSignOffSettingRes struct {
+	*types.CheckInSignOffSetting
+}
+
+type PutBatchCheckInSignOffSettingReq struct {
+	SignOffSetting []*types.CheckInSignOffSetting `json:"signOffSetting"`
+}
+
+type PutBatchCheckInSignOffSettingRes struct{}

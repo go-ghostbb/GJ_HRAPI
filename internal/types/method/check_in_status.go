@@ -43,4 +43,6 @@ type CheckInStatus interface {
 	QueryTotalAttendHours(empID uint, dateOnly1, dateOnly2 string) (float32, error)
 	// exec P_C_CheckInHourUpdateByLeave @empID, @leaveRequestFromID
 	UpdateHourByLeave(empID, leaveRequestFromID uint) error
+	// exec P_C_CheckInHourSubByLeave @empID, @leaveRequestFromID
+	SubHourByLeave(empID, leaveRequestFromID uint) error
 }

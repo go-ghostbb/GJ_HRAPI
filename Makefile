@@ -18,4 +18,4 @@ dlv-dev:
 dev:
 	@air
 gen:
-	@GB_CFG_FILE=config.dev.yaml go run main.go gen
+	@go run internal/cmd/gen/gen.go

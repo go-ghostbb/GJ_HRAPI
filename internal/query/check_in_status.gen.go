@@ -545,6 +545,7 @@ type ICheckInStatusDo interface {
 	UpdateTime(timeOnly string, dateOnly string, workShiftCode string, cardNum string, isWork bool) (rowsAffected int64, err error)
 	QueryTotalAttendHours(empID uint, dateOnly1 string, dateOnly2 string) (result float32, err error)
 	UpdateHourByLeave(empID uint, leaveRequestFromID uint) (err error)
+	SubHourByLeave(empID uint, leaveRequestFromID uint) (err error)
 }
 
 // select * from @@table
@@ -708,6 +709,22 @@ func (c checkInStatusDo) UpdateHourByLeave(empID uint, leaveRequestFromID uint) 
 	params = append(params, empID)
 	params = append(params, leaveRequestFromID)
 	generateSQL.WriteString("exec P_C_CheckInHourUpdateByLeave ?, ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// exec P_C_CheckInHourSubByLeave @empID, @leaveRequestFromID
+func (c checkInStatusDo) SubHourByLeave(empID uint, leaveRequestFromID uint) (err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, empID)
+	params = append(params, leaveRequestFromID)
+	generateSQL.WriteString("exec P_C_CheckInHourSubByLeave ?, ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert

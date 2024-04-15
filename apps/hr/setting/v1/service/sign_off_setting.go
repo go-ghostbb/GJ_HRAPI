@@ -24,6 +24,10 @@ type (
 		GetOvertimeSignOffSetting(in model.GetOvertimeSignOffSettingReq) (out []*model.GetOvertimeSignOffSettingRes, err error)
 		// UpdateOvertimeSignOffSettingBatch 批量更新overtime sign off setting
 		UpdateOvertimeSignOffSettingBatch(in model.PutBatchOvertimeSignOffSettingReq) error
+		// GetCheckInSignOffSetting 獲取補打卡簽核設定
+		GetCheckInSignOffSetting() (out []*model.GetCheckInSignOffSettingRes, err error)
+		// UpdateCheckInSignOffSettingBatch 批量更新check in sign off setting
+		UpdateCheckInSignOffSettingBatch(in model.PutBatchCheckInSignOffSettingReq) error
 	}
 
 	signOffSetting struct {
@@ -124,5 +128,48 @@ func (s *signOffSetting) UpdateOvertimeSignOffSettingBatch(in model.PutBatchOver
 		}
 
 		return qOvertimeSetting.WithContext(dbcache.WithCtx(s.ctx)).Create(in.SignOffSetting...)
+	})
+}
+
+// GetCheckInSignOffSetting 獲取補打卡簽核設定
+func (s *signOffSetting) GetCheckInSignOffSetting() (out []*model.GetCheckInSignOffSettingRes, err error) {
+	var (
+		qSetting = query.CheckInSignOffSetting
+		setting  []*types.CheckInSignOffSetting
+	)
+
+	setting, err = qSetting.WithContext(dbcache.WithCtx(s.ctx)).Preload(field.Associations).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	if err = copier.Copy(&out, setting); err != nil {
+		return nil, err
+	}
+
+	return
+}
+
+// UpdateCheckInSignOffSettingBatch 批量更新check in sign off setting
+func (s *signOffSetting) UpdateCheckInSignOffSettingBatch(in model.PutBatchCheckInSignOffSettingReq) error {
+	return query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qSetting = tx.CheckInSignOffSetting
+			err      error
+		)
+		// 刪除原本
+		_, err = qSetting.WithContext(dbcache.WithCtx(s.ctx)).Where(qSetting.ID.Neq(0)).Unscoped().Delete()
+		if err != nil {
+			return err
+		}
+
+		// 建立新的
+		for index, setting := range in.SignOffSetting {
+			setting.SpecificEmployee = nil
+			setting.Level = uint(index) + 1
+			setting.ID = 0
+		}
+
+		return qSetting.WithContext(dbcache.WithCtx(s.ctx)).Create(in.SignOffSetting...)
 	})
 }
