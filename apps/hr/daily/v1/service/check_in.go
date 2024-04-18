@@ -41,6 +41,8 @@ type (
 		GetCheckInFormByEmployee(in model.GetCheckInFormByEmployeeReq) (out model.GetCheckInFormByEmployeeRes, err error)
 		// SaveCheckInForm 儲存補打卡單
 		SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCheckInFormRes, err error)
+		// DeleteCheckInForm 刪除補打卡單
+		DeleteCheckInForm(in model.DeleteCheckInFormReq) error
 	}
 
 	checkIn struct {
@@ -79,7 +81,7 @@ func (c *checkIn) GetCheckInFormByEmployee(in model.GetCheckInFormByEmployeeReq)
 func (c *checkIn) SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCheckInFormRes, err error) {
 	var (
 		qForm = query.CheckInRequestForm
-		form  *types.CheckInRequestForm
+		form  = new(types.CheckInRequestForm)
 	)
 
 	if in.ID != 0 {
@@ -129,7 +131,7 @@ func (c *checkIn) SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCh
 		}
 
 		// 刪除原本的簽核流程
-		_, err = qFlow.WithContext(dbcache.WithCtx(c.ctx)).Where(qFlow.CheckInRequestFormID.Eq(in.ID)).Delete()
+		_, err = qFlow.WithContext(dbcache.WithCtx(c.ctx)).Unscoped().Where(qFlow.CheckInRequestFormID.Eq(in.ID)).Delete()
 		if err != nil {
 			return err
 		}
@@ -156,6 +158,9 @@ func (c *checkIn) SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCh
 		// commit
 		return nil
 	})
+	if err != nil {
+		return
+	}
 
 	// 開啟一個新的service
 	// 因為如果response的話，context會被cancel
@@ -165,6 +170,33 @@ func (c *checkIn) SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCh
 	out.ID = form.ID
 	out.Order = form.Order
 	return out, nil
+}
+
+// DeleteCheckInForm 刪除補打卡單
+func (c *checkIn) DeleteCheckInForm(in model.DeleteCheckInFormReq) error {
+	return query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qForm = tx.CheckInRequestForm
+			qFlow = tx.CheckInSignOffFlow
+
+			err error
+		)
+
+		// 刪除此表單
+		_, err = qForm.WithContext(dbcache.WithCtx(c.ctx)).Where(qForm.ID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
+		// 刪除流程
+		_, err = qFlow.WithContext(dbcache.WithCtx(c.ctx)).Where(qFlow.CheckInRequestFormID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
+		// commit
+		return nil
+	})
 }
 
 // 寫入基本訊息

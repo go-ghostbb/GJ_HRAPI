@@ -6,6 +6,7 @@ import (
 	"ghostbb.io/gb/contrib/dbcache"
 	gberror "ghostbb.io/gb/errors/gb_error"
 	"ghostbb.io/gb/frame/g"
+	gbctx "ghostbb.io/gb/os/gb_ctx"
 	"gorm.io/gen/field"
 	"hrapi/apps/hr/sign-off/v1/model"
 	"hrapi/internal/query"
@@ -13,6 +14,7 @@ import (
 	"hrapi/internal/types/enum"
 	"hrapi/internal/utils"
 	"hrapi/internal/utils/email"
+	"time"
 )
 
 func CheckIn(ctx context.Context) ICheckIn {
@@ -23,9 +25,16 @@ type (
 	ICheckIn interface {
 		// GetByUUID 根據uuid查詢補打卡單
 		GetByUUID(uuid string) (form *types.CheckInRequestForm, err error)
+		// Approve 核准
+		Approve(in model.CheckInApproveReq) error
+		// Reject 駁回
+		Reject(in model.CheckInRejectReq) error
 
 		// NextFlow 下一個流程
 		NextFlow(uuid string)
+
+		// 寄信
+		sendEmail(option *model.EmailOption[types.CheckInRequestForm])
 	}
 
 	checkIn struct {
@@ -54,6 +63,100 @@ func (c *checkIn) GetByUUID(uuid string) (form *types.CheckInRequestForm, err er
 	}
 
 	return
+}
+
+// Approve 核准
+func (c *checkIn) Approve(in model.CheckInApproveReq) error {
+	err := query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qFlow = tx.CheckInSignOffFlow
+			qForm = tx.CheckInRequestForm
+
+			// select check_in_request_form_id from check_in_sign_off_flow where uuid = ?
+			subQueryFormID = qFlow.WithContext(c.ctx).Select(qFlow.CheckInRequestFormID).Where(qFlow.UUID.Eq(in.UUID))
+
+			err error
+		)
+
+		// 更新此流程的簽核時間和簽核狀態
+		_, err = qFlow.WithContext(dbcache.WithCtx(c.ctx)).Where(qFlow.UUID.Eq(in.UUID)).
+			UpdateSimple(qFlow.SignDate.Value(time.Now()), qFlow.Status.Value(enum.SignStatusApprove), qFlow.Comment.Value(in.Comment))
+		if err != nil {
+			return err
+		}
+
+		// 如果表單為送簽中，改為簽核中
+		_, err = qForm.WithContext(dbcache.WithCtx(c.ctx)).
+			Where(qForm.Columns(qForm.ID).Eq(subQueryFormID), qForm.SignStatus.Eq(enum.SignStatusSending)).
+			UpdateSimple(qForm.SignStatus.Value(enum.SignStatusSigning))
+		if err != nil {
+			return err
+		}
+
+		// commit
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// 前往下一流程
+	// 開啟一個新的service
+	// 使用goroutine
+	go CheckIn(gbctx.New()).NextFlow(in.UUID)
+
+	return nil
+}
+
+// Reject 駁回
+func (c *checkIn) Reject(in model.CheckInRejectReq) error {
+	// 查詢此uuid的請假單資訊
+	var form, err = c.GetByUUID(in.UUID)
+	if err != nil {
+		return err
+	}
+
+	// 開啟事務
+	err = query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qFlow = tx.CheckInSignOffFlow
+			qForm = tx.CheckInRequestForm
+
+			err error
+		)
+
+		// 更新此流程的簽核時間和簽核狀態
+		_, err = qFlow.WithContext(dbcache.WithCtx(c.ctx)).Where(qFlow.UUID.Eq(in.UUID)).
+			UpdateSimple(qFlow.SignDate.Value(time.Now()), qFlow.Status.Value(enum.SignStatusReject), qFlow.Comment.Value(in.Comment))
+		if err != nil {
+			return err
+		}
+
+		// 更新此請假單的狀態
+		_, err = qForm.WithContext(dbcache.WithCtx(c.ctx)).Where(qForm.ID.Eq(form.ID)).
+			UpdateSimple(qForm.SignStatus.Value(enum.SignStatusReject))
+		if err != nil {
+			return err
+		}
+
+		// commit
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// send email
+	go CheckIn(gbctx.New()).sendEmail(&model.EmailOption[types.CheckInRequestForm]{
+		Form: form,
+		// 最後一關為起單人的完成後通知
+		// 直接通知最後一關
+		UUID:    form.SignOffFlow[len(form.SignOffFlow)-1].UUID,
+		Subject: fmt.Sprintf("駁回【補打卡單】- %s", form.Order),
+		Msg:     "補打卡單駁回",
+	})
+
+	return nil
 }
 
 // NextFlow 下一個流程
@@ -117,8 +220,8 @@ func (c *checkIn) handleSignOffPlusNotify(form *types.CheckInRequestForm, uuid s
 	c.sendEmail(&model.EmailOption[types.CheckInRequestForm]{
 		Form:    form,
 		UUID:    uuid,
-		Subject: fmt.Sprintf("待簽核【請假單】- %s", form.Order),
-		Msg:     "請假單簽核",
+		Subject: fmt.Sprintf("待簽核【補打卡單】- %s", form.Order),
+		Msg:     "補打卡單簽核",
 	})
 }
 
@@ -133,8 +236,8 @@ func (c *checkIn) handleNotifyOnly(form *types.CheckInRequestForm, uuid string) 
 	emailOption := &model.EmailOption[types.CheckInRequestForm]{
 		Form:    form,
 		UUID:    uuid,
-		Subject: fmt.Sprintf("通知【請假單】- %s", form.Order),
-		Msg:     "請假單通知",
+		Subject: fmt.Sprintf("通知【補打卡單】- %s", form.Order),
+		Msg:     "補打卡單通知",
 	}
 	c.sendEmail(emailOption)
 

@@ -80,3 +80,7 @@ type GetLeaveFormByEmployeeRes struct {
 type DeleteLeaveFormReq struct {
 	ID uint
 }
+
+type DeleteCheckInFormReq struct {
+	ID uint
+}

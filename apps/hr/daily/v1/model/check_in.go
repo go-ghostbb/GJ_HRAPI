@@ -10,17 +10,18 @@ import (
 
 // -------------------form-------------------
 type CheckInBasicForm struct {
-	ID          uint                `bson:"id" copier:"ID"`
-	EmployeeID  uint                `json:"-"`
-	Detail      []*CheckInBasicForm `json:"detail" copier:"Detail"`
-	AttachArray []string            `json:"attach" copier:"AttachArray"`
+	ID          uint                      `json:"id" copier:"ID"`
+	EmployeeID  uint                      `json:"-" copier:"EmployeeID"`
+	Detail      []*CheckInBasicFormDetail `json:"detail" copier:"Detail"`
+	AttachArray []string                  `json:"attach" copier:"AttachArray"`
+	Remark      string                    `json:"remark" copier:"Remark"`
 }
 
 type CheckInBasicFormDetail struct {
-	CheckInType enum.CheckInType `gorm:"comment:補打卡類型" json:"checkInType"`
-	Date        driver.Date      `gorm:"type:date;not null;comment:補打卡日期" json:"date"`
-	Time        driver.Time      `gorm:"type:time(0);not null;comment:補打卡時間" json:"time"`
-	Remark      string           `gorm:"comment:補打卡原因" json:"remark"`
+	CheckInType enum.CheckInType `gorm:"comment:補打卡類型" json:"checkInType" copier:"CheckInType"`
+	Date        driver.Date      `gorm:"type:date;not null;comment:補打卡日期" json:"date" copier:"Date"`
+	Time        driver.Time      `gorm:"type:time(0);not null;comment:補打卡時間" json:"time" copier:"Time"`
+	Remark      string           `gorm:"comment:補打卡原因" json:"remark" copier:"Remark"`
 }
 
 func (c *CheckInBasicForm) Attach() string {

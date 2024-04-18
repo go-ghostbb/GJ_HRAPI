@@ -33,6 +33,8 @@ type (
 
 		// 判斷下一流程
 		nextFlow(uuid string)
+		// 寄信
+		sendEmail(option *model.EmailOption[types.LeaveRequestForm])
 	}
 
 	leave struct {
@@ -116,7 +118,7 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 	}
 
 	// 開啟事務
-	return query.Q.Transaction(func(tx *query.Query) error {
+	err = query.Q.Transaction(func(tx *query.Query) error {
 		var (
 			qFlow          = tx.LeaveSignOffFlow
 			qForm          = tx.LeaveRequestForm
@@ -161,6 +163,21 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 		// commit
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// send email
+	go Leave(gbctx.New()).sendEmail(&model.EmailOption[types.LeaveRequestForm]{
+		Form: form,
+		// 最後一關為起單人的完成後通知
+		// 直接通知最後一關
+		UUID:    form.SignOffFlow[len(form.SignOffFlow)-1].UUID,
+		Subject: fmt.Sprintf("駁回【請假單】- %s", form.Order),
+		Msg:     "請假單駁回",
+	})
+
+	return nil
 }
 
 // nextFlow 進行下一個流程
