@@ -32,9 +32,12 @@ func newLeaveCorrect(db *gorm.DB, opts ...gen.DOOption) leaveCorrect {
 	_leaveCorrect.DeletedAt = field.NewField(tableName, "deleted_at")
 	_leaveCorrect.EmployeeID = field.NewUint(tableName, "employee_id")
 	_leaveCorrect.LeaveID = field.NewUint(tableName, "leave_id")
+	_leaveCorrect.Effective = field.NewField(tableName, "effective")
+	_leaveCorrect.Expired = field.NewField(tableName, "expired")
 	_leaveCorrect.Available = field.NewFloat64(tableName, "available")
 	_leaveCorrect.Used = field.NewFloat64(tableName, "used")
 	_leaveCorrect.Signing = field.NewFloat64(tableName, "signing")
+	_leaveCorrect.IsDefer = field.NewBool(tableName, "is_defer")
 	_leaveCorrect.Employee = leaveCorrectBelongsToEmployee{
 		db: db.Session(&gorm.Session{}),
 
@@ -208,9 +211,12 @@ type leaveCorrect struct {
 	DeletedAt  field.Field
 	EmployeeID field.Uint
 	LeaveID    field.Uint
+	Effective  field.Field
+	Expired    field.Field
 	Available  field.Float64
 	Used       field.Float64
 	Signing    field.Float64
+	IsDefer    field.Bool
 	Employee   leaveCorrectBelongsToEmployee
 
 	Leave leaveCorrectBelongsToLeave
@@ -236,9 +242,12 @@ func (l *leaveCorrect) updateTableName(table string) *leaveCorrect {
 	l.DeletedAt = field.NewField(table, "deleted_at")
 	l.EmployeeID = field.NewUint(table, "employee_id")
 	l.LeaveID = field.NewUint(table, "leave_id")
+	l.Effective = field.NewField(table, "effective")
+	l.Expired = field.NewField(table, "expired")
 	l.Available = field.NewFloat64(table, "available")
 	l.Used = field.NewFloat64(table, "used")
 	l.Signing = field.NewFloat64(table, "signing")
+	l.IsDefer = field.NewBool(table, "is_defer")
 
 	l.fillFieldMap()
 
@@ -267,16 +276,19 @@ func (l *leaveCorrect) GetFieldByName(fieldName string) (field.OrderExpr, bool) 
 }
 
 func (l *leaveCorrect) fillFieldMap() {
-	l.fieldMap = make(map[string]field.Expr, 11)
+	l.fieldMap = make(map[string]field.Expr, 14)
 	l.fieldMap["id"] = l.ID
 	l.fieldMap["created_at"] = l.CreatedAt
 	l.fieldMap["updated_at"] = l.UpdatedAt
 	l.fieldMap["deleted_at"] = l.DeletedAt
 	l.fieldMap["employee_id"] = l.EmployeeID
 	l.fieldMap["leave_id"] = l.LeaveID
+	l.fieldMap["effective"] = l.Effective
+	l.fieldMap["expired"] = l.Expired
 	l.fieldMap["available"] = l.Available
 	l.fieldMap["used"] = l.Used
 	l.fieldMap["signing"] = l.Signing
+	l.fieldMap["is_defer"] = l.IsDefer
 
 }
 

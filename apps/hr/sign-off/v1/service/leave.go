@@ -143,13 +143,8 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 		}
 
 		// 更新遞延表或可用請假表
-		if form.IsDefer {
-			// 如果是遞延表出來的話
-			err = l.updateDefer(tx, form, false)
-		} else {
-			// 如果不是從遞延表裡面使用的話
-			err = l.updateCorrect(tx, form, false)
-		}
+		// 如果不是從遞延表裡面使用的話
+		err = l.updateCorrect(tx, form, false)
 		if err != nil {
 			return err
 		}
@@ -288,13 +283,9 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 			err            error
 		)
 
-		if form.IsDefer {
-			// 如果是遞延表出來的話
-			err = l.updateDefer(tx, form, true)
-		} else {
-			// 如果不是從遞延表裡面使用的話
-			err = l.updateCorrect(tx, form, true)
-		}
+		// 如果不是從遞延表裡面使用的話
+		err = l.updateCorrect(tx, form, true)
+
 		if err != nil {
 			return err
 		}
@@ -319,38 +310,6 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 		// commit
 		return nil
 	})
-}
-
-// 更新遞延表簽核中時數
-func (l *leave) updateDefer(tx *query.Query, form *types.LeaveRequestForm, isApprove bool) (err error) {
-	var (
-		qDefer = tx.LeaveDefer
-		info   gen.ResultInfo
-
-		// 簽核中天數扣除
-		updateCol = []field.AssignExpr{qDefer.Signing.Sub(float64(form.LeaveDayCount))}
-	)
-
-	if isApprove {
-		// 補上使用天數
-		updateCol = append(updateCol, qDefer.Used.Add(float64(form.LeaveDayCount)))
-	}
-
-	info, err = qDefer.WithContext(l.ctx).Where(
-		qDefer.EmployeeID.Eq(form.EmployeeID),
-		qDefer.LeaveID.Eq(form.LeaveID),
-		// 請假日期區間必須在生效時間內
-		qDefer.Effective.Lte(form.StartDate),
-		qDefer.Expired.Gte(form.EndDate),
-	).UpdateSimple(updateCol...)
-	if err != nil {
-		return err
-	}
-	if info.RowsAffected == 0 {
-		return gberror.New("update leave_defer signing error: affected rows is 0")
-	}
-
-	return nil
 }
 
 // 更新可用請假表簽核中天數

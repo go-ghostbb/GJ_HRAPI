@@ -33,8 +33,8 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 	_employee.DeletedAt = field.NewField(tableName, "deleted_at")
 	_employee.Code = field.NewString(tableName, "code")
 	_employee.CardNumber = field.NewString(tableName, "card_number")
-	_employee.HireDate = field.NewTime(tableName, "hire_date")
-	_employee.TerminationDate = field.NewTime(tableName, "termination_date")
+	_employee.HireDate = field.NewField(tableName, "hire_date")
+	_employee.TerminationDate = field.NewField(tableName, "termination_date")
 	_employee.EmploymentStatus = field.NewField(tableName, "employment_status")
 	_employee.Backend = field.NewBool(tableName, "backend")
 	_employee.RealName = field.NewString(tableName, "real_name")
@@ -235,8 +235,8 @@ type employee struct {
 	DeletedAt        field.Field
 	Code             field.String
 	CardNumber       field.String
-	HireDate         field.Time
-	TerminationDate  field.Time
+	HireDate         field.Field
+	TerminationDate  field.Field
 	EmploymentStatus field.Field
 	Backend          field.Bool
 	RealName         field.String
@@ -281,8 +281,8 @@ func (e *employee) updateTableName(table string) *employee {
 	e.DeletedAt = field.NewField(table, "deleted_at")
 	e.Code = field.NewString(table, "code")
 	e.CardNumber = field.NewString(table, "card_number")
-	e.HireDate = field.NewTime(table, "hire_date")
-	e.TerminationDate = field.NewTime(table, "termination_date")
+	e.HireDate = field.NewField(table, "hire_date")
+	e.TerminationDate = field.NewField(table, "termination_date")
 	e.EmploymentStatus = field.NewField(table, "employment_status")
 	e.Backend = field.NewBool(table, "backend")
 	e.RealName = field.NewString(table, "real_name")

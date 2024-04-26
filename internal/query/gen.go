@@ -31,7 +31,6 @@ var (
 	Employee                  *employee
 	Leave                     *leave
 	LeaveCorrect              *leaveCorrect
-	LeaveDefer                *leaveDefer
 	LeaveGroup                *leaveGroup
 	LeaveGroupCondition       *leaveGroupCondition
 	LeaveGroupEmployee        *leaveGroupEmployee
@@ -76,7 +75,6 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Employee = &Q.Employee
 	Leave = &Q.Leave
 	LeaveCorrect = &Q.LeaveCorrect
-	LeaveDefer = &Q.LeaveDefer
 	LeaveGroup = &Q.LeaveGroup
 	LeaveGroupCondition = &Q.LeaveGroupCondition
 	LeaveGroupEmployee = &Q.LeaveGroupEmployee
@@ -122,7 +120,6 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Employee:                  newEmployee(db, opts...),
 		Leave:                     newLeave(db, opts...),
 		LeaveCorrect:              newLeaveCorrect(db, opts...),
-		LeaveDefer:                newLeaveDefer(db, opts...),
 		LeaveGroup:                newLeaveGroup(db, opts...),
 		LeaveGroupCondition:       newLeaveGroupCondition(db, opts...),
 		LeaveGroupEmployee:        newLeaveGroupEmployee(db, opts...),
@@ -169,7 +166,6 @@ type Query struct {
 	Employee                  employee
 	Leave                     leave
 	LeaveCorrect              leaveCorrect
-	LeaveDefer                leaveDefer
 	LeaveGroup                leaveGroup
 	LeaveGroupCondition       leaveGroupCondition
 	LeaveGroupEmployee        leaveGroupEmployee
@@ -217,7 +213,6 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Employee:                  q.Employee.clone(db),
 		Leave:                     q.Leave.clone(db),
 		LeaveCorrect:              q.LeaveCorrect.clone(db),
-		LeaveDefer:                q.LeaveDefer.clone(db),
 		LeaveGroup:                q.LeaveGroup.clone(db),
 		LeaveGroupCondition:       q.LeaveGroupCondition.clone(db),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.clone(db),
@@ -272,7 +267,6 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Employee:                  q.Employee.replaceDB(db),
 		Leave:                     q.Leave.replaceDB(db),
 		LeaveCorrect:              q.LeaveCorrect.replaceDB(db),
-		LeaveDefer:                q.LeaveDefer.replaceDB(db),
 		LeaveGroup:                q.LeaveGroup.replaceDB(db),
 		LeaveGroupCondition:       q.LeaveGroupCondition.replaceDB(db),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.replaceDB(db),
@@ -317,7 +311,6 @@ type queryCtx struct {
 	Employee                  IEmployeeDo
 	Leave                     ILeaveDo
 	LeaveCorrect              ILeaveCorrectDo
-	LeaveDefer                ILeaveDeferDo
 	LeaveGroup                ILeaveGroupDo
 	LeaveGroupCondition       ILeaveGroupConditionDo
 	LeaveGroupEmployee        ILeaveGroupEmployeeDo
@@ -362,7 +355,6 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Employee:                  q.Employee.WithContext(ctx),
 		Leave:                     q.Leave.WithContext(ctx),
 		LeaveCorrect:              q.LeaveCorrect.WithContext(ctx),
-		LeaveDefer:                q.LeaveDefer.WithContext(ctx),
 		LeaveGroup:                q.LeaveGroup.WithContext(ctx),
 		LeaveGroupCondition:       q.LeaveGroupCondition.WithContext(ctx),
 		LeaveGroupEmployee:        q.LeaveGroupEmployee.WithContext(ctx),

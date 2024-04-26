@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/jinzhu/copier"
@@ -12,6 +13,7 @@ import (
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
 	"hrapi/internal/utils"
+	"hrapi/internal/utils/driver"
 	"hrapi/internal/utils/paginator"
 	"time"
 )
@@ -359,11 +361,13 @@ func (l *leave) ResetEmployeeAvailable(in model.ResetEmployeeAvailableReq) error
 			var correct *types.LeaveCorrect
 			switch leave.Cycle {
 			case enum.Annual:
-				correct, err = l.annual(employee, leave)
+				correct, err = l.annual(employee, leave, in.Year)
 			case enum.Calendar:
-				correct, err = l.calendar(employee, leave)
+				correct, err = l.calendar(employee, leave, in.Year)
 			case enum.Default:
 				correct = &types.LeaveCorrect{
+					Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", in.Year)),
+					Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", in.Year)),
 					EmployeeID: employee.ID,
 					LeaveID:    in.LeaveID,
 					Available:  float64(leave.Default),
@@ -374,7 +378,9 @@ func (l *leave) ResetEmployeeAvailable(in model.ResetEmployeeAvailableReq) error
 			}
 
 			// 刪除原有資料
-			_, err = qCorrect.WithContext(dbcache.WithCtx(l.ctx)).Where(qCorrect.EmployeeID.Eq(employee.ID), qCorrect.LeaveID.Eq(in.LeaveID)).Unscoped().Delete()
+			_, err = qCorrect.WithContext(dbcache.WithCtx(l.ctx)).
+				Where(qCorrect.EmployeeID.Eq(employee.ID), qCorrect.LeaveID.Eq(in.LeaveID), qCorrect.Effective.Eq(correct.Effective), qCorrect.Expired.Eq(correct.Expired)).
+				Unscoped().Delete()
 			if err != nil {
 				return err
 			}
@@ -394,10 +400,10 @@ func (l *leave) ResetEmployeeAvailable(in model.ResetEmployeeAvailableReq) error
 }
 
 // 週年制計算
-func (l *leave) annual(employee *types.Employee, leave *types.Leave) (*types.LeaveCorrect, error) {
+func (l *leave) annual(employee *types.Employee, leave *types.Leave, year int) (*types.LeaveCorrect, error) {
 	var (
 		result        = new(types.LeaveCorrect)
-		currDate      = time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC)
+		currDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		years, months int
 		conditions    []*types.LeaveGroupCondition
 		currCondIndex = -1 // 套用的條件index
@@ -407,7 +413,7 @@ func (l *leave) annual(employee *types.Employee, leave *types.Leave) (*types.Lea
 	result.EmployeeID = employee.ID
 
 	// 計算年資
-	years, months, _ = utils.CalcSeniority(employee.HireDate, currDate)
+	years, months, _ = utils.CalcSeniority(employee.HireDate.Time(), currDate)
 
 	// 搜尋套用到哪個群組
 	for _, g := range leave.LeaveGroup {
@@ -449,6 +455,11 @@ func (l *leave) annual(employee *types.Employee, leave *types.Leave) (*types.Lea
 			break
 		}
 	}
+
+	// 帶入預設生效時間和過期時間
+	var effDay = driver.NewDate(fmt.Sprintf("%d-%d-%d", year, employee.HireDate.Month(), employee.HireDate.Day()))
+	result.Effective = effDay
+	result.Expired = effDay.AddDate(1, 0, 0).AddDate(0, 0, -1)
 
 	if currCondIndex == -1 || conditions == nil {
 		// 如果連一關都沒有達成或是找不到群組，直接帶入預設天數
@@ -457,18 +468,24 @@ func (l *leave) annual(employee *types.Employee, leave *types.Leave) (*types.Lea
 	}
 
 	// 帶入套用的條件
+	if conditions[currCondIndex].ConditionType == enum.ConditionMonth && years == 0 {
+		// 如果套用的條件為月和年資不滿一年
+		// 從滿條件的那一天開始套用
+		result.Effective = effDay.AddDate(0, int(conditions[currCondIndex].ConditionNum), 0)
+	}
+
 	result.Available = float64(conditions[currCondIndex].Result)
 
 	return result, nil
 }
 
 // 曆年制計算
-func (l *leave) calendar(employee *types.Employee, leave *types.Leave) (*types.LeaveCorrect, error) {
+func (l *leave) calendar(employee *types.Employee, leave *types.Leave, year int) (*types.LeaveCorrect, error) {
 	var (
 		result        = new(types.LeaveCorrect)
 		years, months int
 		conditions    []*types.LeaveGroupCondition
-		currDate      = time.Date(time.Now().Year(), 12, 31, 0, 0, 0, 0, time.UTC)
+		currDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
 		currCondIndex = -1 // 套用的條件index
 	)
 
@@ -476,7 +493,7 @@ func (l *leave) calendar(employee *types.Employee, leave *types.Leave) (*types.L
 	result.EmployeeID = employee.ID
 
 	// 計算年資
-	years, months, _ = utils.CalcSeniority(employee.HireDate, currDate)
+	years, months, _ = utils.CalcSeniority(employee.HireDate.Time(), currDate)
 
 	// 搜尋套用到哪個群組
 	for _, g := range leave.LeaveGroup {
@@ -518,6 +535,10 @@ func (l *leave) calendar(employee *types.Employee, leave *types.Leave) (*types.L
 			break
 		}
 	}
+
+	// 寫入預設生效時間和過期時間
+	result.Effective = driver.NewDate(fmt.Sprintf("%d-01-01", year))
+	result.Expired = driver.NewDate(fmt.Sprintf("%d-12-31", year))
 
 	if currCondIndex == -1 || conditions == nil {
 		// 如果連一關都沒有達成或是找不到群組，直接帶入預設天數
@@ -529,17 +550,19 @@ func (l *leave) calendar(employee *types.Employee, leave *types.Leave) (*types.L
 		availableDay    = float64(conditions[currCondIndex].Result)
 		hireMonth       = float64(employee.HireDate.Month() - 1)
 		hireDay         = float64(employee.HireDate.Day() - 1)
-		daysByMonth     = utils.GetDay(employee.HireDate.Year(), int(employee.HireDate.Month()))
+		daysByMonth     = utils.GetDay(employee.HireDate.Year(), employee.HireDate.Month())
 		conditionNum    = float64(conditions[currCondIndex].ConditionNum)
 		dayMonthPercent = (hireMonth + hireDay/daysByMonth) / 12
 	)
 
 	if years == 0 {
 		// 無論如何，到今天未滿第一個條件，直接回傳0
-		if _, m, _ := utils.CalcSeniority(employee.HireDate, time.Now()); float64(m) < conditionNum {
+		if _, m, _ := utils.CalcSeniority(employee.HireDate.Time(), currDate); float64(m) < conditionNum {
 			result.Available = 0
 		} else {
 			// 未滿一年
+			var effDay = driver.NewDate(fmt.Sprintf("%d-%d-%d", year, employee.HireDate.Month(), employee.HireDate.Day()))
+			result.Effective = effDay.AddDate(0, int(conditions[currCondIndex].ConditionNum), 0)
 			result.Available = availableDay - (hireMonth+hireDay/daysByMonth)/conditionNum*availableDay
 		}
 	} else if years > 0 {
@@ -556,7 +579,7 @@ func (l *leave) calendar(employee *types.Employee, leave *types.Leave) (*types.L
 				lastAvailableDay = float64(leave.Default)
 			}
 
-			if conditions[currCondIndex].ConditionType == enum.ConditionYear {
+			if conditions[currCondIndex-1].ConditionType == enum.ConditionYear {
 				conditionNum *= 12
 			}
 

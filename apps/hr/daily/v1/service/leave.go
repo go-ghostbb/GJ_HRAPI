@@ -113,11 +113,7 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 		}
 
 		// 遞減可用請假表或遞延表
-		if form.IsDefer {
-			err = l.updateDeferSigning(tx, form, float64(form.LeaveDayCount)*-1)
-		} else {
-			err = l.updateCorrectSigning(tx, form, float64(form.LeaveDayCount)*-1)
-		}
+		err = l.updateCorrectSigning(tx, form, float64(form.LeaveDayCount)*-1)
 		if err != nil {
 			return err
 		}
@@ -206,11 +202,7 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			leaveForm.Order = "A" + time.Now().Format("20060102") + fmt.Sprintf("%06d", leaveForm.ID%1000000)
 		} else {
 			// 如果不為0, 請假可用表或遞延表必須減去原本的簽核中時數
-			if leaveForm.IsDefer {
-				err = l.updateDeferSigning(tx, leaveForm, originDays*-1)
-			} else {
-				err = l.updateCorrectSigning(tx, leaveForm, originDays*-1)
-			}
+			err = l.updateCorrectSigning(tx, leaveForm, originDays*-1)
 			if err != nil {
 				return err
 			}
@@ -242,13 +234,9 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 		}
 
 		// 更新請假可用表裡簽核中的天數
-		if leaveForm.IsDefer {
-			// 如果是從遞延表裡面使用的話
-			err = l.updateDeferSigning(tx, leaveForm, float64(leaveForm.LeaveDayCount))
-		} else {
-			// 如果不是從遞延表裡面使用的話
-			err = l.updateCorrectSigning(tx, leaveForm, float64(leaveForm.LeaveDayCount))
-		}
+		// 如果不是從遞延表裡面使用的話
+		err = l.updateCorrectSigning(tx, leaveForm, float64(leaveForm.LeaveDayCount))
+
 		if err != nil {
 			return err
 		}
@@ -308,11 +296,9 @@ func (l *leave) writeBasicInfo(form *types.LeaveRequestForm) (err error) {
 func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 	var (
 		qLeaveCorrect = query.LeaveCorrect
-		qLeaveDefer   = query.LeaveDefer
 		qConfigMap    = query.ConfigMap
 		qWorkSchedule = query.WorkSchedule
 		leaveCorrect  *types.LeaveCorrect
-		leaveDefer    *types.LeaveDefer
 		hoursADay     float32
 	)
 
@@ -323,18 +309,6 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 		if gberror.Is(err, gorm.ErrRecordNotFound) {
 			return false, gberror.New("you don't have this leave to use")
 		}
-		return false, err
-	}
-
-	// 取得遞延剩餘天數
-	leaveDefer, err = qLeaveDefer.WithContext(l.ctx).Where(
-		qLeaveDefer.EmployeeID.Eq(form.EmployeeID),
-		qLeaveDefer.LeaveID.Eq(form.LeaveID),
-		// 請假日期區間必須在生效時間內
-		qLeaveDefer.Effective.Lte(form.StartDate),
-		qLeaveDefer.Expired.Gte(form.EndDate),
-	).First()
-	if err != nil && !gberror.Is(err, gorm.ErrRecordNotFound) {
 		return false, err
 	}
 
@@ -371,16 +345,6 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 	form.LeaveDayCount = day
 	form.LeaveHourCount = hour
 	form.LeaveMinuteCount = minute
-
-	// 判斷是否有遞延可以用
-	if leaveDefer != nil && leaveDefer.ID != 0 {
-		// 可用天數 - 已使用天數 - 簽核中天數
-		corr := (leaveDefer.Available - leaveDefer.Used - leaveDefer.Signing) * float64(hoursADay)
-		if float64(hour) <= corr {
-			form.IsDefer = true
-			return true, nil
-		}
-	}
 
 	// 超過遞延天數，或沒有遞延天數可以用，接著判斷今年可用天數
 	// 請假時數 > 可用天數 - 已使用天數 - 簽核中天數
@@ -639,37 +603,6 @@ func (l *leave) attachSave(order string, paths []string) ([]string, error) {
 	}
 
 	return result, nil
-}
-
-// 更新遞延表簽核中天數
-func (l *leave) updateDeferSigning(tx *query.Query, form *types.LeaveRequestForm, days float64) (err error) {
-	var (
-		qDefer    = tx.LeaveDefer
-		updateCol = qDefer.Signing.Add(days)
-		info      gen.ResultInfo
-	)
-
-	if days < 0 {
-		updateCol = qDefer.Signing.Sub(days * -1)
-	}
-
-	// 如果這張單子已核准
-	if form.SignStatus == enum.SignStatusApprove {
-		updateCol = qDefer.Used.Sub(days * -1)
-	}
-
-	info, err = qDefer.WithContext(l.ctx).Where(
-		qDefer.EmployeeID.Eq(form.EmployeeID),
-		qDefer.LeaveID.Eq(form.LeaveID),
-	).UpdateSimple(updateCol)
-	if err != nil {
-		return err
-	}
-	if info.RowsAffected == 0 {
-		return gberror.New("update leave_correct signing error: affected rows is 0")
-	}
-
-	return nil
 }
 
 // 更新可用請假表簽核中天數

@@ -92,4 +92,5 @@ type SetLeaveGroupCondRes struct{}
 type ResetEmployeeAvailableReq struct {
 	LeaveID    uint   `json:"leaveId"`
 	EmployeeID []uint `json:"employeeId"`
+	Year       int    `json:"year"`
 }

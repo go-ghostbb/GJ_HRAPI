@@ -4,10 +4,8 @@ import (
 	"context"
 	"ghostbb.io/gb/frame/g"
 	gbcron "ghostbb.io/gb/os/gb_cron"
-	"hrapi/internal/query"
 	"hrapi/internal/task/NewCheckIn"
 	"hrapi/internal/task/SyncCheckIn"
-	"hrapi/internal/task/UpdateLeaveCount"
 )
 
 func Init() {
@@ -29,13 +27,6 @@ func Init() {
 
 	// 每天固定10點同步打卡機資料
 	_, err = gbcron.Add(ctx, "0 0 10 * * *", SyncCheckIn.Start, "sync check_in")
-	if err != nil {
-		panic(err)
-	}
-
-	// 每天判斷更新請假使用次數
-	leaveCheck := &UpdateLeaveCount.LeaveCheck{Q: query.Q, Log: g.Log()}
-	_, err = gbcron.Add(ctx, "@daily", leaveCheck.Run, "update leave count")
 	if err != nil {
 		panic(err)
 	}

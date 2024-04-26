@@ -65,3 +65,15 @@ func (d Date) After(u Date) bool {
 func (d Date) AddDate(years int, months int, days int) Date {
 	return Date(d.Time().AddDate(years, months, days).Unix())
 }
+
+func (d Date) Year() int {
+	return d.Time().Year()
+}
+
+func (d Date) Month() int {
+	return int(d.Time().Month())
+}
+
+func (d Date) Day() int {
+	return d.Time().Day()
+}

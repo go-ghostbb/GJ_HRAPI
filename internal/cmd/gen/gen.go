@@ -67,7 +67,6 @@ func main() {
 	g.ApplyInterface(func(method.CheckInStatus) {}, types.CheckInStatus{})
 	g.ApplyInterface(func(method.SalaryAddItem) {}, types.SalaryAddItem{})
 	g.ApplyInterface(func(method.SalaryReduceItem) {}, types.SalaryReduceItem{})
-	g.ApplyInterface(func(method.LeaveDefer) {}, types.LeaveDefer{})
 	g.ApplyInterface(func(method.LeaveRequestForm) {}, types.LeaveRequestForm{})
 	g.ApplyInterface(func(method.Department) {}, types.Department{})
 	g.ApplyInterface(func(method.LeaveCorrect) {}, types.LeaveCorrect{})
