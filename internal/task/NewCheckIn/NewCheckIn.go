@@ -8,6 +8,7 @@ import (
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
+	"hrapi/internal/utils/driver"
 	"math"
 	"time"
 )
@@ -72,22 +73,20 @@ func Start(ctx context.Context) {
 			checkInStatus = append(checkInStatus, &types.CheckInStatus{
 				EmployeeID:              empID,
 				WorkShiftID:             v.WorkShiftID,
-				WorkCheckInDate:         v.ScheduleDate,        // 上班時間
-				WorkAttendStatus:        enum.WorkNotSwiped,    // 上班狀態, 未刷卡
-				WorkAttendProcStatus:    enum.NotProcessed,     // 處理狀態, 未處理
-				OffWorkCheckInDate:      offWork,               // 下班時間
-				OffWorkAttendStatus:     enum.OffWorkNotSwiped, // 下班狀態, 未刷卡
-				OffWorkAttendProcStatus: enum.NotProcessed,     // 處理狀態, 未處理
+				Date:                    driver.Date(v.ScheduleDate.Unix()), // 上班時間
+				WorkAttendStatus:        enum.WorkNotSwiped,                 // 上班狀態, 未刷卡
+				WorkAttendProcStatus:    enum.NotProcessed,                  // 處理狀態, 未處理
+				OffWorkAttendStatus:     enum.OffWorkNotSwiped,              // 下班狀態, 未刷卡
+				OffWorkAttendProcStatus: enum.NotProcessed,                  // 處理狀態, 未處理
 				AbsenceHours:            float32(v.WorkShift.TotalHours),
 			})
 		} else {
 			// 不存在, 代表休息日
 			checkInStatus = append(checkInStatus, &types.CheckInStatus{
 				EmployeeID:              empID,
-				WorkCheckInDate:         today,
-				WorkAttendStatus:        enum.WorkOffDay, // 休息日
-				WorkAttendProcStatus:    enum.ProcNormal, // 處理狀態, 正常
-				OffWorkCheckInDate:      today,
+				Date:                    driver.Date(today.Unix()),
+				WorkAttendStatus:        enum.WorkOffDay,    // 休息日
+				WorkAttendProcStatus:    enum.ProcNormal,    // 處理狀態, 正常
 				OffWorkAttendStatus:     enum.OffWorkOffDay, // 休息日
 				OffWorkAttendProcStatus: enum.ProcNormal,    // 處理狀態, 正常
 			})
@@ -95,7 +94,7 @@ func Start(ctx context.Context) {
 	}
 
 	// 刪除原有, 避免資料重複
-	if _, err = qCheckInStatus.WithContext(ctx).DeleteByDate(todayStr); err != nil {
+	if _, err = qCheckInStatus.WithContext(ctx).Where(qCheckInStatus.Date.Eq(driver.NewDate(today))).Delete(); err != nil {
 		g.Log().Error(ctx, "create new check_in status err:", err)
 		return
 	}

@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"ghostbb.io/gb/frame/g"
-	gbstr "ghostbb.io/gb/text/gb_str"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"hrapi/apps/hr/filing/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
+	"hrapi/internal/utils/driver"
 	"math"
 	"time"
 )
@@ -68,10 +67,10 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 		}
 
 		// 遍歷時間區間
-		startDate := gbconv.Time(in.DateRange[0])
-		endDate := gbconv.Time(in.DateRange[1]).AddDate(0, 0, 1)
+		startDate := driver.NewDate(in.DateRange[0])
+		endDate := driver.NewDate(in.DateRange[1]).AddDate(0, 0, 1)
 		for endDate.After(startDate) {
-			tmpDate := startDate.Format(time.DateOnly) // 暫存日期(string)
+			tmpDate := startDate.Format() // 暫存日期(string)
 			// 遍歷所有員工
 			for _, empID := range empIDs {
 				// 查詢該名員工是否有班表
@@ -87,22 +86,20 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 					newCheckInStatus = append(newCheckInStatus, &types.CheckInStatus{
 						EmployeeID:              empID,
 						WorkShiftID:             v.WorkShiftID,
-						WorkCheckInDate:         v.ScheduleDate,        // 上班時間
-						WorkAttendStatus:        enum.WorkNotSwiped,    // 上班狀態, 未刷卡
-						WorkAttendProcStatus:    enum.NotProcessed,     // 處理狀態, 未處理
-						OffWorkCheckInDate:      offWork,               // 下班時間
-						OffWorkAttendStatus:     enum.OffWorkNotSwiped, // 下班狀態, 未刷卡
-						OffWorkAttendProcStatus: enum.NotProcessed,     // 處理狀態, 未處理
+						Date:                    driver.Date(v.ScheduleDate.Unix()), // 上班時間
+						WorkAttendStatus:        enum.WorkNotSwiped,                 // 上班狀態, 未刷卡
+						WorkAttendProcStatus:    enum.NotProcessed,                  // 處理狀態, 未處理
+						OffWorkAttendStatus:     enum.OffWorkNotSwiped,              // 下班狀態, 未刷卡
+						OffWorkAttendProcStatus: enum.NotProcessed,                  // 處理狀態, 未處理
 						AbsenceHours:            float32(v.WorkShift.TotalHours),
 					})
 				} else {
 					// 不存在, 代表休息日
 					newCheckInStatus = append(newCheckInStatus, &types.CheckInStatus{
 						EmployeeID:              empID,
-						WorkCheckInDate:         startDate,
-						WorkAttendStatus:        enum.WorkOffDay, // 休息日
-						WorkAttendProcStatus:    enum.ProcNormal, // 處理狀態, 正常
-						OffWorkCheckInDate:      startDate,
+						Date:                    startDate,
+						WorkAttendStatus:        enum.WorkOffDay,    // 休息日
+						WorkAttendProcStatus:    enum.ProcNormal,    // 處理狀態, 正常
 						OffWorkAttendStatus:     enum.OffWorkOffDay, // 休息日
 						OffWorkAttendProcStatus: enum.ProcNormal,    // 處理狀態, 正常
 					})
@@ -113,7 +110,11 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 		}
 
 		// 刪除原有, 避免資料重複
-		if _, err = qCheckInStatus.WithContext(c.ctx).DeleteByDateRange(in.DateRange[0], in.DateRange[1]); err != nil {
+		// in.DateRange[0] <= date <= in.DateRange[1]
+		if _, err = qCheckInStatus.WithContext(c.ctx).Unscoped().
+			Where(qCheckInStatus.Date.Gte(driver.NewDate(in.DateRange[0])),
+				qCheckInStatus.Date.Lte(driver.NewDate(in.DateRange[1]))).
+			Delete(); err != nil {
 			return err
 		}
 
@@ -131,48 +132,37 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 func (c *checkInStatus) UploadData(in []*model.UploadDataReq) error {
 	return query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			err             error
-			qCheckInStatus  = tx.CheckInStatus
-			updateDates     = make([]string, 0)
-			checkUpdateDate = make(map[string]struct{})
+			err            error
+			qCheckInStatus = tx.CheckInStatus
 		)
 
 		// 遍歷+更新
 		for _, data := range in {
 			var (
-				fullDateTime = gbconv.Time(data.DateTime)
-				dateOnly     = fullDateTime.Format(time.DateOnly)
-				timeOnly     = fullDateTime.Format(time.TimeOnly)
-				rowsAffected int64
+				fullDateTime = gbconv.Time(data.DateTime).Format(time.DateTime)
+				isWork       bool
 			)
 
 			switch data.CheckInType {
 			case "1":
 				// 上班
-				rowsAffected, err = qCheckInStatus.WithContext(c.ctx).UpdateTime(timeOnly, dateOnly, data.WorkShiftCode, data.CardNumber, true)
+				isWork = true
 			case "2":
 				// 下班
-				rowsAffected, err = qCheckInStatus.WithContext(c.ctx).UpdateTime(timeOnly, dateOnly, data.WorkShiftCode, data.CardNumber, false)
+				isWork = false
+
 			}
 
+			err = qCheckInStatus.WithContext(c.ctx).UpdateTime(fullDateTime, data.WorkShiftCode, data.CardNumber, isWork)
 			if err != nil {
 				return err
-			}
-			if rowsAffected == 0 {
-				// 如果更新數量為0, warning
-				g.Log().Warningf(c.ctx, "%s %s not found", dateOnly, data.CardNumber)
-			} else {
-				if _, ok := checkUpdateDate[dateOnly]; !ok {
-					updateDates = append(updateDates, dateOnly)
-					checkUpdateDate[dateOnly] = struct{}{}
-				}
 			}
 		}
 
 		// 計算狀態
-		if err = qCheckInStatus.WithContext(c.ctx).UpdateStatus(gbstr.Join(updateDates, ",")); err != nil {
-			return err
-		}
+		//if err = qCheckInStatus.WithContext(c.ctx).UpdateStatus(gbstr.Join(updateDates, ",")); err != nil {
+		//	return err
+		//}
 
 		// commit
 		return nil

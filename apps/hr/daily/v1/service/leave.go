@@ -123,7 +123,12 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 		}
 
 		// 更新出勤狀態表
-		err = qCheckInStatus.WithContext(l.ctx).UpdateHourByLeave(form.EmployeeID, form.ID)
+		err = qCheckInStatus.WithContext(dbcache.WithCtx(l.ctx)).
+			UpdateStatus(
+				form.StartDate.AddDate(0, 0, -1).Format(),
+				form.EndDate.AddDate(0, 0, 1).Format(),
+				gbconv.String(form.EmployeeID),
+			)
 		if err != nil {
 			return err
 		}
@@ -209,11 +214,6 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			if err != nil {
 				return err
 			}
-			// 出勤狀態表扣除
-			err = qCheckInStatus.WithContext(dbcache.WithCtx(l.ctx)).SubHourByLeave(leaveForm.EmployeeID, leaveForm.ID)
-			if err != nil {
-				return err
-			}
 		}
 
 		// 刪除該form的簽核流程並且建立新的
@@ -253,8 +253,13 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			return err
 		}
 
-		// 更新出勤狀態表的簽核中時數
-		err = qCheckInStatus.WithContext(l.ctx).UpdateHourByLeave(leaveForm.EmployeeID, leaveForm.ID)
+		// 更新出勤狀態表
+		err = qCheckInStatus.WithContext(dbcache.WithCtx(l.ctx)).
+			UpdateStatus(
+				leaveForm.StartDate.AddDate(0, 0, -1).Format(),
+				leaveForm.EndDate.AddDate(0, 0, 1).Format(),
+				gbconv.String(leaveForm.EmployeeID),
+			)
 		if err != nil {
 			return err
 		}
@@ -304,20 +309,20 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 	var (
 		qLeaveCorrect = query.LeaveCorrect
 		qLeaveDefer   = query.LeaveDefer
-		qWorkSchedule = query.WorkSchedule
 		qConfigMap    = query.ConfigMap
+		qWorkSchedule = query.WorkSchedule
 		leaveCorrect  *types.LeaveCorrect
 		leaveDefer    *types.LeaveDefer
-		workSchedule  []*types.WorkSchedule
-		startDateStr  = form.StartDate.Format()
-		endDateStr    = form.EndDate.Format()
-		hoursADay     float64
+		hoursADay     float32
 	)
 
 	// 取得請假剩餘天數
 	leaveCorrect, err = qLeaveCorrect.WithContext(l.ctx).Preload(qLeaveCorrect.Leave).
 		Where(qLeaveCorrect.EmployeeID.Eq(form.EmployeeID), qLeaveCorrect.LeaveID.Eq(form.LeaveID)).First()
 	if err != nil {
+		if gberror.Is(err, gorm.ErrRecordNotFound) {
+			return false, gberror.New("you don't have this leave to use")
+		}
 		return false, err
 	}
 
@@ -333,56 +338,45 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 		return false, err
 	}
 
-	// 取得班表
-	workSchedule, err = qWorkSchedule.WithContext(l.ctx).Preload(qWorkSchedule.WorkShift).QueryByDateRangeAndEmpID(form.EmployeeID, startDateStr, endDateStr)
-	if err != nil {
-		return false, err
-	}
-
 	// 取得設定檔中一天算幾小時
 	err = qConfigMap.WithContext(l.ctx).Select(qConfigMap.Value).Where(qConfigMap.Key.Eq("HoursADay")).Scan(&hoursADay)
 	if err != nil {
+		if gberror.Is(err, gorm.ErrRecordNotFound) {
+			g.Log().Errorf(l.ctx, `config map not found: "%s"`, "HoursADay")
+		}
 		return false, err
 	}
 
 	// 班表遍歷+計算
-	var sec int64
-	for _, s := range workSchedule {
-		// 遍歷所有班表
-		// 並加總跟請假表單上的時間重疊部分
-		// 等於請假總時間
-		timeRange := []time.Time{gbconv.Time(form.StartTime.Format()), gbconv.Time(form.EndTime.Format())}
-		sec += utils.TimeOverlapCount(timeRange, [][]time.Time{
-			{gbconv.Time(s.WorkShift.WorkStart.Format(time.TimeOnly)), gbconv.Time(s.WorkShift.RestStart.Format(time.TimeOnly))},
-			{gbconv.Time(s.WorkShift.RestEnd.Format(time.TimeOnly)), gbconv.Time(s.WorkShift.WorkEnd.Format(time.TimeOnly))},
-		}...)
-	}
-
-	// 各種換算
 	var (
-		minute = float64(sec) / 60
-		hour   = minute / 60
-		day    = hour / hoursADay
+		sec    float32
+		minute float32
+		hour   float32
+		day    float32
 	)
+	hour, err = qWorkSchedule.WithContext(l.ctx).WorkHoursCountMany(form.EmployeeID, form.StartDate.Format(), form.EndDate.Format(), form.StartTime.Format(), form.EndTime.Format())
+	minute = hour * 60
+	sec = minute * 60
+	day = hour / hoursADay
 
 	// 請假少於最低要求
-	if sec != 0 && minute < float64(leaveCorrect.Leave.Minimum) {
+	if sec != 0 && minute < float32(leaveCorrect.Leave.Minimum) {
 		// 自動補滿
-		minute = float64(leaveCorrect.Leave.Minimum)
-		hour = mathx.Round(minute/60, 2)
-		day = mathx.Round(hour/hoursADay, 2)
+		minute = float32(leaveCorrect.Leave.Minimum)
+		hour = float32(mathx.Round(float64(minute/60), 2))
+		day = float32(mathx.Round(float64(hour/hoursADay), 2))
 	}
 
 	// 回寫計算結果
-	form.LeaveDayCount = float32(day)
-	form.LeaveHourCount = float32(hour)
-	form.LeaveMinuteCount = float32(minute)
+	form.LeaveDayCount = day
+	form.LeaveHourCount = hour
+	form.LeaveMinuteCount = minute
 
 	// 判斷是否有遞延可以用
 	if leaveDefer != nil && leaveDefer.ID != 0 {
 		// 可用天數 - 已使用天數 - 簽核中天數
-		corr := (leaveDefer.Available - leaveDefer.Used - leaveDefer.Signing) * hoursADay
-		if hour <= corr {
+		corr := (leaveDefer.Available - leaveDefer.Used - leaveDefer.Signing) * float64(hoursADay)
+		if float64(hour) <= corr {
 			form.IsDefer = true
 			return true, nil
 		}
@@ -390,8 +384,8 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 
 	// 超過遞延天數，或沒有遞延天數可以用，接著判斷今年可用天數
 	// 請假時數 > 可用天數 - 已使用天數 - 簽核中天數
-	corr := (leaveCorrect.Available - leaveCorrect.Used - leaveCorrect.Signing) * hoursADay
-	if hour > corr {
+	corr := (leaveCorrect.Available - leaveCorrect.Used - leaveCorrect.Signing) * float64(hoursADay)
+	if float64(hour) > corr {
 		// 如果今年可用天數也超過，回傳false(不合法請假)
 		return false, gberror.New(gbi18n.New().Tf(l.ctx, `{#Daily.Leave.Error.Limit}`, mathx.Round(corr, 2), hour))
 	}
@@ -411,13 +405,57 @@ func (l *leave) isOverlap(form *types.LeaveRequestForm) (bool, error) {
 		// isOverlap: A1 <= B2 and A2 >= B1
 		qForm.StartDate.Lte(form.EndDate), qForm.EndDate.Gte(form.StartDate),
 		qForm.SignStatus.In(enum.SignStatusSending, enum.SignStatusApprove, enum.SignStatusSigning),
+		qForm.EmployeeID.Eq(form.EmployeeID),
 	).Find()
 	if err != nil {
 		return false, err
 	}
 
 	// 判斷重疊的時間裡時間是不是也重疊
+	// 遍歷尋出來的表單
 	for _, f := range queryRes {
+		// 遍歷表單(f)日期
+		for f.EndDate.AddDate(0, 0, 1).After(f.StartDate) {
+			// A1 < B2 && A2 > B1
+			var (
+				A1 = gbconv.Time(f.StartDate.Format() + " " + f.StartTime.Format())
+				A2 = gbconv.Time(f.StartDate.Format() + " " + f.EndTime.Format())
+			)
+
+			// 如果開始時間>結束時間
+			// 代表隔夜，需要+1天
+			if f.StartTime.Unix() > f.EndTime.Unix() {
+				A2 = A2.AddDate(0, 0, 1)
+			}
+
+			tempStartDate := form.StartDate
+			// 遍歷表單(form)日期
+			for form.EndDate.AddDate(0, 0, 1).After(tempStartDate) {
+				var (
+					B1 = gbconv.Time(form.StartDate.Format() + " " + form.StartTime.Format())
+					B2 = gbconv.Time(form.StartDate.Format() + " " + form.EndTime.Format())
+				)
+
+				// 如果開始時間>結束時間
+				// 代表隔夜，需要+1天
+				if form.StartTime.Unix() > form.EndTime.Unix() {
+					B2 = B2.AddDate(0, 0, 1)
+				}
+
+				// 判斷是否重疊
+				// 公式：A1 < B2 && A2 > B1
+				if A1.Unix() < B2.Unix() && A2.Unix() > B1.Unix() {
+					return true, nil
+				}
+
+				// 迴圈step(1 day)
+				tempStartDate = tempStartDate.AddDate(0, 0, 1)
+			}
+
+			// 迴圈step(1 day)
+			f.StartDate = f.StartDate.AddDate(0, 0, 1)
+		}
+
 		if form.StartTime.Unix() < f.EndTime.Unix() && form.EndTime.Unix() > f.StartTime.Unix() {
 			return true, nil
 		}

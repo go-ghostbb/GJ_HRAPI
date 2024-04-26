@@ -79,11 +79,6 @@ func (l *LeaveRequestForm) DateArray() []string {
 	return []string{l.StartDate.Format(), l.EndDate.Format()}
 }
 
-// TimeArray for copier
-func (l *LeaveRequestForm) TimeArray() []string {
-	return []string{l.StartTime.Format(), l.EndTime.Format()}
-}
-
 // AttachArray for copier
 func (l *LeaveRequestForm) AttachArray() []string {
 	result := gbstr.Split(l.Attach, ",")

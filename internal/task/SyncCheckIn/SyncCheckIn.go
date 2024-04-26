@@ -4,7 +4,6 @@ import (
 	"context"
 	"ghostbb.io/gb/frame/g"
 	gbenv "ghostbb.io/gb/os/gb_env"
-	gbstr "ghostbb.io/gb/text/gb_str"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/xuri/excelize/v2"
 	"hrapi/internal/query"
@@ -68,48 +67,36 @@ func Start(ctx context.Context) {
 
 	// 更新
 	var (
-		qCheckInStatus  = tx.CheckInStatus
-		updateDates     = make([]string, 0)
-		checkUpdateDate = make(map[string]struct{})
+		qCheckInStatus = tx.CheckInStatus
 	)
 	// 更新表裡時間
 	for _, row := range rows {
 		var (
-			fullDateTime = gbconv.Time(row[dateTime])
-			dateOnly     = fullDateTime.Format(time.DateOnly)
-			timeOnly     = fullDateTime.Format(time.TimeOnly)
-			rowsAffected int64
+			fullDateTime = gbconv.Time(row[dateTime]).Format(time.DateTime)
+			isWork       bool
 		)
 
 		switch row[checkInType] {
 		case "1":
 			// 上班
-			rowsAffected, err = qCheckInStatus.WithContext(ctx).UpdateTime(timeOnly, dateOnly, row[workShiftCode], row[cardNum], true)
+			isWork = true
 		case "2":
 			// 下班
-			rowsAffected, err = qCheckInStatus.WithContext(ctx).UpdateTime(timeOnly, dateOnly, row[workShiftCode], row[cardNum], false)
+			isWork = false
 		}
 
+		err = qCheckInStatus.WithContext(ctx).UpdateTime(fullDateTime, row[workShiftCode], row[cardNum], isWork)
 		if err != nil {
 			g.Log().Error(ctx, "sync check_in data err:", err)
 			return
 		}
-		if rowsAffected == 0 {
-			// 如果更新數量為0, warning
-			g.Log().Warningf(ctx, "%s %s not found", dateOnly, row[0])
-		} else {
-			if _, ok := checkUpdateDate[dateOnly]; !ok {
-				updateDates = append(updateDates, dateOnly)
-				checkUpdateDate[dateOnly] = struct{}{}
-			}
-		}
 	}
 
 	// 計算狀態
-	if err = qCheckInStatus.WithContext(ctx).UpdateStatus(gbstr.Join(updateDates, ",")); err != nil {
-		g.Log().Error(ctx, "sync check_in data err:", err)
-		return
-	}
+	//if err = qCheckInStatus.WithContext(ctx).UpdateStatus(gbstr.Join(updateDates, ",")); err != nil {
+	//	g.Log().Error(ctx, "sync check_in data err:", err)
+	//	return
+	//}
 
 	// 提交(commit)
 	if err = tx.Commit(); err != nil {

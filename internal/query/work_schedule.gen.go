@@ -494,6 +494,7 @@ type IWorkScheduleDo interface {
 	QueryByDateRange(dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error)
 	DeleteByDateRange(empID uint, likeDate string) (rowsAffected int64, err error)
 	QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error)
+	WorkHoursCountMany(empID uint, startDate string, endDate string, startTime string, endTime string) (result float32, err error)
 }
 
 // select * from @@table where schedule_date = @dateOnly and deleted_at is null
@@ -556,6 +557,25 @@ func (w workScheduleDo) QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, d
 
 	var executeSQL *gorm.DB
 	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select dbo.FN_C_WorkHoursCountMany(@empID, @startDate, @endDate, @startTime, @endTime);
+func (w workScheduleDo) WorkHoursCountMany(empID uint, startDate string, endDate string, startTime string, endTime string) (result float32, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, empID)
+	params = append(params, startDate)
+	params = append(params, endDate)
+	params = append(params, startTime)
+	params = append(params, endTime)
+	generateSQL.WriteString("select dbo.FN_C_WorkHoursCountMany(?, ?, ?, ?, ?); ")
+
+	var executeSQL *gorm.DB
+	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

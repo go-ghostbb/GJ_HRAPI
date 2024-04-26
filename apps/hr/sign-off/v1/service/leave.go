@@ -7,6 +7,7 @@ import (
 	gberror "ghostbb.io/gb/errors/gb_error"
 	"ghostbb.io/gb/frame/g"
 	gbctx "ghostbb.io/gb/os/gb_ctx"
+	gbconv "ghostbb.io/gb/util/gb_conv"
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"hrapi/apps/hr/sign-off/v1/model"
@@ -155,7 +156,7 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 
 		// 更新出勤狀態表
 		// 查詢form
-		err = qCheckInStatus.WithContext(l.ctx).UpdateHourByLeave(form.EmployeeID, form.ID)
+		err = qCheckInStatus.WithContext(dbcache.WithCtx(l.ctx)).UpdateStatus(form.StartDate.Format(), form.EndDate.Format(), gbconv.String(form.EmployeeID))
 		if err != nil {
 			return err
 		}
@@ -231,7 +232,7 @@ func (l *leave) handleSignOffPlusNotify(form *types.LeaveRequestForm, uuid strin
 	)
 
 	// 更改流程狀態為簽核中
-	_, err = qFlow.WithContext(dbcache.WithCtx(l.ctx)).Where(qFlow.UUID.Eq(uuid)).UpdateSimple(qFlow.Status.Value(enum.SignStatusSigning))
+	_, err = qFlow.WithContext(dbcache.WithCtx(l.ctx)).Where(qFlow.UUID.Eq(uuid)).UpdateSimple(qFlow.Status.Value(enum.SignStatusSigning), qFlow.SignDate.Value(time.Now()))
 	if err != nil {
 		g.Log().Error(l.ctx, "update sign-off form fail:", err.Error())
 		return
@@ -305,7 +306,12 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 		}
 
 		// 更新出勤狀態表
-		err = qCheckInStatus.WithContext(l.ctx).UpdateHourByLeave(form.EmployeeID, form.ID)
+		err = qCheckInStatus.WithContext(dbcache.WithCtx(l.ctx)).
+			UpdateStatus(
+				form.StartDate.AddDate(0, 0, -1).Format(),
+				form.EndDate.AddDate(0, 0, 1).Format(),
+				gbconv.String(form.EmployeeID),
+			)
 		if err != nil {
 			return err
 		}

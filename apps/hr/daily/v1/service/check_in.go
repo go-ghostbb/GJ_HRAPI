@@ -19,6 +19,7 @@ import (
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
 	"hrapi/internal/utils"
+	"hrapi/internal/utils/driver"
 	"hrapi/internal/utils/paginator"
 	"io"
 	"os"
@@ -176,11 +177,30 @@ func (c *checkIn) SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCh
 func (c *checkIn) DeleteCheckInForm(in model.DeleteCheckInFormReq) error {
 	return query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			qForm = tx.CheckInRequestForm
-			qFlow = tx.CheckInSignOffFlow
-
+			qForm          = tx.CheckInRequestForm
+			qDetail        = tx.CheckInRequestFormDetail
+			qFlow          = tx.CheckInSignOffFlow
+			qCheckInStatus = tx.CheckInStatus
+			empID          uint
+			dateRange      struct {
+				StartDate driver.Date
+				EndDate   driver.Date
+			}
 			err error
 		)
+
+		// 搜尋此表單的員工
+		err = qForm.WithContext(c.ctx).Where(qForm.ID.Eq(in.ID)).Pluck(qForm.EmployeeID, &empID)
+		if err != nil {
+			return err
+		}
+
+		// 查詢此表單最小日期和最大日期
+		err = qDetail.WithContext(c.ctx).Select(qDetail.Date.Min().As("start_date"), qDetail.Date.Max().As("end_date")).
+			Where(qDetail.CheckInRequestFormID.Eq(in.ID)).Scan(&dateRange)
+		if err != nil {
+			return err
+		}
 
 		// 刪除此表單
 		_, err = qForm.WithContext(dbcache.WithCtx(c.ctx)).Where(qForm.ID.Eq(in.ID)).Delete()
@@ -188,8 +208,25 @@ func (c *checkIn) DeleteCheckInForm(in model.DeleteCheckInFormReq) error {
 			return err
 		}
 
+		// 刪除明細
+		_, err = qDetail.WithContext(dbcache.WithCtx(c.ctx)).Where(qDetail.CheckInRequestFormID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
 		// 刪除流程
 		_, err = qFlow.WithContext(dbcache.WithCtx(c.ctx)).Where(qFlow.CheckInRequestFormID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
+		// 更新出勤狀態表
+		err = qCheckInStatus.WithContext(dbcache.WithCtx(c.ctx)).
+			UpdateStatus(
+				dateRange.StartDate.AddDate(0, 0, -1).Format(),
+				dateRange.EndDate.AddDate(0, 0, 1).Format(),
+				gbconv.String(empID),
+			)
 		if err != nil {
 			return err
 		}

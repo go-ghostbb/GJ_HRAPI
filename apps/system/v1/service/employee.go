@@ -236,7 +236,9 @@ func (e *employee) GetByDateRangeCheckInStatus(in model.GetByDateRangeCheckInSta
 		result         []*types.CheckInStatus
 	)
 
-	result, err = qCheckInStatus.WithContext(dbcache.WithCtx(e.ctx)).Preload(field.Associations, qCheckInStatus.Employee.Department).QueryByDateRangeAndEmpID(in.EmployeeID, in.DateRangeStart, in.DateRangeEnd, in.Abnormal)
+	result, err = qCheckInStatus.WithContext(e.ctx).
+		Preload(field.Associations, qCheckInStatus.Employee.Department).
+		QueryByDateRangeAndEmpID(in.EmployeeID, in.DateRangeStart, in.DateRangeEnd, in.Abnormal)
 	if err != nil {
 		return nil, err
 	}

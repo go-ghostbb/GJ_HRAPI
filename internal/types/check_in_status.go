@@ -3,7 +3,7 @@ package types
 import (
 	"gorm.io/gorm"
 	"hrapi/internal/types/enum"
-	"time"
+	"hrapi/internal/utils/driver"
 )
 
 type CheckInStatus struct {
@@ -12,12 +12,11 @@ type CheckInStatus struct {
 	Employee                *Employee                `gorm:"foreignKey:EmployeeID;comment:員工" json:"employee"`
 	WorkShiftID             uint                     `gorm:"comment:班別ID" json:"workShiftId"`
 	WorkShift               *WorkShift               `gorm:"foreignKey:WorkShiftID;comment:班別" json:"workShift"`
-	WorkCheckInDate         time.Time                `gorm:"type:date;comment:上班日期" json:"workCheckInDate"`
-	WorkAttendTime          time.Time                `gorm:"type:time(0);comment:上班出勤時間" json:"workAttendTime"`
+	Date                    driver.Date              `gorm:"type:date;comment:上班日期" json:"date"`
+	WorkCheckIn             driver.Datetime          `gorm:"type:datetime;comment:上班打卡時間" json:"workCheckIn"`
 	WorkAttendStatus        enum.WorkAttendStatus    `gorm:"comment:上班出勤狀態" json:"workAttendStatus"`
 	WorkAttendProcStatus    enum.CheckInProcStatus   `gorm:"comment:上班處理狀態" json:"workAttendProcStatus"`
-	OffWorkCheckInDate      time.Time                `gorm:"type:date;comment:下班日期" json:"offWorkCheckInDate"`
-	OffWorkAttendTime       time.Time                `gorm:"type:time(0);comment:下班出勤時間" json:"offWorkAttendTime"`
+	OffWorkCheckIn          driver.Datetime          `gorm:"type:datetime;comment:下班打卡時間" json:"offWorkCheckIn"`
 	OffWorkAttendStatus     enum.OffWorkAttendStatus `gorm:"comment:下班出勤狀態" json:"offWorkAttendStatus"`
 	OffWorkAttendProcStatus enum.CheckInProcStatus   `gorm:"comment:下班處理狀態" json:"offWorkAttendProcStatus"`
 	AbsenceHours            float32                  `gorm:"comment:缺勤時數" json:"absenceHours"`

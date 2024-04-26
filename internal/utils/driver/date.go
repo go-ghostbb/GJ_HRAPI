@@ -4,10 +4,17 @@ import (
 	"database/sql/driver"
 	"fmt"
 	gbstr "ghostbb.io/gb/text/gb_str"
+	gbconv "ghostbb.io/gb/util/gb_conv"
 	"time"
 )
 
 type Date int64
+
+func NewDate[T string | time.Time](n T) Date {
+	t := gbconv.Time(n)
+	t, _ = time.Parse(time.DateOnly, t.Format(time.DateOnly))
+	return Date(t.Unix())
+}
 
 func (d *Date) Scan(value interface{}) error {
 	v := value.(time.Time)
@@ -40,4 +47,21 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 	*d = Date(t.Unix())
 
 	return nil
+}
+
+func (d Date) DateTime(t Time) time.Time {
+	result, _ := time.Parse(time.DateTime, d.Format()+" "+t.Format())
+	return result
+}
+
+func (d Date) Time() time.Time {
+	return time.Unix(int64(d), 0).UTC()
+}
+
+func (d Date) After(u Date) bool {
+	return d.Time().After(u.Time())
+}
+
+func (d Date) AddDate(years int, months int, days int) Date {
+	return Date(d.Time().AddDate(years, months, days).Unix())
 }

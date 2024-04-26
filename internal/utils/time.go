@@ -5,7 +5,17 @@ import "time"
 // TimeOverlapCount
 // time overlap count
 func TimeOverlapCount(timeRange []time.Time, timePeriod ...[]time.Time) (sec int64) {
+	if timeRange[0].After(timeRange[1]) {
+		// 如果開始時間>結束時間，代表過夜
+		timeRange[1] = timeRange[1].AddDate(0, 0, 1)
+	}
+
 	for _, t := range timePeriod {
+		if t[0].After(t[1]) {
+			// 如果開始時間>結束時間，代表過夜
+			t[1] = t[1].AddDate(0, 0, 1)
+		}
+
 		if (timeRange[0].Before(t[1]) || timeRange[0].Equal(t[1])) && (t[0].Before(timeRange[1]) || t[1].Equal(timeRange[0])) {
 			overlapStart := max(timeRange[0], t[0])
 			overlapEnd := min(timeRange[1], t[1])

@@ -7,12 +7,14 @@ import (
 	gberror "ghostbb.io/gb/errors/gb_error"
 	"ghostbb.io/gb/frame/g"
 	gbctx "ghostbb.io/gb/os/gb_ctx"
+	gbconv "ghostbb.io/gb/util/gb_conv"
 	"gorm.io/gen/field"
 	"hrapi/apps/hr/sign-off/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
 	"hrapi/internal/utils"
+	"hrapi/internal/utils/driver"
 	"hrapi/internal/utils/email"
 	"time"
 )
@@ -261,8 +263,9 @@ func (c *checkIn) handleNotifyOnly(form *types.CheckInRequestForm, uuid string) 
 func (c *checkIn) handleSignDone(form *types.CheckInRequestForm) error {
 	return query.Q.Transaction(func(tx *query.Query) error {
 		var (
-			qForm = tx.CheckInRequestForm
-			err   error
+			qForm          = tx.CheckInRequestForm
+			qCheckInStatus = tx.CheckInStatus
+			err            error
 		)
 
 		// 更新表單狀態
@@ -271,7 +274,29 @@ func (c *checkIn) handleSignDone(form *types.CheckInRequestForm) error {
 			return err
 		}
 
-		// TODO: 寫入出勤狀態表
+		// 寫入出勤狀態表
+		var (
+			startDate driver.Date
+			endDate   driver.Date
+		)
+
+		for _, item := range form.Detail {
+			if startDate.Unix() == 0 {
+				startDate = item.Date
+			} else {
+				startDate = min(startDate, item.Date)
+			}
+			endDate = max(endDate, item.Date)
+		}
+		err = qCheckInStatus.WithContext(dbcache.WithCtx(c.ctx)).
+			UpdateStatus(
+				startDate.AddDate(0, 0, -1).Format(),
+				endDate.AddDate(0, 0, 1).Format(),
+				gbconv.String(form.EmployeeID),
+			)
+		if err != nil {
+			return err
+		}
 
 		// commit
 		return nil

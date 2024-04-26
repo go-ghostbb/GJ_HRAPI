@@ -33,12 +33,11 @@ func newCheckInStatus(db *gorm.DB, opts ...gen.DOOption) checkInStatus {
 	_checkInStatus.DeletedAt = field.NewField(tableName, "deleted_at")
 	_checkInStatus.EmployeeID = field.NewUint(tableName, "employee_id")
 	_checkInStatus.WorkShiftID = field.NewUint(tableName, "work_shift_id")
-	_checkInStatus.WorkCheckInDate = field.NewTime(tableName, "work_check_in_date")
-	_checkInStatus.WorkAttendTime = field.NewTime(tableName, "work_attend_time")
+	_checkInStatus.Date = field.NewField(tableName, "date")
+	_checkInStatus.WorkCheckIn = field.NewField(tableName, "work_check_in")
 	_checkInStatus.WorkAttendStatus = field.NewField(tableName, "work_attend_status")
 	_checkInStatus.WorkAttendProcStatus = field.NewField(tableName, "work_attend_proc_status")
-	_checkInStatus.OffWorkCheckInDate = field.NewTime(tableName, "off_work_check_in_date")
-	_checkInStatus.OffWorkAttendTime = field.NewTime(tableName, "off_work_attend_time")
+	_checkInStatus.OffWorkCheckIn = field.NewField(tableName, "off_work_check_in")
 	_checkInStatus.OffWorkAttendStatus = field.NewField(tableName, "off_work_attend_status")
 	_checkInStatus.OffWorkAttendProcStatus = field.NewField(tableName, "off_work_attend_proc_status")
 	_checkInStatus.AbsenceHours = field.NewFloat32(tableName, "absence_hours")
@@ -179,12 +178,11 @@ type checkInStatus struct {
 	DeletedAt               field.Field
 	EmployeeID              field.Uint
 	WorkShiftID             field.Uint
-	WorkCheckInDate         field.Time
-	WorkAttendTime          field.Time
+	Date                    field.Field
+	WorkCheckIn             field.Field
 	WorkAttendStatus        field.Field
 	WorkAttendProcStatus    field.Field
-	OffWorkCheckInDate      field.Time
-	OffWorkAttendTime       field.Time
+	OffWorkCheckIn          field.Field
 	OffWorkAttendStatus     field.Field
 	OffWorkAttendProcStatus field.Field
 	AbsenceHours            field.Float32
@@ -217,12 +215,11 @@ func (c *checkInStatus) updateTableName(table string) *checkInStatus {
 	c.DeletedAt = field.NewField(table, "deleted_at")
 	c.EmployeeID = field.NewUint(table, "employee_id")
 	c.WorkShiftID = field.NewUint(table, "work_shift_id")
-	c.WorkCheckInDate = field.NewTime(table, "work_check_in_date")
-	c.WorkAttendTime = field.NewTime(table, "work_attend_time")
+	c.Date = field.NewField(table, "date")
+	c.WorkCheckIn = field.NewField(table, "work_check_in")
 	c.WorkAttendStatus = field.NewField(table, "work_attend_status")
 	c.WorkAttendProcStatus = field.NewField(table, "work_attend_proc_status")
-	c.OffWorkCheckInDate = field.NewTime(table, "off_work_check_in_date")
-	c.OffWorkAttendTime = field.NewTime(table, "off_work_attend_time")
+	c.OffWorkCheckIn = field.NewField(table, "off_work_check_in")
 	c.OffWorkAttendStatus = field.NewField(table, "off_work_attend_status")
 	c.OffWorkAttendProcStatus = field.NewField(table, "off_work_attend_proc_status")
 	c.AbsenceHours = field.NewFloat32(table, "absence_hours")
@@ -258,19 +255,18 @@ func (c *checkInStatus) GetFieldByName(fieldName string) (field.OrderExpr, bool)
 }
 
 func (c *checkInStatus) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 21)
+	c.fieldMap = make(map[string]field.Expr, 20)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["created_at"] = c.CreatedAt
 	c.fieldMap["updated_at"] = c.UpdatedAt
 	c.fieldMap["deleted_at"] = c.DeletedAt
 	c.fieldMap["employee_id"] = c.EmployeeID
 	c.fieldMap["work_shift_id"] = c.WorkShiftID
-	c.fieldMap["work_check_in_date"] = c.WorkCheckInDate
-	c.fieldMap["work_attend_time"] = c.WorkAttendTime
+	c.fieldMap["date"] = c.Date
+	c.fieldMap["work_check_in"] = c.WorkCheckIn
 	c.fieldMap["work_attend_status"] = c.WorkAttendStatus
 	c.fieldMap["work_attend_proc_status"] = c.WorkAttendProcStatus
-	c.fieldMap["off_work_check_in_date"] = c.OffWorkCheckInDate
-	c.fieldMap["off_work_attend_time"] = c.OffWorkAttendTime
+	c.fieldMap["off_work_check_in"] = c.OffWorkCheckIn
 	c.fieldMap["off_work_attend_status"] = c.OffWorkAttendStatus
 	c.fieldMap["off_work_attend_proc_status"] = c.OffWorkAttendProcStatus
 	c.fieldMap["absence_hours"] = c.AbsenceHours
@@ -539,35 +535,21 @@ type ICheckInStatusDo interface {
 	schema.Tabler
 
 	QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string, abnormal bool) (result []*types.CheckInStatus, err error)
-	DeleteByDate(dateOnly string) (rowsAffected int64, err error)
-	DeleteByDateRange(dateOnly1 string, dateOnly2 string) (rowsAffected int64, err error)
-	UpdateStatus(dateOnly string) (err error)
-	UpdateTime(timeOnly string, dateOnly string, workShiftCode string, cardNum string, isWork bool) (rowsAffected int64, err error)
+	UpdateStatus(startDate string, endDate string, empIDs string) (err error)
+	UpdateTime(datetime string, workShiftCode string, cardNum string, isWork bool) (err error)
 	QueryTotalAttendHours(empID uint, dateOnly1 string, dateOnly2 string) (result float32, err error)
-	UpdateHourByLeave(empID uint, leaveRequestFromID uint) (err error)
-	SubHourByLeave(empID uint, leaveRequestFromID uint) (err error)
 }
 
-// select * from @@table
-//
-//	   where work_check_in_date between @dateOnly1 and @dateOnly2 and
-//	         employee_id = @empID and
-//			 {{if abnormal}}
-//	         	(work_attend_proc_status = 'not processed' or off_work_attend_proc_status = 'not processed') and
-//				 {{end}}
-//	         deleted_at is null
+// select * from FN_Q_CheckInStatusByDateRange(@empID, @dateOnly1, @dateOnly2, @abnormal);
 func (c checkInStatusDo) QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string, abnormal bool) (result []*types.CheckInStatus, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
+	params = append(params, empID)
 	params = append(params, dateOnly1)
 	params = append(params, dateOnly2)
-	params = append(params, empID)
-	generateSQL.WriteString("select * from check_in_status where work_check_in_date between ? and ? and employee_id = ? and ")
-	if abnormal {
-		generateSQL.WriteString("(work_attend_proc_status = 'not processed' or off_work_attend_proc_status = 'not processed') and ")
-	}
-	generateSQL.WriteString("deleted_at is null ")
+	params = append(params, abnormal)
+	generateSQL.WriteString("select * from FN_Q_CheckInStatusByDateRange(?, ?, ?, ?); ")
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
@@ -576,46 +558,15 @@ func (c checkInStatusDo) QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, 
 	return
 }
 
-// delete @@table where work_check_in_date = @dateOnly
-func (c checkInStatusDo) DeleteByDate(dateOnly string) (rowsAffected int64, err error) {
+// exec P_C_CheckInStatusUpdateStatus @startDate, @endDate, @empIDs
+func (c checkInStatusDo) UpdateStatus(startDate string, endDate string, empIDs string) (err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	params = append(params, dateOnly)
-	generateSQL.WriteString("delete check_in_status where work_check_in_date = ? ")
-
-	var executeSQL *gorm.DB
-	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
-	rowsAffected = executeSQL.RowsAffected
-	err = executeSQL.Error
-
-	return
-}
-
-// delete @@table where work_check_in_date between @dateOnly1 and @dateOnly2
-func (c checkInStatusDo) DeleteByDateRange(dateOnly1 string, dateOnly2 string) (rowsAffected int64, err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, dateOnly1)
-	params = append(params, dateOnly2)
-	generateSQL.WriteString("delete check_in_status where work_check_in_date between ? and ? ")
-
-	var executeSQL *gorm.DB
-	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
-	rowsAffected = executeSQL.RowsAffected
-	err = executeSQL.Error
-
-	return
-}
-
-// exec P_C_CheckInStatusUpdateStatus @dateOnly
-func (c checkInStatusDo) UpdateStatus(dateOnly string) (err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, dateOnly)
-	generateSQL.WriteString("exec P_C_CheckInStatusUpdateStatus ? ")
+	params = append(params, startDate)
+	params = append(params, endDate)
+	params = append(params, empIDs)
+	generateSQL.WriteString("exec P_C_CheckInStatusUpdateStatus ?, ?, ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
@@ -624,51 +575,19 @@ func (c checkInStatusDo) UpdateStatus(dateOnly string) (err error) {
 	return
 }
 
-// update @@table
-// {{if isWork}}
-//
-//	set work_attend_time = @timeOnly, updated_at = getdate()
-//
-// {{else}}
-//
-//	set off_work_attend_time = @timeOnly, updated_at = getdate()
-//
-// {{end}}
-// where
-//
-//	work_shift_id = (select id from work_shift where code = @workShiftCode) and
-//	employee_id = (select id from employee where card_number = @cardNum) and
-//	{{if isWork}}
-//	    work_check_in_date = @dateOnly
-//	{{else}}
-//	    off_work_check_in_date = @dateOnly
-//	{{end}}
-func (c checkInStatusDo) UpdateTime(timeOnly string, dateOnly string, workShiftCode string, cardNum string, isWork bool) (rowsAffected int64, err error) {
+// exec P_C_CheckInStatusUpdateTime @datetime, @workShiftCode, @cardNum, @isWork
+func (c checkInStatusDo) UpdateTime(datetime string, workShiftCode string, cardNum string, isWork bool) (err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	generateSQL.WriteString("update check_in_status ")
-	if isWork {
-		params = append(params, timeOnly)
-		generateSQL.WriteString("set work_attend_time = ?, updated_at = getdate() ")
-	} else {
-		params = append(params, timeOnly)
-		generateSQL.WriteString("set off_work_attend_time = ?, updated_at = getdate() ")
-	}
+	params = append(params, datetime)
 	params = append(params, workShiftCode)
 	params = append(params, cardNum)
-	generateSQL.WriteString("where work_shift_id = (select id from work_shift where code = ?) and employee_id = (select id from employee where card_number = ?) and ")
-	if isWork {
-		params = append(params, dateOnly)
-		generateSQL.WriteString("work_check_in_date = ? ")
-	} else {
-		params = append(params, dateOnly)
-		generateSQL.WriteString("off_work_check_in_date = ? ")
-	}
+	params = append(params, isWork)
+	generateSQL.WriteString("exec P_C_CheckInStatusUpdateTime ?, ?, ?, ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
-	rowsAffected = executeSQL.RowsAffected
 	err = executeSQL.Error
 
 	return
@@ -696,38 +615,6 @@ func (c checkInStatusDo) QueryTotalAttendHours(empID uint, dateOnly1 string, dat
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
-}
-
-// exec P_C_CheckInHourUpdateByLeave @empID, @leaveRequestFromID
-func (c checkInStatusDo) UpdateHourByLeave(empID uint, leaveRequestFromID uint) (err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, empID)
-	params = append(params, leaveRequestFromID)
-	generateSQL.WriteString("exec P_C_CheckInHourUpdateByLeave ?, ? ")
-
-	var executeSQL *gorm.DB
-	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
-}
-
-// exec P_C_CheckInHourSubByLeave @empID, @leaveRequestFromID
-func (c checkInStatusDo) SubHourByLeave(empID uint, leaveRequestFromID uint) (err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, empID)
-	params = append(params, leaveRequestFromID)
-	generateSQL.WriteString("exec P_C_CheckInHourSubByLeave ?, ? ")
-
-	var executeSQL *gorm.DB
-	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
 	err = executeSQL.Error
 
 	return
