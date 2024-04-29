@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gberror "ghostbb.io/gb/errors/gb_error"
@@ -112,8 +113,8 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 			return err
 		}
 
-		// 遞減可用請假表或遞延表
-		err = l.updateCorrectSigning(tx, form, float64(form.LeaveDayCount)*-1)
+		// 更新請假可用表
+		err = l.updateLeaveCorrect(tx, form)
 		if err != nil {
 			return err
 		}
@@ -131,16 +132,17 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 
 		// commit
 		return nil
+	}, &sql.TxOptions{
+		// 啟用讀取未提交
+		Isolation: sql.LevelReadCommitted,
 	})
 }
 
 // SaveLeaveForm is to insert or update leave request form
 func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFormRes, err error) {
 	var (
-		qForm      = query.LeaveRequestForm
-		leaveForm  = new(types.LeaveRequestForm)
-		originDays float64
-		originForm = new(types.LeaveRequestForm)
+		qForm     = query.LeaveRequestForm
+		leaveForm = new(types.LeaveRequestForm)
 	)
 
 	if in.ID != 0 {
@@ -150,10 +152,6 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 		if err != nil {
 			return
 		}
-		originDays = float64(leaveForm.LeaveDayCount)
-
-		// 複製一份
-		*originForm = *leaveForm
 	}
 
 	// 複製form(request body)到database model
@@ -171,17 +169,16 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 		return
 	}
 
-	// 請假合法判斷, 這裡會順便寫入請假分鐘, 小時, 天
-	if _, err = l.judge(leaveForm); err != nil {
-		return
-	}
-
 	// 寫入基本訊息, 部門id, 代理人部門id等...
 	if err = l.writeBasicInfo(leaveForm); err != nil {
 		return
 	}
 
 	// 開始資料庫操作，開啟事務
+	opts := &sql.TxOptions{
+		// 啟用讀取未提交
+		Isolation: sql.LevelReadCommitted,
+	}
 	err = query.Q.Transaction(func(tx *query.Query) error {
 		var (
 			qForm          = tx.LeaveRequestForm
@@ -200,12 +197,6 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			// maybe A20240131000010
 			// A + 今天日期 + (id % 1000000)補全6位數
 			leaveForm.Order = "A" + time.Now().Format("20060102") + fmt.Sprintf("%06d", leaveForm.ID%1000000)
-		} else {
-			// 如果不為0, 請假可用表或遞延表必須減去原本的簽核中時數
-			err = l.updateCorrectSigning(tx, leaveForm, originDays*-1)
-			if err != nil {
-				return err
-			}
 		}
 
 		// 刪除該form的簽核流程並且建立新的
@@ -233,10 +224,8 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			return err
 		}
 
-		// 更新請假可用表裡簽核中的天數
-		// 如果不是從遞延表裡面使用的話
-		err = l.updateCorrectSigning(tx, leaveForm, float64(leaveForm.LeaveDayCount))
-
+		// 更新請假可用表
+		err = l.updateLeaveCorrect(tx, leaveForm)
 		if err != nil {
 			return err
 		}
@@ -254,7 +243,7 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 
 		// commit
 		return nil
-	})
+	}, opts)
 	if err != nil {
 		return
 	}
@@ -289,27 +278,30 @@ func (l *leave) writeBasicInfo(form *types.LeaveRequestForm) (err error) {
 		return
 	}
 
+	// 計算請假時間
+	err = l.countTime(form)
+	if err != nil {
+		return
+	}
+
 	return nil
 }
 
-// 請假合法判斷
-func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
+// 計算請假時間
+func (l *leave) countTime(form *types.LeaveRequestForm) (err error) {
 	var (
-		qLeaveCorrect = query.LeaveCorrect
 		qConfigMap    = query.ConfigMap
 		qWorkSchedule = query.WorkSchedule
-		leaveCorrect  *types.LeaveCorrect
+		qLeave        = query.Leave
 		hoursADay     float32
 	)
 
-	// 取得請假剩餘天數
-	leaveCorrect, err = qLeaveCorrect.WithContext(l.ctx).Preload(qLeaveCorrect.Leave).
-		Where(qLeaveCorrect.EmployeeID.Eq(form.EmployeeID), qLeaveCorrect.LeaveID.Eq(form.LeaveID)).First()
+	form.Leave, err = qLeave.WithContext(dbcache.WithCtx(l.ctx)).Where(qLeave.ID.Eq(form.LeaveID)).First()
 	if err != nil {
 		if gberror.Is(err, gorm.ErrRecordNotFound) {
-			return false, gberror.New("you don't have this leave to use")
+			return gberror.Newf("leave id:%d not found", form.LeaveID)
 		}
-		return false, err
+		return err
 	}
 
 	// 取得設定檔中一天算幾小時
@@ -318,7 +310,7 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 		if gberror.Is(err, gorm.ErrRecordNotFound) {
 			g.Log().Errorf(l.ctx, `config map not found: "%s"`, "HoursADay")
 		}
-		return false, err
+		return err
 	}
 
 	// 班表遍歷+計算
@@ -334,11 +326,16 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 	day = hour / hoursADay
 
 	// 請假少於最低要求
-	if sec != 0 && minute < float32(leaveCorrect.Leave.Minimum) {
+	if sec != 0 && minute < float32(form.Leave.Minimum) {
 		// 自動補滿
-		minute = float32(leaveCorrect.Leave.Minimum)
+		minute = float32(form.Leave.Minimum)
 		hour = float32(mathx.Round(float64(minute/60), 2))
 		day = float32(mathx.Round(float64(hour/hoursADay), 2))
+	}
+
+	// 請假時數不能為0
+	if hour == 0 {
+		return gberror.New("the number of leave hours cannot be 0")
 	}
 
 	// 回寫計算結果
@@ -346,15 +343,7 @@ func (l *leave) judge(form *types.LeaveRequestForm) (judge bool, err error) {
 	form.LeaveHourCount = hour
 	form.LeaveMinuteCount = minute
 
-	// 超過遞延天數，或沒有遞延天數可以用，接著判斷今年可用天數
-	// 請假時數 > 可用天數 - 已使用天數 - 簽核中天數
-	corr := (leaveCorrect.Available - leaveCorrect.Used - leaveCorrect.Signing) * float64(hoursADay)
-	if float64(hour) > corr {
-		// 如果今年可用天數也超過，回傳false(不合法請假)
-		return false, gberror.New(gbi18n.New().Tf(l.ctx, `{#Daily.Leave.Error.Limit}`, mathx.Round(corr, 2), hour))
-	}
-
-	return true, nil
+	return nil
 }
 
 // 判斷時間是否有重疊
@@ -426,6 +415,43 @@ func (l *leave) isOverlap(form *types.LeaveRequestForm) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// 更新請假可用表
+func (l *leave) updateLeaveCorrect(tx *query.Query, form *types.LeaveRequestForm) error {
+	var (
+		qLeaveCorrect = tx.LeaveCorrect
+		lcIDs         = make([]uint, 0)
+		err           error
+	)
+
+	// 查詢表單內日期區間對應的所有可用表id
+	lcIDs, err = qLeaveCorrect.WithContext(l.ctx).FindByDateRange(form.EmployeeID, form.LeaveID, form.StartDate.Format(), form.EndDate.Format())
+	if err != nil {
+		return err
+	}
+
+	// 如果有一個id為0
+	// 代表請假有到下一個週期，且人事未結算本週期
+	for _, id := range lcIDs {
+		if id == 0 {
+			return gberror.New("leave_correct id is 0")
+		}
+	}
+
+	// 更新可用表
+	var rowCount int64
+	for _, id := range lcIDs {
+		rowCount, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(id)
+		if err != nil {
+			return err
+		}
+		if rowCount == 0 {
+			return gberror.New("leave_correct update quantity is 0")
+		}
+	}
+
+	return nil
 }
 
 // 創建流程
@@ -603,37 +629,6 @@ func (l *leave) attachSave(order string, paths []string) ([]string, error) {
 	}
 
 	return result, nil
-}
-
-// 更新可用請假表簽核中天數
-func (l *leave) updateCorrectSigning(tx *query.Query, form *types.LeaveRequestForm, days float64) (err error) {
-	var (
-		qCorrect  = tx.LeaveCorrect
-		updateCol = qCorrect.Signing.Add(days)
-		info      gen.ResultInfo
-	)
-
-	if days < 0 {
-		updateCol = qCorrect.Signing.Sub(days * -1)
-	}
-
-	// 如果這張單子已核准
-	if form.SignStatus == enum.SignStatusApprove {
-		updateCol = qCorrect.Used.Sub(days * -1)
-	}
-
-	info, err = qCorrect.WithContext(l.ctx).Where(
-		qCorrect.EmployeeID.Eq(form.EmployeeID),
-		qCorrect.LeaveID.Eq(form.LeaveID),
-	).UpdateSimple(updateCol)
-	if err != nil {
-		return err
-	}
-	if info.RowsAffected == 0 {
-		return gberror.New("update leave_correct signing error: affected rows is 0")
-	}
-
-	return nil
 }
 
 // 寄信通知

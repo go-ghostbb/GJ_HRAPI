@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gberror "ghostbb.io/gb/errors/gb_error"
 	"ghostbb.io/gb/frame/g"
 	gbctx "ghostbb.io/gb/os/gb_ctx"
 	gbconv "ghostbb.io/gb/util/gb_conv"
-	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"hrapi/apps/hr/sign-off/v1/model"
 	"hrapi/internal/query"
@@ -119,6 +119,10 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 	}
 
 	// 開啟事務
+	opts := &sql.TxOptions{
+		// 啟用讀取未提交
+		Isolation: sql.LevelReadCommitted,
+	}
 	err = query.Q.Transaction(func(tx *query.Query) error {
 		var (
 			qFlow          = tx.LeaveSignOffFlow
@@ -143,8 +147,7 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 		}
 
 		// 更新遞延表或可用請假表
-		// 如果不是從遞延表裡面使用的話
-		err = l.updateCorrect(tx, form, false)
+		err = l.updateLeaveCorrect(tx, form)
 		if err != nil {
 			return err
 		}
@@ -158,7 +161,7 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 
 		// commit
 		return nil
-	})
+	}, opts)
 	if err != nil {
 		return err
 	}
@@ -283,15 +286,14 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 			err            error
 		)
 
-		// 如果不是從遞延表裡面使用的話
-		err = l.updateCorrect(tx, form, true)
-
+		// 更新表單狀態
+		_, err = qForm.WithContext(dbcache.WithCtx(l.ctx)).Where(qForm.ID.Eq(form.ID)).UpdateSimple(qForm.SignStatus.Value(enum.SignStatusApprove))
 		if err != nil {
 			return err
 		}
 
-		// 更新表單狀態
-		_, err = qForm.WithContext(dbcache.WithCtx(l.ctx)).Where(qForm.ID.Eq(form.ID)).UpdateSimple(qForm.SignStatus.Value(enum.SignStatusApprove))
+		// 如果不是從遞延表裡面使用的話
+		err = l.updateLeaveCorrect(tx, form)
 		if err != nil {
 			return err
 		}
@@ -309,31 +311,44 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 
 		// commit
 		return nil
+	}, &sql.TxOptions{
+		// 啟用讀取未提交
+		Isolation: sql.LevelReadCommitted,
 	})
 }
 
-// 更新可用請假表簽核中天數
-func (l *leave) updateCorrect(tx *query.Query, form *types.LeaveRequestForm, isApprove bool) (err error) {
+// 更新請假可用表
+func (l *leave) updateLeaveCorrect(tx *query.Query, form *types.LeaveRequestForm) error {
 	var (
-		qCorrect = tx.LeaveCorrect
-		info     gen.ResultInfo
-
-		// 簽核中天數扣除
-		updateCol = []field.AssignExpr{qCorrect.Signing.Sub(float64(form.LeaveDayCount))}
+		qLeaveCorrect = tx.LeaveCorrect
+		lcIDs         = make([]uint, 0)
+		err           error
 	)
 
-	if isApprove {
-		// 補上使用天數
-		updateCol = append(updateCol, qCorrect.Used.Add(float64(form.LeaveDayCount)))
+	// 查詢表單內日期區間對應的所有可用表id
+	lcIDs, err = qLeaveCorrect.WithContext(l.ctx).FindByDateRange(form.EmployeeID, form.LeaveID, form.StartDate.Format(), form.EndDate.Format())
+	if err != nil {
+		return err
 	}
 
-	info, err = qCorrect.WithContext(l.ctx).Where(
-		qCorrect.EmployeeID.Eq(form.EmployeeID),
-		qCorrect.LeaveID.Eq(form.LeaveID),
-	).UpdateSimple(updateCol...)
+	// 如果有一個id為0
+	// 代表請假有到下一個週期，且人事未結算本週期
+	for _, id := range lcIDs {
+		if id == 0 {
+			return gberror.New("leave_correct id is 0")
+		}
+	}
 
-	if info.RowsAffected == 0 {
-		return gberror.New("update leave_correct signing error: affected rows is 0")
+	// 更新可用表
+	var rowCount int64
+	for _, id := range lcIDs {
+		rowCount, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(id)
+		if err != nil {
+			return err
+		}
+		if rowCount == 0 {
+			return gberror.New("leave_correct update quantity is 0")
+		}
 	}
 
 	return nil

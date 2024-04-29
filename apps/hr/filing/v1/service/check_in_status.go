@@ -150,7 +150,6 @@ func (c *checkInStatus) UploadData(in []*model.UploadDataReq) error {
 			case "2":
 				// 下班
 				isWork = false
-
 			}
 
 			err = qCheckInStatus.WithContext(c.ctx).UpdateTime(fullDateTime, data.WorkShiftCode, data.CardNumber, isWork)
@@ -158,11 +157,6 @@ func (c *checkInStatus) UploadData(in []*model.UploadDataReq) error {
 				return err
 			}
 		}
-
-		// 計算狀態
-		//if err = qCheckInStatus.WithContext(c.ctx).UpdateStatus(gbstr.Join(updateDates, ",")); err != nil {
-		//	return err
-		//}
 
 		// commit
 		return nil

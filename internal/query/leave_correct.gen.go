@@ -7,6 +7,7 @@ package query
 import (
 	"context"
 	"hrapi/internal/types"
+	"strings"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -564,6 +565,43 @@ type ILeaveCorrectDo interface {
 	Returning(value interface{}, columns ...string) ILeaveCorrectDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
+
+	UpdateCount(id uint) (rowsAffected int64, err error)
+	FindByDateRange(empID uint, leaveID uint, start string, end string) (result []uint, err error)
+}
+
+// exec P_C_LeaveCorrectUpdateCount @id
+func (l leaveCorrectDo) UpdateCount(id uint) (rowsAffected int64, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, id)
+	generateSQL.WriteString("exec P_C_LeaveCorrectUpdateCount ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = l.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
+	rowsAffected = executeSQL.RowsAffected
+	err = executeSQL.Error
+
+	return
+}
+
+// select distinct leave_correct_id from FN_Q_LeaveCorrectByDateRange(@empID, @leaveID, @start, @end)
+func (l leaveCorrectDo) FindByDateRange(empID uint, leaveID uint, start string, end string) (result []uint, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, empID)
+	params = append(params, leaveID)
+	params = append(params, start)
+	params = append(params, end)
+	generateSQL.WriteString("select distinct leave_correct_id from FN_Q_LeaveCorrectByDateRange(?, ?, ?, ?) ")
+
+	var executeSQL *gorm.DB
+	executeSQL = l.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
 }
 
 func (l leaveCorrectDo) Debug() ILeaveCorrectDo {

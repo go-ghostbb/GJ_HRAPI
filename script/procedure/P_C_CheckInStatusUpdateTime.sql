@@ -69,4 +69,12 @@ begin
                             order by abs(datediff(second, @datetime, dbo.FN_Convert_Datetime(iif(i_w.work_start > i_w.work_end, dateadd(day, 1, i_c.date), i_c.date), i_w.work_end))))
             end
     end
+    
+    declare @date date = convert(date, @datetime);
+    declare @start_date date = dateadd(day, -1, @date);
+    declare @end_date date = dateadd(day, 1, @date);
+    declare @emp_id bigint = (select id from employee where card_number = @card_number and deleted_at is null);
+
+    exec P_C_CheckInStatusUpdateStatus
+        @start_date , @end_date, @emp_id;
 end
