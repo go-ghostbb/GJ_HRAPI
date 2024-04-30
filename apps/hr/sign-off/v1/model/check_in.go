@@ -1,11 +1,11 @@
 package model
 
-type LeaveApproveReq struct {
+type CheckInApproveReq struct {
 	UUID    string
 	Comment string `json:"comment"`
 }
 
-type LeaveRejectReq struct {
+type CheckInRejectReq struct {
 	UUID    string
 	Comment string `json:"comment"`
 }

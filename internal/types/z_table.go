@@ -37,6 +37,8 @@ func Basic() []interface{} {
 		&LeaveSignOffFlow{},          // leave_sign_off_flow
 		&LeaveCorrect{},              // leave_correct
 		&OvertimeCheckIn{},           // overtime_check_in
+		&OvertimeRequestForm{},       // overtime_request_form
+		&OvertimeSignOffFlow{},       // overtime_sign_off_flow
 	}
 }
 

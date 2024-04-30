@@ -9,6 +9,7 @@ server:
   idle-timeout: "60s"
   max-header-bytes: "10240"
   access-log-enabled: true
+  dump-router-map: false
 
 logger:
   path: "./log/system"
@@ -47,6 +48,9 @@ viewer:
   checkSign:
     paths: [ "resource/template/mail" ]
     default-file: "checkInSign.html"
+  overtimeSign:
+    paths: [ "resource/template/mail" ]
+    default-file: "overtimeSign.html"
 
 cors:
   # mode說明

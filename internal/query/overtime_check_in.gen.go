@@ -31,7 +31,8 @@ func newOvertimeCheckIn(db *gorm.DB, opts ...gen.DOOption) overtimeCheckIn {
 	_overtimeCheckIn.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_overtimeCheckIn.DeletedAt = field.NewField(tableName, "deleted_at")
 	_overtimeCheckIn.EmployeeID = field.NewUint(tableName, "employee_id")
-	_overtimeCheckIn.Datetime = field.NewField(tableName, "datetime")
+	_overtimeCheckIn.Date = field.NewField(tableName, "date")
+	_overtimeCheckIn.Time = field.NewField(tableName, "time")
 	_overtimeCheckIn.CheckInType = field.NewField(tableName, "check_in_type")
 	_overtimeCheckIn.Employee = overtimeCheckInBelongsToEmployee{
 		db: db.Session(&gorm.Session{}),
@@ -159,7 +160,8 @@ type overtimeCheckIn struct {
 	UpdatedAt   field.Time
 	DeletedAt   field.Field
 	EmployeeID  field.Uint
-	Datetime    field.Field
+	Date        field.Field
+	Time        field.Field
 	CheckInType field.Field
 	Employee    overtimeCheckInBelongsToEmployee
 
@@ -183,7 +185,8 @@ func (o *overtimeCheckIn) updateTableName(table string) *overtimeCheckIn {
 	o.UpdatedAt = field.NewTime(table, "updated_at")
 	o.DeletedAt = field.NewField(table, "deleted_at")
 	o.EmployeeID = field.NewUint(table, "employee_id")
-	o.Datetime = field.NewField(table, "datetime")
+	o.Date = field.NewField(table, "date")
+	o.Time = field.NewField(table, "time")
 	o.CheckInType = field.NewField(table, "check_in_type")
 
 	o.fillFieldMap()
@@ -213,13 +216,14 @@ func (o *overtimeCheckIn) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (o *overtimeCheckIn) fillFieldMap() {
-	o.fieldMap = make(map[string]field.Expr, 8)
+	o.fieldMap = make(map[string]field.Expr, 9)
 	o.fieldMap["id"] = o.ID
 	o.fieldMap["created_at"] = o.CreatedAt
 	o.fieldMap["updated_at"] = o.UpdatedAt
 	o.fieldMap["deleted_at"] = o.DeletedAt
 	o.fieldMap["employee_id"] = o.EmployeeID
-	o.fieldMap["datetime"] = o.Datetime
+	o.fieldMap["date"] = o.Date
+	o.fieldMap["time"] = o.Time
 	o.fieldMap["check_in_type"] = o.CheckInType
 
 }

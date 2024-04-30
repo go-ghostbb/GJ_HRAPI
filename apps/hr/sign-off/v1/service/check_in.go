@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gberror "ghostbb.io/gb/errors/gb_error"
@@ -50,7 +51,7 @@ func (c *checkIn) GetByUUID(uuid string) (form *types.CheckInRequestForm, err er
 		qForm = query.CheckInRequestForm
 		qFlow = query.CheckInSignOffFlow
 
-		// select leave_request_form_id from leave_sign_off_flow where uuid = ?
+		// select check_in_request_form_id from check_in_sign_off_flow where uuid = ?
 		subQueryFormID = qFlow.WithContext(c.ctx).Select(qFlow.CheckInRequestFormID).Where(qFlow.UUID.Eq(uuid))
 	)
 
@@ -97,6 +98,8 @@ func (c *checkIn) Approve(in model.CheckInApproveReq) error {
 
 		// commit
 		return nil
+	}, &sql.TxOptions{
+		Isolation: sql.LevelReadUncommitted,
 	})
 	if err != nil {
 		return err
@@ -143,6 +146,8 @@ func (c *checkIn) Reject(in model.CheckInRejectReq) error {
 
 		// commit
 		return nil
+	}, &sql.TxOptions{
+		Isolation: sql.LevelReadUncommitted,
 	})
 	if err != nil {
 		return err
@@ -300,6 +305,8 @@ func (c *checkIn) handleSignDone(form *types.CheckInRequestForm) error {
 
 		// commit
 		return nil
+	}, &sql.TxOptions{
+		Isolation: sql.LevelReadUncommitted,
 	})
 }
 
@@ -337,7 +344,7 @@ func (c *checkIn) sendEmail(option *model.EmailOption[types.CheckInRequestForm])
 		"msg":     option.Msg,
 	})
 	if err != nil {
-		option.Err = gberror.Newf("parse template(mail/leaveSign.html) error:%s", err.Error())
+		option.Err = gberror.Newf("parse template(mail/checkInSign.html) error:%s", err.Error())
 		return
 	}
 

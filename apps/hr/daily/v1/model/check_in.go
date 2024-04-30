@@ -48,3 +48,7 @@ type SaveCheckInFormRes struct {
 	ID    uint   `json:"ID"`
 	Order string `json:"order"`
 }
+
+type DeleteCheckInFormReq struct {
+	ID uint
+}

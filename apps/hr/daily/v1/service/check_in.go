@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gbi18n "ghostbb.io/gb/i18n/gb_i18n"
@@ -158,6 +159,8 @@ func (c *checkIn) SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCh
 
 		// commit
 		return nil
+	}, &sql.TxOptions{
+		Isolation: sql.LevelReadUncommitted,
 	})
 	if err != nil {
 		return
@@ -233,6 +236,8 @@ func (c *checkIn) DeleteCheckInForm(in model.DeleteCheckInFormReq) error {
 
 		// commit
 		return nil
+	}, &sql.TxOptions{
+		Isolation: sql.LevelReadCommitted,
 	})
 }
 
