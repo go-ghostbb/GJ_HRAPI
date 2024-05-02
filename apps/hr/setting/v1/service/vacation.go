@@ -14,6 +14,7 @@ import (
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
+	"hrapi/internal/utils/driver"
 	"hrapi/internal/utils/paginator"
 )
 
@@ -356,11 +357,10 @@ func (v *vacation) GetScheduleByDate(in model.GetByDateVacationScheduleReq) (out
 	// 查詢
 	var (
 		qVacationSchedule = query.VacationSchedule
-		startDate         = gbconv.Time(in.Start)
-		endDate           = gbconv.Time(in.End)
 		schedule          []*types.VacationSchedule
 	)
-	schedule, err = qVacationSchedule.WithContext(dbcache.WithCtx(v.ctx)).Preload(field.Associations).Where(qVacationSchedule.ScheduleDate.Between(startDate, endDate)).Find()
+	schedule, err = qVacationSchedule.WithContext(dbcache.WithCtx(v.ctx)).Preload(field.Associations).
+		Where(qVacationSchedule.ScheduleDate.Gte(driver.NewDate(in.Start)), qVacationSchedule.ScheduleDate.Lte(driver.NewDate(in.End))).Find()
 	if err != nil {
 		return nil, err
 	}

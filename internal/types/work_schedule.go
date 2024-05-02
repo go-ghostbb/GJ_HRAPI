@@ -2,12 +2,12 @@ package types
 
 import (
 	"gorm.io/gorm"
-	"time"
+	"hrapi/internal/utils/driver"
 )
 
 type WorkSchedule struct {
 	gorm.Model
-	ScheduleDate time.Time `gorm:"type:date;comment:到職日期" json:"scheduleDate"`
+	ScheduleDate driver.Date `gorm:"type:date;comment:到職日期" json:"scheduleDate"`
 	// User
 	EmployeeID uint      `gorm:"not null;default:0;comment:員工ID" json:"employeeId"`
 	Employee   *Employee `gorm:"foreignKey:EmployeeID;comment:員工" json:"employee"`

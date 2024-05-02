@@ -34,10 +34,10 @@ func newWorkShift(db *gorm.DB, opts ...gen.DOOption) workShift {
 	_workShift.Name = field.NewString(tableName, "name")
 	_workShift.Status = field.NewBool(tableName, "status")
 	_workShift.Remark = field.NewString(tableName, "remark")
-	_workShift.WorkStart = field.NewTime(tableName, "work_start")
-	_workShift.WorkEnd = field.NewTime(tableName, "work_end")
-	_workShift.RestStart = field.NewTime(tableName, "rest_start")
-	_workShift.RestEnd = field.NewTime(tableName, "rest_end")
+	_workShift.WorkStart = field.NewField(tableName, "work_start")
+	_workShift.WorkEnd = field.NewField(tableName, "work_end")
+	_workShift.RestStart = field.NewField(tableName, "rest_start")
+	_workShift.RestEnd = field.NewField(tableName, "rest_end")
 	_workShift.TotalHours = field.NewFloat64(tableName, "total_hours")
 	_workShift.Color = field.NewString(tableName, "color")
 
@@ -58,10 +58,10 @@ type workShift struct {
 	Name       field.String
 	Status     field.Bool
 	Remark     field.String
-	WorkStart  field.Time
-	WorkEnd    field.Time
-	RestStart  field.Time
-	RestEnd    field.Time
+	WorkStart  field.Field
+	WorkEnd    field.Field
+	RestStart  field.Field
+	RestEnd    field.Field
 	TotalHours field.Float64
 	Color      field.String
 
@@ -88,10 +88,10 @@ func (w *workShift) updateTableName(table string) *workShift {
 	w.Name = field.NewString(table, "name")
 	w.Status = field.NewBool(table, "status")
 	w.Remark = field.NewString(table, "remark")
-	w.WorkStart = field.NewTime(table, "work_start")
-	w.WorkEnd = field.NewTime(table, "work_end")
-	w.RestStart = field.NewTime(table, "rest_start")
-	w.RestEnd = field.NewTime(table, "rest_end")
+	w.WorkStart = field.NewField(table, "work_start")
+	w.WorkEnd = field.NewField(table, "work_end")
+	w.RestStart = field.NewField(table, "rest_start")
+	w.RestEnd = field.NewField(table, "rest_end")
 	w.TotalHours = field.NewFloat64(table, "total_hours")
 	w.Color = field.NewString(table, "color")
 

@@ -11,6 +11,7 @@ import (
 	"hrapi/apps/hr/setting/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
+	"hrapi/internal/utils/driver"
 	"hrapi/internal/utils/mathx"
 	"hrapi/internal/utils/paginator"
 	"math"
@@ -177,13 +178,15 @@ func (w *workShift) GetScheduleByDate(in model.GetByDateWorkScheduleReq) (out []
 
 	var (
 		qSchedule = query.WorkSchedule
-		startDate = gbconv.Time(in.Start)
-		endDate   = gbconv.Time(in.End)
 		schedule  []*types.WorkSchedule
 	)
 
 	schedule, err = qSchedule.WithContext(dbcache.WithCtx(w.ctx)).Preload(field.Associations).
-		Where(qSchedule.ScheduleDate.Between(startDate, endDate), qSchedule.EmployeeID.Eq(in.EmployeeID)).Find()
+		Where(
+			qSchedule.ScheduleDate.Gte(driver.NewDate(in.Start)),
+			qSchedule.ScheduleDate.Lte(driver.NewDate(in.End)),
+			qSchedule.EmployeeID.Eq(in.EmployeeID),
+		).Find()
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +207,8 @@ func (w *workShift) UpdateWorkScheduleBatch(in model.PutBatchWorkScheduleReq) er
 			err       error
 		)
 		// 刪除
-		_, err = qSchedule.WithContext(dbcache.WithCtx(w.ctx)).DeleteByDateRange(in.EmployeeID, in.YearMonth+"-%")
+		_, err = qSchedule.WithContext(dbcache.WithCtx(w.ctx)).Unscoped().
+			Where(qSchedule.EmployeeID.Eq(in.EmployeeID), qSchedule.ScheduleDate.Like(driver.NewString(in.YearMonth+"-%"))).Delete()
 		if err != nil {
 			return err
 		}

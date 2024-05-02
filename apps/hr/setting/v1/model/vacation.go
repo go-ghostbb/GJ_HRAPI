@@ -6,8 +6,8 @@ import (
 )
 
 type GetByKeywordVacationReq struct {
-	Keyword string `json:"keyword" from:"keyword"`
-	Status  string `json:"status" from:"status"`
+	Keyword string `json:"keyword" form:"keyword"`
+	Status  string `json:"status" form:"status"`
 }
 
 type GetByKeywordVacationRes struct {

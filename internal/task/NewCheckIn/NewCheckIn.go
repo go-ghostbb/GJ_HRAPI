@@ -37,7 +37,7 @@ func Start(ctx context.Context) {
 	)
 
 	// 查詢今天班表
-	schedules, err = qWorkSchedule.WithContext(ctx).Preload(qWorkSchedule.WorkShift).QueryByDate(todayStr)
+	schedules, err = qWorkSchedule.WithContext(ctx).Preload(qWorkSchedule.WorkShift).Where(qWorkSchedule.ScheduleDate.Eq(driver.NewDate(todayStr))).Find()
 	if err != nil {
 		g.Log().Error(ctx, "create new check_in status err:", err)
 		return
@@ -64,7 +64,7 @@ func Start(ctx context.Context) {
 		if v, ok := empScheMap[empID]; ok {
 			// 存在
 			// 計算預計下班日期
-			offWork := gbconv.Time(fmt.Sprintf("%s %s", v.ScheduleDate.Format(time.DateOnly), v.WorkShift.WorkStart.Format(time.TimeOnly)))
+			offWork := gbconv.Time(fmt.Sprintf("%s %s", v.ScheduleDate.Format(), v.WorkShift.WorkStart.Format()))
 			// 換算分鐘並四捨五入, 為了精準
 			mins := time.Duration(math.Round(v.WorkShift.TotalHours * 60))
 			// 加上上班總時數

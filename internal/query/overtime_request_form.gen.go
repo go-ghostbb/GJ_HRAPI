@@ -34,6 +34,7 @@ func newOvertimeRequestForm(db *gorm.DB, opts ...gen.DOOption) overtimeRequestFo
 	_overtimeRequestForm.Date = field.NewField(tableName, "date")
 	_overtimeRequestForm.StartTime = field.NewField(tableName, "start_time")
 	_overtimeRequestForm.EndTime = field.NewField(tableName, "end_time")
+	_overtimeRequestForm.EstimatedHours = field.NewFloat32(tableName, "estimated_hours")
 	_overtimeRequestForm.SignStatus = field.NewField(tableName, "sign_status")
 	_overtimeRequestForm.Remark = field.NewString(tableName, "remark")
 	_overtimeRequestForm.EmployeeID = field.NewUint(tableName, "employee_id")
@@ -288,20 +289,21 @@ func newOvertimeRequestForm(db *gorm.DB, opts ...gen.DOOption) overtimeRequestFo
 type overtimeRequestForm struct {
 	overtimeRequestFormDo overtimeRequestFormDo
 
-	ALL          field.Asterisk
-	ID           field.Uint
-	CreatedAt    field.Time
-	UpdatedAt    field.Time
-	DeletedAt    field.Field
-	Order        field.String
-	Date         field.Field
-	StartTime    field.Field
-	EndTime      field.Field
-	SignStatus   field.Field
-	Remark       field.String
-	EmployeeID   field.Uint
-	DepartmentID field.Uint
-	SignOffFlow  overtimeRequestFormHasManySignOffFlow
+	ALL            field.Asterisk
+	ID             field.Uint
+	CreatedAt      field.Time
+	UpdatedAt      field.Time
+	DeletedAt      field.Field
+	Order          field.String
+	Date           field.Field
+	StartTime      field.Field
+	EndTime        field.Field
+	EstimatedHours field.Float32
+	SignStatus     field.Field
+	Remark         field.String
+	EmployeeID     field.Uint
+	DepartmentID   field.Uint
+	SignOffFlow    overtimeRequestFormHasManySignOffFlow
 
 	Employee overtimeRequestFormBelongsToEmployee
 
@@ -330,6 +332,7 @@ func (o *overtimeRequestForm) updateTableName(table string) *overtimeRequestForm
 	o.Date = field.NewField(table, "date")
 	o.StartTime = field.NewField(table, "start_time")
 	o.EndTime = field.NewField(table, "end_time")
+	o.EstimatedHours = field.NewFloat32(table, "estimated_hours")
 	o.SignStatus = field.NewField(table, "sign_status")
 	o.Remark = field.NewString(table, "remark")
 	o.EmployeeID = field.NewUint(table, "employee_id")
@@ -362,7 +365,7 @@ func (o *overtimeRequestForm) GetFieldByName(fieldName string) (field.OrderExpr,
 }
 
 func (o *overtimeRequestForm) fillFieldMap() {
-	o.fieldMap = make(map[string]field.Expr, 15)
+	o.fieldMap = make(map[string]field.Expr, 16)
 	o.fieldMap["id"] = o.ID
 	o.fieldMap["created_at"] = o.CreatedAt
 	o.fieldMap["updated_at"] = o.UpdatedAt
@@ -371,6 +374,7 @@ func (o *overtimeRequestForm) fillFieldMap() {
 	o.fieldMap["date"] = o.Date
 	o.fieldMap["start_time"] = o.StartTime
 	o.fieldMap["end_time"] = o.EndTime
+	o.fieldMap["estimated_hours"] = o.EstimatedHours
 	o.fieldMap["sign_status"] = o.SignStatus
 	o.fieldMap["remark"] = o.Remark
 	o.fieldMap["employee_id"] = o.EmployeeID

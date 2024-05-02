@@ -30,14 +30,14 @@ func newVacationSchedule(db *gorm.DB, opts ...gen.DOOption) vacationSchedule {
 	_vacationSchedule.CreatedAt = field.NewTime(tableName, "created_at")
 	_vacationSchedule.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_vacationSchedule.DeletedAt = field.NewField(tableName, "deleted_at")
-	_vacationSchedule.ScheduleDate = field.NewTime(tableName, "schedule_date")
+	_vacationSchedule.ScheduleDate = field.NewField(tableName, "schedule_date")
 	_vacationSchedule.GeneralKey = field.NewString(tableName, "general_key")
 	_vacationSchedule.Remark = field.NewString(tableName, "remark")
 	_vacationSchedule.VacationID = field.NewUint(tableName, "vacation_id")
-	_vacationSchedule.StartDate = field.NewTime(tableName, "start_date")
-	_vacationSchedule.EndDate = field.NewTime(tableName, "end_date")
+	_vacationSchedule.StartDate = field.NewField(tableName, "start_date")
+	_vacationSchedule.EndDate = field.NewField(tableName, "end_date")
 	_vacationSchedule.Repeat = field.NewField(tableName, "repeat")
-	_vacationSchedule.EndRepeat = field.NewTime(tableName, "end_repeat")
+	_vacationSchedule.EndRepeat = field.NewField(tableName, "end_repeat")
 	_vacationSchedule.Vacation = vacationScheduleBelongsToVacation{
 		db: db.Session(&gorm.Session{}),
 
@@ -460,14 +460,14 @@ type vacationSchedule struct {
 	CreatedAt    field.Time
 	UpdatedAt    field.Time
 	DeletedAt    field.Field
-	ScheduleDate field.Time
+	ScheduleDate field.Field
 	GeneralKey   field.String
 	Remark       field.String
 	VacationID   field.Uint
-	StartDate    field.Time
-	EndDate      field.Time
+	StartDate    field.Field
+	EndDate      field.Field
 	Repeat       field.Field
-	EndRepeat    field.Time
+	EndRepeat    field.Field
 	Vacation     vacationScheduleBelongsToVacation
 
 	fieldMap map[string]field.Expr
@@ -489,14 +489,14 @@ func (v *vacationSchedule) updateTableName(table string) *vacationSchedule {
 	v.CreatedAt = field.NewTime(table, "created_at")
 	v.UpdatedAt = field.NewTime(table, "updated_at")
 	v.DeletedAt = field.NewField(table, "deleted_at")
-	v.ScheduleDate = field.NewTime(table, "schedule_date")
+	v.ScheduleDate = field.NewField(table, "schedule_date")
 	v.GeneralKey = field.NewString(table, "general_key")
 	v.Remark = field.NewString(table, "remark")
 	v.VacationID = field.NewUint(table, "vacation_id")
-	v.StartDate = field.NewTime(table, "start_date")
-	v.EndDate = field.NewTime(table, "end_date")
+	v.StartDate = field.NewField(table, "start_date")
+	v.EndDate = field.NewField(table, "end_date")
 	v.Repeat = field.NewField(table, "repeat")
-	v.EndRepeat = field.NewTime(table, "end_repeat")
+	v.EndRepeat = field.NewField(table, "end_repeat")
 
 	v.fillFieldMap()
 

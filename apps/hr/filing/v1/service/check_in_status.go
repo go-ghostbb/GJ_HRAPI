@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"ghostbb.io/gb/contrib/dbcache"
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"hrapi/apps/hr/filing/v1/model"
 	"hrapi/internal/query"
@@ -43,7 +44,10 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 		)
 
 		// 查詢區間內所有班表
-		schedules, err = qWorkSchedule.WithContext(c.ctx).Preload(qWorkSchedule.WorkShift).QueryByDateRange(in.DateRange[0], in.DateRange[1])
+		schedules, err = qWorkSchedule.WithContext(dbcache.WithCtx(c.ctx)).
+			Preload(qWorkSchedule.WorkShift).
+			Where(qWorkSchedule.ScheduleDate.Gte(driver.NewDate(in.DateRange[0])), qWorkSchedule.ScheduleDate.Lte(driver.NewDate(in.DateRange[1]))).
+			Find()
 		if err != nil {
 			return err
 		}
@@ -56,7 +60,7 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 				// 不存在empID map
 				empScheMap[schedule.EmployeeID] = make(map[string]*types.WorkSchedule)
 			}
-			empScheMap[schedule.EmployeeID][schedule.ScheduleDate.Format(time.DateOnly)] = schedule
+			empScheMap[schedule.EmployeeID][schedule.ScheduleDate.Format()] = schedule
 		}
 
 		// 查詢所有在職員工id
@@ -77,7 +81,7 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 				if v, ok := empScheMap[empID][tmpDate]; ok {
 					// 存在
 					// 計算預計下班日期
-					offWork := gbconv.Time(fmt.Sprintf("%s %s", v.ScheduleDate.Format(time.DateOnly), v.WorkShift.WorkStart.Format(time.TimeOnly)))
+					offWork := gbconv.Time(fmt.Sprintf("%s %s", v.ScheduleDate.Format(), v.WorkShift.WorkStart.Format()))
 					// 換算分鐘並四捨五入, 為了精準
 					mins := time.Duration(math.Round(v.WorkShift.TotalHours * 60))
 					// 加上上班總時數

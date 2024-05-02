@@ -62,6 +62,10 @@ func (d Date) After(u Date) bool {
 	return d.Time().After(u.Time())
 }
 
+func (d Date) Before(u Date) bool {
+	return d.Time().Before(u.Time())
+}
+
 func (d Date) AddDate(years int, months int, days int) Date {
 	return Date(d.Time().AddDate(years, months, days).Unix())
 }

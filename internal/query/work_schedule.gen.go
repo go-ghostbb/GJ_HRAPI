@@ -31,7 +31,7 @@ func newWorkSchedule(db *gorm.DB, opts ...gen.DOOption) workSchedule {
 	_workSchedule.CreatedAt = field.NewTime(tableName, "created_at")
 	_workSchedule.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_workSchedule.DeletedAt = field.NewField(tableName, "deleted_at")
-	_workSchedule.ScheduleDate = field.NewTime(tableName, "schedule_date")
+	_workSchedule.ScheduleDate = field.NewField(tableName, "schedule_date")
 	_workSchedule.EmployeeID = field.NewUint(tableName, "employee_id")
 	_workSchedule.WorkShiftID = field.NewUint(tableName, "work_shift_id")
 	_workSchedule.Employee = workScheduleBelongsToEmployee{
@@ -165,7 +165,7 @@ type workSchedule struct {
 	CreatedAt    field.Time
 	UpdatedAt    field.Time
 	DeletedAt    field.Field
-	ScheduleDate field.Time
+	ScheduleDate field.Field
 	EmployeeID   field.Uint
 	WorkShiftID  field.Uint
 	Employee     workScheduleBelongsToEmployee
@@ -191,7 +191,7 @@ func (w *workSchedule) updateTableName(table string) *workSchedule {
 	w.CreatedAt = field.NewTime(table, "created_at")
 	w.UpdatedAt = field.NewTime(table, "updated_at")
 	w.DeletedAt = field.NewField(table, "deleted_at")
-	w.ScheduleDate = field.NewTime(table, "schedule_date")
+	w.ScheduleDate = field.NewField(table, "schedule_date")
 	w.EmployeeID = field.NewUint(table, "employee_id")
 	w.WorkShiftID = field.NewUint(table, "work_shift_id")
 
@@ -490,76 +490,7 @@ type IWorkScheduleDo interface {
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 
-	QueryByDate(dateOnly string) (result []*types.WorkSchedule, err error)
-	QueryByDateRange(dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error)
-	DeleteByDateRange(empID uint, likeDate string) (rowsAffected int64, err error)
-	QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error)
 	WorkHoursCountMany(empID uint, startDate string, endDate string, startTime string, endTime string) (result float32, err error)
-}
-
-// select * from @@table where schedule_date = @dateOnly and deleted_at is null
-func (w workScheduleDo) QueryByDate(dateOnly string) (result []*types.WorkSchedule, err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, dateOnly)
-	generateSQL.WriteString("select * from work_schedule where schedule_date = ? and deleted_at is null ")
-
-	var executeSQL *gorm.DB
-	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
-}
-
-// select * from @@table where schedule_date between @dateOnly1 and @dateOnly2 and deleted_at is null
-func (w workScheduleDo) QueryByDateRange(dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, dateOnly1)
-	params = append(params, dateOnly2)
-	generateSQL.WriteString("select * from work_schedule where schedule_date between ? and ? and deleted_at is null ")
-
-	var executeSQL *gorm.DB
-	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
-}
-
-// delete @@table where employee_id = @empID and schedule_date like @likeDate
-func (w workScheduleDo) DeleteByDateRange(empID uint, likeDate string) (rowsAffected int64, err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, empID)
-	params = append(params, likeDate)
-	generateSQL.WriteString("delete work_schedule where employee_id = ? and schedule_date like ? ")
-
-	var executeSQL *gorm.DB
-	executeSQL = w.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert
-	rowsAffected = executeSQL.RowsAffected
-	err = executeSQL.Error
-
-	return
-}
-
-// select * from @@table where schedule_date between @dateOnly1 and @dateOnly2 and employee_id = @empID and deleted_at is null
-func (w workScheduleDo) QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string) (result []*types.WorkSchedule, err error) {
-	var params []interface{}
-
-	var generateSQL strings.Builder
-	params = append(params, dateOnly1)
-	params = append(params, dateOnly2)
-	params = append(params, empID)
-	generateSQL.WriteString("select * from work_schedule where schedule_date between ? and ? and employee_id = ? and deleted_at is null ")
-
-	var executeSQL *gorm.DB
-	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
-	err = executeSQL.Error
-
-	return
 }
 
 // select dbo.FN_C_WorkHoursCountMany(@empID, @startDate, @endDate, @startTime, @endTime);
