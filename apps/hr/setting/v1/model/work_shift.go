@@ -65,3 +65,7 @@ type PutBatchWorkScheduleReq struct {
 }
 
 type PutBatchWorkScheduleRes struct{}
+
+type DeleteWorkScheduleReq struct {
+	ID uint `form:"id" binding:"required"`
+}

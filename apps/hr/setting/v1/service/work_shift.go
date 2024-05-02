@@ -42,6 +42,8 @@ type (
 		GetScheduleByDate(in model.GetByDateWorkScheduleReq) (out []*model.GetByDateWorkScheduleRes, err error)
 		// UpdateWorkScheduleBatch 更新schedule
 		UpdateWorkScheduleBatch(in model.PutBatchWorkScheduleReq) error
+		// DeleteWorkSchedule 刪除班表
+		DeleteWorkSchedule(in model.DeleteWorkScheduleReq) error
 	}
 
 	workShift struct {
@@ -223,4 +225,10 @@ func (w *workShift) UpdateWorkScheduleBatch(in model.PutBatchWorkScheduleReq) er
 		// 插入新的
 		return qSchedule.WithContext(dbcache.WithCtx(w.ctx)).Create(in.Schedules...)
 	})
+}
+
+// DeleteWorkSchedule 刪除班表
+func (w *workShift) DeleteWorkSchedule(in model.DeleteWorkScheduleReq) error {
+	_, err := query.WorkSchedule.WithContext(dbcache.WithCtx(w.ctx)).Where(query.WorkSchedule.ID.Eq(in.ID)).Delete()
+	return err
 }
