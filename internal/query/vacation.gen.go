@@ -35,6 +35,7 @@ func newVacation(db *gorm.DB, opts ...gen.DOOption) vacation {
 	_vacation.Status = field.NewBool(tableName, "status")
 	_vacation.Remark = field.NewString(tableName, "remark")
 	_vacation.Color = field.NewString(tableName, "color")
+	_vacation.Weight = field.NewInt(tableName, "weight")
 	_vacation.Schedule = vacationHasManySchedule{
 		db: db.Session(&gorm.Session{}),
 
@@ -540,6 +541,7 @@ type vacation struct {
 	Status    field.Bool
 	Remark    field.String
 	Color     field.String
+	Weight    field.Int
 	Schedule  vacationHasManySchedule
 
 	VacationGroup vacationHasManyVacationGroup
@@ -568,6 +570,7 @@ func (v *vacation) updateTableName(table string) *vacation {
 	v.Status = field.NewBool(table, "status")
 	v.Remark = field.NewString(table, "remark")
 	v.Color = field.NewString(table, "color")
+	v.Weight = field.NewInt(table, "weight")
 
 	v.fillFieldMap()
 
@@ -592,7 +595,7 @@ func (v *vacation) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (v *vacation) fillFieldMap() {
-	v.fieldMap = make(map[string]field.Expr, 11)
+	v.fieldMap = make(map[string]field.Expr, 12)
 	v.fieldMap["id"] = v.ID
 	v.fieldMap["created_at"] = v.CreatedAt
 	v.fieldMap["updated_at"] = v.UpdatedAt
@@ -602,6 +605,7 @@ func (v *vacation) fillFieldMap() {
 	v.fieldMap["status"] = v.Status
 	v.fieldMap["remark"] = v.Remark
 	v.fieldMap["color"] = v.Color
+	v.fieldMap["weight"] = v.Weight
 
 }
 

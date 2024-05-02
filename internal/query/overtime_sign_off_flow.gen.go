@@ -45,158 +45,496 @@ func newOvertimeSignOffFlow(db *gorm.DB, opts ...gen.DOOption) overtimeSignOffFl
 		db: db.Session(&gorm.Session{}),
 
 		RelationField: field.NewRelation("OvertimeRequestForm", "types.OvertimeRequestForm"),
-		Employee: struct {
+		Vacation: struct {
 			field.RelationField
-			Department struct {
+			Schedule struct {
 				field.RelationField
-				Manager struct {
+				Vacation struct {
 					field.RelationField
 				}
 			}
-			Rank struct {
+			VacationGroup struct {
 				field.RelationField
-				Grade struct {
+				Vacation struct {
 					field.RelationField
-					Rank struct {
+				}
+				VacationGroupOvertimeRate struct {
+					field.RelationField
+					VacationGroup struct {
 						field.RelationField
+						Leave struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						LeaveGroupCondition struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						Employee struct {
+							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
+						}
 					}
 				}
-			}
-			Grade struct {
-				field.RelationField
-			}
-			LoginInformation struct {
-				field.RelationField
 				Employee struct {
 					field.RelationField
-				}
-			}
-			Roles struct {
-				field.RelationField
-				Employees struct {
-					field.RelationField
-				}
-				Permissions struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}
-				Menus struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
 				}
 			}
 		}{
-			RelationField: field.NewRelation("OvertimeRequestForm.Employee", "types.Employee"),
-			Department: struct {
+			RelationField: field.NewRelation("OvertimeRequestForm.Vacation", "types.Vacation"),
+			Schedule: struct {
 				field.RelationField
-				Manager struct {
+				Vacation struct {
 					field.RelationField
 				}
 			}{
-				RelationField: field.NewRelation("OvertimeRequestForm.Employee.Department", "types.Department"),
-				Manager: struct {
+				RelationField: field.NewRelation("OvertimeRequestForm.Vacation.Schedule", "types.VacationSchedule"),
+				Vacation: struct {
 					field.RelationField
 				}{
-					RelationField: field.NewRelation("OvertimeRequestForm.Employee.Department.Manager", "types.Employee"),
+					RelationField: field.NewRelation("OvertimeRequestForm.Vacation.Schedule.Vacation", "types.Vacation"),
 				},
 			},
-			Rank: struct {
+			VacationGroup: struct {
 				field.RelationField
-				Grade struct {
+				Vacation struct {
 					field.RelationField
-					Rank struct {
+				}
+				VacationGroupOvertimeRate struct {
+					field.RelationField
+					VacationGroup struct {
 						field.RelationField
+						Leave struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						LeaveGroupCondition struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						Employee struct {
+							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
+						}
 					}
 				}
-			}{
-				RelationField: field.NewRelation("OvertimeRequestForm.Employee.Rank", "types.PositionRank"),
-				Grade: struct {
-					field.RelationField
-					Rank struct {
-						field.RelationField
-					}
-				}{
-					RelationField: field.NewRelation("OvertimeRequestForm.Employee.Rank.Grade", "types.PositionGrade"),
-					Rank: struct {
-						field.RelationField
-					}{
-						RelationField: field.NewRelation("OvertimeRequestForm.Employee.Rank.Grade.Rank", "types.PositionRank"),
-					},
-				},
-			},
-			Grade: struct {
-				field.RelationField
-			}{
-				RelationField: field.NewRelation("OvertimeRequestForm.Employee.Grade", "types.PositionGrade"),
-			},
-			LoginInformation: struct {
-				field.RelationField
 				Employee struct {
 					field.RelationField
 				}
 			}{
-				RelationField: field.NewRelation("OvertimeRequestForm.Employee.LoginInformation", "types.LoginInformation"),
+				RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup", "types.VacationGroup"),
+				Vacation: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.Vacation", "types.Vacation"),
+				},
+				VacationGroupOvertimeRate: struct {
+					field.RelationField
+					VacationGroup struct {
+						field.RelationField
+						Leave struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						LeaveGroupCondition struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						Employee struct {
+							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
+						}
+					}
+				}{
+					RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate", "types.VacationGroupOvertimeRate"),
+					VacationGroup: struct {
+						field.RelationField
+						Leave struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						LeaveGroupCondition struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}
+						Employee struct {
+							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
+						}
+					}{
+						RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup", "types.LeaveGroup"),
+						Leave: struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}{
+							RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Leave", "types.Leave"),
+							LeaveGroup: struct {
+								field.RelationField
+							}{
+								RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Leave.LeaveGroup", "types.LeaveGroup"),
+							},
+						},
+						LeaveGroupCondition: struct {
+							field.RelationField
+							LeaveGroup struct {
+								field.RelationField
+							}
+						}{
+							RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.LeaveGroupCondition", "types.LeaveGroupCondition"),
+							LeaveGroup: struct {
+								field.RelationField
+							}{
+								RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.LeaveGroupCondition.LeaveGroup", "types.LeaveGroup"),
+							},
+						},
+						Employee: struct {
+							field.RelationField
+							Department struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}
+							Rank struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}
+							Grade struct {
+								field.RelationField
+							}
+							LoginInformation struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}
+							Roles struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}
+						}{
+							RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee", "types.Employee"),
+							Department: struct {
+								field.RelationField
+								Manager struct {
+									field.RelationField
+								}
+							}{
+								RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Department", "types.Department"),
+								Manager: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Department.Manager", "types.Employee"),
+								},
+							},
+							Rank: struct {
+								field.RelationField
+								Grade struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}
+							}{
+								RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Rank", "types.PositionRank"),
+								Grade: struct {
+									field.RelationField
+									Rank struct {
+										field.RelationField
+									}
+								}{
+									RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Rank.Grade", "types.PositionGrade"),
+									Rank: struct {
+										field.RelationField
+									}{
+										RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Rank.Grade.Rank", "types.PositionRank"),
+									},
+								},
+							},
+							Grade: struct {
+								field.RelationField
+							}{
+								RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Grade", "types.PositionGrade"),
+							},
+							LoginInformation: struct {
+								field.RelationField
+								Employee struct {
+									field.RelationField
+								}
+							}{
+								RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.LoginInformation", "types.LoginInformation"),
+								Employee: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.LoginInformation.Employee", "types.Employee"),
+								},
+							},
+							Roles: struct {
+								field.RelationField
+								Employees struct {
+									field.RelationField
+								}
+								Permissions struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+								Menus struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}
+							}{
+								RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles", "types.Role"),
+								Employees: struct {
+									field.RelationField
+								}{
+									RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Employees", "types.Employee"),
+								},
+								Permissions: struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}{
+									RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Permissions", "types.Permission"),
+									Roles: struct {
+										field.RelationField
+									}{
+										RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Permissions.Roles", "types.Role"),
+									},
+								},
+								Menus: struct {
+									field.RelationField
+									Roles struct {
+										field.RelationField
+									}
+								}{
+									RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Menus", "types.Menu"),
+									Roles: struct {
+										field.RelationField
+									}{
+										RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.VacationGroupOvertimeRate.VacationGroup.Employee.Roles.Menus.Roles", "types.Role"),
+									},
+								},
+							},
+						},
+					},
+				},
 				Employee: struct {
 					field.RelationField
 				}{
-					RelationField: field.NewRelation("OvertimeRequestForm.Employee.LoginInformation.Employee", "types.Employee"),
+					RelationField: field.NewRelation("OvertimeRequestForm.Vacation.VacationGroup.Employee", "types.Employee"),
 				},
 			},
-			Roles: struct {
-				field.RelationField
-				Employees struct {
-					field.RelationField
-				}
-				Permissions struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}
-				Menus struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}
-			}{
-				RelationField: field.NewRelation("OvertimeRequestForm.Employee.Roles", "types.Role"),
-				Employees: struct {
-					field.RelationField
-				}{
-					RelationField: field.NewRelation("OvertimeRequestForm.Employee.Roles.Employees", "types.Employee"),
-				},
-				Permissions: struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}{
-					RelationField: field.NewRelation("OvertimeRequestForm.Employee.Roles.Permissions", "types.Permission"),
-					Roles: struct {
-						field.RelationField
-					}{
-						RelationField: field.NewRelation("OvertimeRequestForm.Employee.Roles.Permissions.Roles", "types.Role"),
-					},
-				},
-				Menus: struct {
-					field.RelationField
-					Roles struct {
-						field.RelationField
-					}
-				}{
-					RelationField: field.NewRelation("OvertimeRequestForm.Employee.Roles.Menus", "types.Menu"),
-					Roles: struct {
-						field.RelationField
-					}{
-						RelationField: field.NewRelation("OvertimeRequestForm.Employee.Roles.Menus.Roles", "types.Role"),
-					},
-				},
-			},
+		},
+		Employee: struct {
+			field.RelationField
+		}{
+			RelationField: field.NewRelation("OvertimeRequestForm.Employee", "types.Employee"),
 		},
 		Department: struct {
 			field.RelationField
@@ -352,50 +690,89 @@ type overtimeSignOffFlowBelongsToOvertimeRequestForm struct {
 
 	field.RelationField
 
-	Employee struct {
+	Vacation struct {
 		field.RelationField
-		Department struct {
+		Schedule struct {
 			field.RelationField
-			Manager struct {
+			Vacation struct {
 				field.RelationField
 			}
 		}
-		Rank struct {
+		VacationGroup struct {
 			field.RelationField
-			Grade struct {
+			Vacation struct {
 				field.RelationField
-				Rank struct {
+			}
+			VacationGroupOvertimeRate struct {
+				field.RelationField
+				VacationGroup struct {
 					field.RelationField
+					Leave struct {
+						field.RelationField
+						LeaveGroup struct {
+							field.RelationField
+						}
+					}
+					LeaveGroupCondition struct {
+						field.RelationField
+						LeaveGroup struct {
+							field.RelationField
+						}
+					}
+					Employee struct {
+						field.RelationField
+						Department struct {
+							field.RelationField
+							Manager struct {
+								field.RelationField
+							}
+						}
+						Rank struct {
+							field.RelationField
+							Grade struct {
+								field.RelationField
+								Rank struct {
+									field.RelationField
+								}
+							}
+						}
+						Grade struct {
+							field.RelationField
+						}
+						LoginInformation struct {
+							field.RelationField
+							Employee struct {
+								field.RelationField
+							}
+						}
+						Roles struct {
+							field.RelationField
+							Employees struct {
+								field.RelationField
+							}
+							Permissions struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+							Menus struct {
+								field.RelationField
+								Roles struct {
+									field.RelationField
+								}
+							}
+						}
+					}
 				}
 			}
-		}
-		Grade struct {
-			field.RelationField
-		}
-		LoginInformation struct {
-			field.RelationField
 			Employee struct {
 				field.RelationField
 			}
 		}
-		Roles struct {
-			field.RelationField
-			Employees struct {
-				field.RelationField
-			}
-			Permissions struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}
-			Menus struct {
-				field.RelationField
-				Roles struct {
-					field.RelationField
-				}
-			}
-		}
+	}
+	Employee struct {
+		field.RelationField
 	}
 	Department struct {
 		field.RelationField

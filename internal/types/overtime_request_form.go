@@ -16,6 +16,10 @@ type OvertimeRequestForm struct {
 	SignStatus     enum.SignStatus `gorm:"type:tinyint;not null;default:0;comment:0 送簽中, 1 簽核中, 2 通過, 3 拒絕" json:"signStatus"`
 	Remark         string          `gorm:"comment:備註" json:"remark"`
 
+	// 休假日
+	VacationID uint      `gorm:"comment:假別ID" json:"vacationId"`
+	Vacation   *Vacation `gorm:"foreignKey:VacationID" json:"vacation"`
+
 	// 加班人員
 	EmployeeID uint      `gorm:"default:0;not null;comment:加班員工ID" json:"employeeId"`
 	Employee   *Employee `gorm:"foreignKey:EmployeeID;comment:加班員工" json:"employee"`

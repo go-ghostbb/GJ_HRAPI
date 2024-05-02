@@ -9,6 +9,7 @@ type Vacation struct {
 	Status bool   `gorm:"default:true;not null;comment:狀態" json:"status"`
 	Remark string `gorm:"comment:備註" json:"remark"`
 	Color  string `gorm:"size:10;comment:顏色" json:"color"`
+	Weight int    `gorm:"default:1;comment:權重" json:"weight"`
 
 	// schedule
 	Schedule []*VacationSchedule `gorm:"foreignKey:VacationID" json:"schedule"`
