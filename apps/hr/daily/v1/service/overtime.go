@@ -102,6 +102,7 @@ func (o *overtime) SaveOvertimeForm(in model.SaveOvertimeFormReq) (out model.Sav
 		var (
 			qForm = tx.OvertimeRequestForm
 			qFlow = tx.OvertimeSignOffFlow
+			qRate = tx.OvertimeRequestFormRate
 			err   error
 		)
 
@@ -117,6 +118,12 @@ func (o *overtime) SaveOvertimeForm(in model.SaveOvertimeFormReq) (out model.Sav
 			form.Order = "O" + time.Now().Format("20060102") + fmt.Sprintf("%06d", form.ID%1000000)
 		}
 
+		// 刪除原有的倍率
+		_, err = qRate.WithContext(dbcache.WithCtx(o.ctx)).Unscoped().Where(qRate.OvertimeRequestFormID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
 		// 刪除原本的簽核流程
 		_, err = qFlow.WithContext(dbcache.WithCtx(o.ctx)).Unscoped().Where(qFlow.OvertimeRequestFormID.Eq(in.ID)).Delete()
 		if err != nil {
@@ -125,6 +132,11 @@ func (o *overtime) SaveOvertimeForm(in model.SaveOvertimeFormReq) (out model.Sav
 
 		// 創建流程
 		if err = o.createFlow(form); err != nil {
+			return err
+		}
+
+		// 創建倍率
+		if err = o.createRate(form); err != nil {
 			return err
 		}
 
@@ -159,11 +171,18 @@ func (o *overtime) DeleteOvertimeForm(in model.DeleteOvertimeFormReq) error {
 		var (
 			qForm = tx.OvertimeRequestForm
 			qFlow = tx.OvertimeSignOffFlow
+			qRate = tx.OvertimeRequestFormRate
 			err   error
 		)
 
 		// 刪除流程
 		_, err = qFlow.WithContext(dbcache.WithCtx(o.ctx)).Where(qFlow.OvertimeRequestFormID.Eq(in.ID)).Delete()
+		if err != nil {
+			return err
+		}
+
+		// 刪除倍率
+		_, err = qRate.WithContext(dbcache.WithCtx(o.ctx)).Where(qRate.OvertimeRequestFormID.Eq(in.ID)).Delete()
 		if err != nil {
 			return err
 		}
@@ -184,7 +203,9 @@ func (o *overtime) DeleteOvertimeForm(in model.DeleteOvertimeFormReq) error {
 // 寫入基本訊息
 func (o *overtime) writeBasicInfo(form *types.OvertimeRequestForm) (err error) {
 	var (
-		qEmployee = query.Employee
+		qEmployee         = query.Employee
+		qVacation         = query.Vacation
+		qVacationSchedule = query.VacationSchedule
 	)
 
 	// 查詢員工部門id
@@ -192,6 +213,28 @@ func (o *overtime) writeBasicInfo(form *types.OvertimeRequestForm) (err error) {
 	if err != nil {
 		return
 	}
+
+	// 尋找vacation id
+	err = qVacationSchedule.WithContext(o.ctx).Select(qVacationSchedule.VacationID).
+		Join(qVacation, qVacationSchedule.VacationID.EqCol(qVacation.ID)).
+		Where(qVacationSchedule.ScheduleDate.Eq(form.Date)).
+		Order(qVacation.Weight.Desc()).
+		Offset(0).Limit(1).Scan(&form.VacationID)
+	if err != nil {
+		return err
+	}
+
+	// 計算預計時數
+	var (
+		start = form.StartTime.Time()
+		end   = form.EndTime.Time()
+	)
+
+	if form.StartTime > form.EndTime {
+		end = end.AddDate(0, 0, 1)
+	}
+
+	form.EstimatedHours = float32(end.Unix()-start.Unix()) / 60 / 60
 
 	return nil
 }
@@ -206,7 +249,9 @@ func (o *overtime) createFlow(form *types.OvertimeRequestForm) error {
 	)
 
 	// 查詢簽核設定
-	flowSetting, err = qFlowSetting.WithContext(dbcache.WithCtx(o.ctx)).Find()
+	flowSetting, err = qFlowSetting.WithContext(dbcache.WithCtx(o.ctx)).
+		Where(qFlowSetting.DepartmentID.Eq(form.DepartmentID), qFlowSetting.VacationID.Eq(form.VacationID)).
+		Find()
 	if err != nil {
 		return err
 	}
@@ -288,6 +333,39 @@ func (o *overtime) createFlow(form *types.OvertimeRequestForm) error {
 		flow.Level = uint(index + 1)                             // 重新定義關卡
 		flow.UUID = uuid.Must(uuid.NewRandom()).String()         // 為每一關生成uuid
 		flow.Locale = enum.Locale(gbi18n.LanguageFromCtx(o.ctx)) // 語言為請求時使用的語言
+	}
+
+	return nil
+}
+
+// 創建倍率
+func (o *overtime) createRate(form *types.OvertimeRequestForm) error {
+	var (
+		qM2M   = query.VacationGroupEmployee
+		qGroup = query.VacationGroup
+		qRate  = query.VacationGroupOvertimeRate
+		rate   []*types.VacationGroupOvertimeRate
+		err    error
+	)
+
+	// 搜尋套用倍率
+	// select rate.*
+	// from vacation_group_overtime_rate as rate
+	// join vacation_group as [group] on (rate.vacation_group_id = [group].id)
+	// join vacation_group_employee as m2m on (m2m.vacation_group_id = [group].id)
+	// where m2m.employee_id = @empID and [group].vacation_id = @vacationID;
+	rate, err = qRate.WithContext(dbcache.WithCtx(o.ctx)).Select(qRate.ALL).
+		Join(qGroup, qRate.VacationGroupID.EqCol(qGroup.ID)).
+		Join(qM2M, qM2M.VacationGroupID.EqCol(qGroup.ID)).
+		Where(qM2M.EmployeeID.Eq(form.EmployeeID), qGroup.VacationID.Eq(form.VacationID)).
+		Find()
+	if err != nil {
+		return err
+	}
+
+	// copier
+	if err = copier.Copy(&form.Rate, rate); err != nil {
+		return err
 	}
 
 	return nil

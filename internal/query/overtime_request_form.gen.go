@@ -136,6 +136,12 @@ func newOvertimeRequestForm(db *gorm.DB, opts ...gen.DOOption) overtimeRequestFo
 			SignOffFlow struct {
 				field.RelationField
 			}
+			Rate struct {
+				field.RelationField
+				OvertimeRequestForm struct {
+					field.RelationField
+				}
+			}
 		}{
 			RelationField: field.NewRelation("SignOffFlow.OvertimeRequestForm", "types.OvertimeRequestForm"),
 			Vacation: struct {
@@ -639,12 +645,31 @@ func newOvertimeRequestForm(db *gorm.DB, opts ...gen.DOOption) overtimeRequestFo
 			}{
 				RelationField: field.NewRelation("SignOffFlow.OvertimeRequestForm.SignOffFlow", "types.OvertimeSignOffFlow"),
 			},
+			Rate: struct {
+				field.RelationField
+				OvertimeRequestForm struct {
+					field.RelationField
+				}
+			}{
+				RelationField: field.NewRelation("SignOffFlow.OvertimeRequestForm.Rate", "types.OvertimeRequestFormRate"),
+				OvertimeRequestForm: struct {
+					field.RelationField
+				}{
+					RelationField: field.NewRelation("SignOffFlow.OvertimeRequestForm.Rate.OvertimeRequestForm", "types.OvertimeRequestForm"),
+				},
+			},
 		},
 		SignOffEmployee: struct {
 			field.RelationField
 		}{
 			RelationField: field.NewRelation("SignOffFlow.SignOffEmployee", "types.Employee"),
 		},
+	}
+
+	_overtimeRequestForm.Rate = overtimeRequestFormHasManyRate{
+		db: db.Session(&gorm.Session{}),
+
+		RelationField: field.NewRelation("Rate", "types.OvertimeRequestFormRate"),
 	}
 
 	_overtimeRequestForm.Vacation = overtimeRequestFormBelongsToVacation{
@@ -689,6 +714,8 @@ type overtimeRequestForm struct {
 	EmployeeID     field.Uint
 	DepartmentID   field.Uint
 	SignOffFlow    overtimeRequestFormHasManySignOffFlow
+
+	Rate overtimeRequestFormHasManyRate
 
 	Vacation overtimeRequestFormBelongsToVacation
 
@@ -753,7 +780,7 @@ func (o *overtimeRequestForm) GetFieldByName(fieldName string) (field.OrderExpr,
 }
 
 func (o *overtimeRequestForm) fillFieldMap() {
-	o.fieldMap = make(map[string]field.Expr, 18)
+	o.fieldMap = make(map[string]field.Expr, 19)
 	o.fieldMap["id"] = o.ID
 	o.fieldMap["created_at"] = o.CreatedAt
 	o.fieldMap["updated_at"] = o.UpdatedAt
@@ -878,6 +905,12 @@ type overtimeRequestFormHasManySignOffFlow struct {
 		SignOffFlow struct {
 			field.RelationField
 		}
+		Rate struct {
+			field.RelationField
+			OvertimeRequestForm struct {
+				field.RelationField
+			}
+		}
 	}
 	SignOffEmployee struct {
 		field.RelationField
@@ -946,6 +979,77 @@ func (a overtimeRequestFormHasManySignOffFlowTx) Clear() error {
 }
 
 func (a overtimeRequestFormHasManySignOffFlowTx) Count() int64 {
+	return a.tx.Count()
+}
+
+type overtimeRequestFormHasManyRate struct {
+	db *gorm.DB
+
+	field.RelationField
+}
+
+func (a overtimeRequestFormHasManyRate) Where(conds ...field.Expr) *overtimeRequestFormHasManyRate {
+	if len(conds) == 0 {
+		return &a
+	}
+
+	exprs := make([]clause.Expression, 0, len(conds))
+	for _, cond := range conds {
+		exprs = append(exprs, cond.BeCond().(clause.Expression))
+	}
+	a.db = a.db.Clauses(clause.Where{Exprs: exprs})
+	return &a
+}
+
+func (a overtimeRequestFormHasManyRate) WithContext(ctx context.Context) *overtimeRequestFormHasManyRate {
+	a.db = a.db.WithContext(ctx)
+	return &a
+}
+
+func (a overtimeRequestFormHasManyRate) Session(session *gorm.Session) *overtimeRequestFormHasManyRate {
+	a.db = a.db.Session(session)
+	return &a
+}
+
+func (a overtimeRequestFormHasManyRate) Model(m *types.OvertimeRequestForm) *overtimeRequestFormHasManyRateTx {
+	return &overtimeRequestFormHasManyRateTx{a.db.Model(m).Association(a.Name())}
+}
+
+type overtimeRequestFormHasManyRateTx struct{ tx *gorm.Association }
+
+func (a overtimeRequestFormHasManyRateTx) Find() (result []*types.OvertimeRequestFormRate, err error) {
+	return result, a.tx.Find(&result)
+}
+
+func (a overtimeRequestFormHasManyRateTx) Append(values ...*types.OvertimeRequestFormRate) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Append(targetValues...)
+}
+
+func (a overtimeRequestFormHasManyRateTx) Replace(values ...*types.OvertimeRequestFormRate) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Replace(targetValues...)
+}
+
+func (a overtimeRequestFormHasManyRateTx) Delete(values ...*types.OvertimeRequestFormRate) (err error) {
+	targetValues := make([]interface{}, len(values))
+	for i, v := range values {
+		targetValues[i] = v
+	}
+	return a.tx.Delete(targetValues...)
+}
+
+func (a overtimeRequestFormHasManyRateTx) Clear() error {
+	return a.tx.Clear()
+}
+
+func (a overtimeRequestFormHasManyRateTx) Count() int64 {
 	return a.tx.Count()
 }
 

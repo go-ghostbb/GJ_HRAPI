@@ -39,6 +39,7 @@ func Basic() []interface{} {
 		&OvertimeCheckIn{},           // overtime_check_in
 		&OvertimeRequestForm{},       // overtime_request_form
 		&OvertimeSignOffFlow{},       // overtime_sign_off_flow
+		&OvertimeRequestFormRate{},   // overtime_request_form_rate
 	}
 }
 

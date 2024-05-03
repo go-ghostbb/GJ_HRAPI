@@ -41,3 +41,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func (t Time) Time() time.Time {
+	return time.Unix(int64(t), 0).UTC()
+}

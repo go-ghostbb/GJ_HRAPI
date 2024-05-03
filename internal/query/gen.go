@@ -41,6 +41,7 @@ var (
 	Menu                      *menu
 	OvertimeCheckIn           *overtimeCheckIn
 	OvertimeRequestForm       *overtimeRequestForm
+	OvertimeRequestFormRate   *overtimeRequestFormRate
 	OvertimeSignOffFlow       *overtimeSignOffFlow
 	OvertimeSignOffSetting    *overtimeSignOffSetting
 	Permission                *permission
@@ -88,6 +89,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Menu = &Q.Menu
 	OvertimeCheckIn = &Q.OvertimeCheckIn
 	OvertimeRequestForm = &Q.OvertimeRequestForm
+	OvertimeRequestFormRate = &Q.OvertimeRequestFormRate
 	OvertimeSignOffFlow = &Q.OvertimeSignOffFlow
 	OvertimeSignOffSetting = &Q.OvertimeSignOffSetting
 	Permission = &Q.Permission
@@ -136,6 +138,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Menu:                      newMenu(db, opts...),
 		OvertimeCheckIn:           newOvertimeCheckIn(db, opts...),
 		OvertimeRequestForm:       newOvertimeRequestForm(db, opts...),
+		OvertimeRequestFormRate:   newOvertimeRequestFormRate(db, opts...),
 		OvertimeSignOffFlow:       newOvertimeSignOffFlow(db, opts...),
 		OvertimeSignOffSetting:    newOvertimeSignOffSetting(db, opts...),
 		Permission:                newPermission(db, opts...),
@@ -185,6 +188,7 @@ type Query struct {
 	Menu                      menu
 	OvertimeCheckIn           overtimeCheckIn
 	OvertimeRequestForm       overtimeRequestForm
+	OvertimeRequestFormRate   overtimeRequestFormRate
 	OvertimeSignOffFlow       overtimeSignOffFlow
 	OvertimeSignOffSetting    overtimeSignOffSetting
 	Permission                permission
@@ -235,6 +239,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Menu:                      q.Menu.clone(db),
 		OvertimeCheckIn:           q.OvertimeCheckIn.clone(db),
 		OvertimeRequestForm:       q.OvertimeRequestForm.clone(db),
+		OvertimeRequestFormRate:   q.OvertimeRequestFormRate.clone(db),
 		OvertimeSignOffFlow:       q.OvertimeSignOffFlow.clone(db),
 		OvertimeSignOffSetting:    q.OvertimeSignOffSetting.clone(db),
 		Permission:                q.Permission.clone(db),
@@ -292,6 +297,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Menu:                      q.Menu.replaceDB(db),
 		OvertimeCheckIn:           q.OvertimeCheckIn.replaceDB(db),
 		OvertimeRequestForm:       q.OvertimeRequestForm.replaceDB(db),
+		OvertimeRequestFormRate:   q.OvertimeRequestFormRate.replaceDB(db),
 		OvertimeSignOffFlow:       q.OvertimeSignOffFlow.replaceDB(db),
 		OvertimeSignOffSetting:    q.OvertimeSignOffSetting.replaceDB(db),
 		Permission:                q.Permission.replaceDB(db),
@@ -339,6 +345,7 @@ type queryCtx struct {
 	Menu                      IMenuDo
 	OvertimeCheckIn           IOvertimeCheckInDo
 	OvertimeRequestForm       IOvertimeRequestFormDo
+	OvertimeRequestFormRate   IOvertimeRequestFormRateDo
 	OvertimeSignOffFlow       IOvertimeSignOffFlowDo
 	OvertimeSignOffSetting    IOvertimeSignOffSettingDo
 	Permission                IPermissionDo
@@ -386,6 +393,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Menu:                      q.Menu.WithContext(ctx),
 		OvertimeCheckIn:           q.OvertimeCheckIn.WithContext(ctx),
 		OvertimeRequestForm:       q.OvertimeRequestForm.WithContext(ctx),
+		OvertimeRequestFormRate:   q.OvertimeRequestFormRate.WithContext(ctx),
 		OvertimeSignOffFlow:       q.OvertimeSignOffFlow.WithContext(ctx),
 		OvertimeSignOffSetting:    q.OvertimeSignOffSetting.WithContext(ctx),
 		Permission:                q.Permission.WithContext(ctx),

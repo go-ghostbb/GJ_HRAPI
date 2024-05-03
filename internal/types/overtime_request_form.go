@@ -30,6 +30,9 @@ type OvertimeRequestForm struct {
 
 	// 簽核流程
 	SignOffFlow []*OvertimeSignOffFlow `gorm:"foreignKey:OvertimeRequestFormID" json:"signOffFlow"`
+
+	// 加班倍率
+	Rate []*OvertimeRequestFormRate `gorm:"foreignKey:OvertimeRequestFormID" json:"rate"`
 }
 
 func (o *OvertimeRequestForm) TableName() string {
