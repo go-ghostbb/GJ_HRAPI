@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
+	gberror "ghostbb.io/gb/errors/gb_error"
 	gbi18n "ghostbb.io/gb/i18n/gb_i18n"
 	gbctx "ghostbb.io/gb/os/gb_ctx"
 	gbconv "ghostbb.io/gb/util/gb_conv"
@@ -89,6 +90,16 @@ func (o *overtime) SaveOvertimeForm(in model.SaveOvertimeFormReq) (out model.Sav
 
 	// 複製form(request body)到database model
 	if err = copier.Copy(form, &in); err != nil {
+		return
+	}
+
+	// 判斷時間有沒有重疊
+	var overlapCheck bool
+	if overlapCheck, err = o.isOverlap(form); err != nil {
+		return
+	} else if overlapCheck {
+		// 回傳時間重疊錯誤
+		err = gberror.New("time overlap")
 		return
 	}
 
@@ -237,6 +248,53 @@ func (o *overtime) writeBasicInfo(form *types.OvertimeRequestForm) (err error) {
 	form.EstimatedHours = float32(end.Unix()-start.Unix()) / 60 / 60
 
 	return nil
+}
+
+// 判斷有沒有重疊
+func (o *overtime) isOverlap(form *types.OvertimeRequestForm) (bool, error) {
+	var (
+		qForm = query.OvertimeRequestForm
+	)
+
+	queryRes, err := qForm.WithContext(dbcache.WithCtx(o.ctx)).Where(qForm.Date.Eq(form.Date)).Find()
+	if err != nil {
+		return false, err
+	}
+
+	// 判斷重疊的時間裡時間是不是也重疊
+	// 遍歷尋出來的表單
+	for _, f := range queryRes {
+		// A1 < B2 && A2 > B1
+		var (
+			A1 = gbconv.Time(f.Date.Format() + " " + f.StartTime.Format())
+			A2 = gbconv.Time(f.Date.Format() + " " + f.EndTime.Format())
+		)
+
+		// 如果開始時間>結束時間
+		// 代表隔夜，需要+1天
+		if f.StartTime.Unix() > f.EndTime.Unix() {
+			A2 = A2.AddDate(0, 0, 1)
+		}
+
+		var (
+			B1 = gbconv.Time(form.Date.Format() + " " + form.StartTime.Format())
+			B2 = gbconv.Time(form.Date.Format() + " " + form.EndTime.Format())
+		)
+
+		// 如果開始時間>結束時間
+		// 代表隔夜，需要+1天
+		if form.StartTime.Unix() > form.EndTime.Unix() {
+			B2 = B2.AddDate(0, 0, 1)
+		}
+
+		// 判斷是否重疊
+		// 公式：A1 < B2 && A2 > B1
+		if A1.Unix() < B2.Unix() && A2.Unix() > B1.Unix() {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // 創建流程

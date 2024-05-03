@@ -408,10 +408,6 @@ func (l *leave) isOverlap(form *types.LeaveRequestForm) (bool, error) {
 			// 迴圈step(1 day)
 			f.StartDate = f.StartDate.AddDate(0, 0, 1)
 		}
-
-		if form.StartTime.Unix() < f.EndTime.Unix() && form.EndTime.Unix() > f.StartTime.Unix() {
-			return true, nil
-		}
 	}
 
 	return false, nil
