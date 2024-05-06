@@ -119,6 +119,9 @@ func (j *Jwtx) ParseRefreshToken(tokenString string) (*claims.RefreshClaims, err
 	token, err := jwt.ParseWithClaims(tokenString, &claims.RefreshClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return j.SigningKey, nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	if _claims, ok := token.Claims.(*claims.RefreshClaims); ok && token.Valid {
 		return _claims, nil
