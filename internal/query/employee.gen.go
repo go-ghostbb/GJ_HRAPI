@@ -39,7 +39,7 @@ func newEmployee(db *gorm.DB, opts ...gen.DOOption) employee {
 	_employee.Backend = field.NewBool(tableName, "backend")
 	_employee.RealName = field.NewString(tableName, "real_name")
 	_employee.NationalID = field.NewString(tableName, "national_id")
-	_employee.Birth = field.NewTime(tableName, "birth")
+	_employee.Birth = field.NewField(tableName, "birth")
 	_employee.Email = field.NewString(tableName, "email")
 	_employee.Mobile = field.NewString(tableName, "mobile")
 	_employee.Avatar = field.NewString(tableName, "avatar")
@@ -241,7 +241,7 @@ type employee struct {
 	Backend          field.Bool
 	RealName         field.String
 	NationalID       field.String
-	Birth            field.Time
+	Birth            field.Field
 	Email            field.String
 	Mobile           field.String
 	Avatar           field.String
@@ -287,7 +287,7 @@ func (e *employee) updateTableName(table string) *employee {
 	e.Backend = field.NewBool(table, "backend")
 	e.RealName = field.NewString(table, "real_name")
 	e.NationalID = field.NewString(table, "national_id")
-	e.Birth = field.NewTime(table, "birth")
+	e.Birth = field.NewField(table, "birth")
 	e.Email = field.NewString(table, "email")
 	e.Mobile = field.NewString(table, "mobile")
 	e.Avatar = field.NewString(table, "avatar")

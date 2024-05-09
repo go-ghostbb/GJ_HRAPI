@@ -4,7 +4,6 @@ import (
 	"gorm.io/gorm"
 	"hrapi/internal/types/enum"
 	"hrapi/internal/utils/driver"
-	"time"
 )
 
 type Employee struct {
@@ -17,12 +16,12 @@ type Employee struct {
 	Backend          bool                  `gorm:"default:false;not null;comment:是否可登入後台" json:"backend" v:"required"`
 
 	// ---------基本訊息---------
-	RealName   string    `gorm:"size:100;not null;comment:真實姓名" json:"realName" v:"required"`
-	NationalID string    `gorm:"size:50;not null;uniqueIndex;comment:身份證號碼" json:"nationalId" v:"required"`
-	Birth      time.Time `gorm:"type:date;comment:生日" json:"birth"`
-	Email      string    `gorm:"size:100;comment:信箱" json:"email"`
-	Mobile     string    `gorm:"size:20;comment:手機號" json:"mobile"`
-	Avatar     string    `gorm:"comment:頭像" json:"avatar"`
+	RealName   string      `gorm:"size:100;not null;comment:真實姓名" json:"realName" v:"required"`
+	NationalID string      `gorm:"size:50;not null;uniqueIndex;comment:身份證號碼" json:"nationalId" v:"required"`
+	Birth      driver.Date `gorm:"type:date;comment:生日" json:"birth"`
+	Email      string      `gorm:"size:100;comment:信箱" json:"email"`
+	Mobile     string      `gorm:"size:20;comment:手機號" json:"mobile"`
+	Avatar     string      `gorm:"comment:頭像" json:"avatar"`
 
 	// ---------薪資訊息---------
 	Salary      float32          `gorm:"comment:薪水" json:"salary"`

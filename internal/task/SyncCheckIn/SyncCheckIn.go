@@ -20,10 +20,9 @@ func init() {
 var dataPath = ""
 
 const (
-	cardNum       = 0
-	dateTime      = 1
-	workShiftCode = 2
-	checkInType   = 3
+	cardNum int = iota
+	dateTime
+	checkInType
 )
 
 func Start(ctx context.Context) {
@@ -85,7 +84,7 @@ func Start(ctx context.Context) {
 			isWork = false
 		}
 
-		err = qCheckInStatus.WithContext(ctx).UpdateTime(fullDateTime, row[workShiftCode], row[cardNum], isWork)
+		err = qCheckInStatus.WithContext(ctx).UpdateTime(fullDateTime, row[cardNum], isWork)
 		if err != nil {
 			g.Log().Error(ctx, "sync check_in data err:", err)
 			return

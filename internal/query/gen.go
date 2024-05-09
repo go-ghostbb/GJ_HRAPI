@@ -29,6 +29,7 @@ var (
 	ConfigMap                 *configMap
 	Department                *department
 	Employee                  *employee
+	EmployeeRole              *employeeRole
 	Leave                     *leave
 	LeaveCorrect              *leaveCorrect
 	LeaveGroup                *leaveGroup
@@ -77,6 +78,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	ConfigMap = &Q.ConfigMap
 	Department = &Q.Department
 	Employee = &Q.Employee
+	EmployeeRole = &Q.EmployeeRole
 	Leave = &Q.Leave
 	LeaveCorrect = &Q.LeaveCorrect
 	LeaveGroup = &Q.LeaveGroup
@@ -126,6 +128,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		ConfigMap:                 newConfigMap(db, opts...),
 		Department:                newDepartment(db, opts...),
 		Employee:                  newEmployee(db, opts...),
+		EmployeeRole:              newEmployeeRole(db, opts...),
 		Leave:                     newLeave(db, opts...),
 		LeaveCorrect:              newLeaveCorrect(db, opts...),
 		LeaveGroup:                newLeaveGroup(db, opts...),
@@ -176,6 +179,7 @@ type Query struct {
 	ConfigMap                 configMap
 	Department                department
 	Employee                  employee
+	EmployeeRole              employeeRole
 	Leave                     leave
 	LeaveCorrect              leaveCorrect
 	LeaveGroup                leaveGroup
@@ -227,6 +231,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		ConfigMap:                 q.ConfigMap.clone(db),
 		Department:                q.Department.clone(db),
 		Employee:                  q.Employee.clone(db),
+		EmployeeRole:              q.EmployeeRole.clone(db),
 		Leave:                     q.Leave.clone(db),
 		LeaveCorrect:              q.LeaveCorrect.clone(db),
 		LeaveGroup:                q.LeaveGroup.clone(db),
@@ -285,6 +290,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		ConfigMap:                 q.ConfigMap.replaceDB(db),
 		Department:                q.Department.replaceDB(db),
 		Employee:                  q.Employee.replaceDB(db),
+		EmployeeRole:              q.EmployeeRole.replaceDB(db),
 		Leave:                     q.Leave.replaceDB(db),
 		LeaveCorrect:              q.LeaveCorrect.replaceDB(db),
 		LeaveGroup:                q.LeaveGroup.replaceDB(db),
@@ -333,6 +339,7 @@ type queryCtx struct {
 	ConfigMap                 IConfigMapDo
 	Department                IDepartmentDo
 	Employee                  IEmployeeDo
+	EmployeeRole              IEmployeeRoleDo
 	Leave                     ILeaveDo
 	LeaveCorrect              ILeaveCorrectDo
 	LeaveGroup                ILeaveGroupDo
@@ -381,6 +388,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		ConfigMap:                 q.ConfigMap.WithContext(ctx),
 		Department:                q.Department.WithContext(ctx),
 		Employee:                  q.Employee.WithContext(ctx),
+		EmployeeRole:              q.EmployeeRole.WithContext(ctx),
 		Leave:                     q.Leave.WithContext(ctx),
 		LeaveCorrect:              q.LeaveCorrect.WithContext(ctx),
 		LeaveGroup:                q.LeaveGroup.WithContext(ctx),

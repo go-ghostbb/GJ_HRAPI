@@ -48,6 +48,11 @@ type DeleteEmployeeReq struct {
 type DeleteEmployeeRes struct {
 }
 
+type SetEmployeeRolesReq struct {
+	EmployeeID uint
+	RoleID     []uint `json:"roleId"`
+}
+
 type ResetPasswordReq struct {
 	ID             uint
 	Password       string `json:"password" v:"required#password cannot be empty|password#password must between 6, 18"`

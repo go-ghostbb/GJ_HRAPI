@@ -32,6 +32,7 @@ type (
 		Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, err error)
 		Update(in model.PutEmployeeReq) (err error)
 		Delete(in model.DeleteEmployeeReq) (err error)
+		SetRoles(in model.SetEmployeeRolesReq) error
 		ResetPassword(in model.ResetPasswordReq) (err error)
 		SetEmploymentStatus(in model.SetEmploymentStatusReq) (err error)
 		SetLoginStatus(in model.SetLoginStatusReq) (err error)
@@ -68,6 +69,7 @@ func (e *employee) GetByKeyword(in model.GetByKeywordEmployeeReq) (out model.Get
 	}
 
 	employees, err = qdEmployee.Scopes(e.page.Where(conds...)).Preload(
+		qEmployee.Roles,
 		qEmployee.LoginInformation,
 		qEmployee.Department,
 	).Find()
@@ -158,6 +160,39 @@ func (e *employee) Update(in model.PutEmployeeReq) error {
 		err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Save(in.Employee)
 		if err != nil {
 			return err
+		}
+
+		// commit
+		return nil
+	})
+}
+
+func (e *employee) SetRoles(in model.SetEmployeeRolesReq) error {
+	return query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qM2M = query.EmployeeRole
+			m2m  = make([]*types.EmployeeRole, 0)
+			err  error
+		)
+
+		// 刪除原本有的
+		_, err = qM2M.WithContext(dbcache.WithCtx(e.ctx)).Where(qM2M.EmployeeID.Eq(in.EmployeeID)).Delete()
+		if err != nil {
+			return err
+		}
+
+		for _, id := range in.RoleID {
+			m2m = append(m2m, &types.EmployeeRole{
+				EmployeeID: in.EmployeeID,
+				RoleID:     id,
+			})
+		}
+
+		if len(m2m) != 0 {
+			err = qM2M.WithContext(dbcache.WithCtx(e.ctx)).Create(m2m...)
+			if err != nil {
+				return err
+			}
 		}
 
 		// commit

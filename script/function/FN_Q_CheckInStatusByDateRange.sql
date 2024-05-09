@@ -29,7 +29,7 @@ begin
          step1 as (
              select *
              from check_in_status
-             where employee_id = @emp_id and
+             where (@emp_id = 0 or (@emp_id != 0 and employee_id = @emp_id)) and
                    date between @start_date and @end_date and
                    deleted_at is null and
                    (@abnormal = 0 or

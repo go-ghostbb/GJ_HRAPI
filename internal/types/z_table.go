@@ -45,6 +45,7 @@ func Basic() []interface{} {
 
 func M2M() []interface{} {
 	return []interface{}{
+		&EmployeeRole{},
 		&RoleMenu{},
 		&RolePermission{},
 		&LeaveGroupEmployee{},

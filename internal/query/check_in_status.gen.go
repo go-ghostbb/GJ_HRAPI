@@ -535,8 +535,10 @@ type ICheckInStatusDo interface {
 	schema.Tabler
 
 	QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, dateOnly2 string, abnormal bool) (result []*types.CheckInStatus, err error)
+	QueryByDateRangeAndKeyword(keyword string, dateOnly1 string, dateOnly2 string, abnormal bool, offset int, limit int) (result []*types.CheckInStatus, err error)
+	CountByDateRangeAndKeyword(keyword string, dateOnly1 string, dateOnly2 string, abnormal bool) (result int64, err error)
 	UpdateStatus(startDate string, endDate string, empIDs string) (err error)
-	UpdateTime(datetime string, workShiftCode string, cardNum string, isWork bool) (err error)
+	UpdateTime(datetime string, cardNum string, isWork bool) (err error)
 	QueryTotalAttendHours(empID uint, dateOnly1 string, dateOnly2 string) (result float32, err error)
 }
 
@@ -553,6 +555,61 @@ func (c checkInStatusDo) QueryByDateRangeAndEmpID(empID uint, dateOnly1 string, 
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select fn.*
+// from FN_Q_CheckInStatusByDateRange(0, @dateOnly1, @dateOnly2, @abnormal) as fn
+// join employee as e on (fn.employee_id = e.id)
+// where real_name like @keyword or code like @keyword
+// order by date desc
+// {{if limit != 0}}
+//
+//	offset @offset rows fetch next @limit rows only
+//
+// {{end}}
+func (c checkInStatusDo) QueryByDateRangeAndKeyword(keyword string, dateOnly1 string, dateOnly2 string, abnormal bool, offset int, limit int) (result []*types.CheckInStatus, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly1)
+	params = append(params, dateOnly2)
+	params = append(params, abnormal)
+	params = append(params, keyword)
+	params = append(params, keyword)
+	generateSQL.WriteString("select fn.* from FN_Q_CheckInStatusByDateRange(0, ?, ?, ?) as fn join employee as e on (fn.employee_id = e.id) where real_name like ? or code like ? order by date desc ")
+	if limit != 0 {
+		params = append(params, offset)
+		params = append(params, limit)
+		generateSQL.WriteString("offset ? rows fetch next ? rows only ")
+	}
+
+	var executeSQL *gorm.DB
+	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select count(*)
+// from FN_Q_CheckInStatusByDateRange(0, @dateOnly1, @dateOnly2, @abnormal) as fn
+// join employee as e on (fn.employee_id = e.id)
+// where real_name like @keyword or code like @keyword
+func (c checkInStatusDo) CountByDateRangeAndKeyword(keyword string, dateOnly1 string, dateOnly2 string, abnormal bool) (result int64, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, dateOnly1)
+	params = append(params, dateOnly2)
+	params = append(params, abnormal)
+	params = append(params, keyword)
+	params = append(params, keyword)
+	generateSQL.WriteString("select count(*) from FN_Q_CheckInStatusByDateRange(0, ?, ?, ?) as fn join employee as e on (fn.employee_id = e.id) where real_name like ? or code like ? ")
+
+	var executeSQL *gorm.DB
+	executeSQL = c.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return
@@ -575,16 +632,15 @@ func (c checkInStatusDo) UpdateStatus(startDate string, endDate string, empIDs s
 	return
 }
 
-// exec P_C_CheckInStatusUpdateTime @datetime, @workShiftCode, @cardNum, @isWork
-func (c checkInStatusDo) UpdateTime(datetime string, workShiftCode string, cardNum string, isWork bool) (err error) {
+// exec P_C_CheckInStatusUpdateTime @datetime, @cardNum, @isWork
+func (c checkInStatusDo) UpdateTime(datetime string, cardNum string, isWork bool) (err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, datetime)
-	params = append(params, workShiftCode)
 	params = append(params, cardNum)
 	params = append(params, isWork)
-	generateSQL.WriteString("exec P_C_CheckInStatusUpdateTime ?, ?, ?, ? ")
+	generateSQL.WriteString("exec P_C_CheckInStatusUpdateTime ?, ?, ? ")
 
 	var executeSQL *gorm.DB
 	executeSQL = c.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert

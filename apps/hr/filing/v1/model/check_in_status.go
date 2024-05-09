@@ -5,10 +5,9 @@ type FilingCheckInStatusReq struct {
 }
 
 type CheckInData struct {
-	CardNumber    string `json:"cardNumber" binding:"required"`
-	DateTime      string `json:"dateTime" binding:"required"`
-	WorkShiftCode string `json:"workShiftCode" binding:"required"`
-	CheckInType   string `json:"checkInType" binding:"required"`
+	CardNumber  string `json:"cardNumber" binding:"required"`
+	DateTime    string `json:"dateTime" binding:"required"`
+	CheckInType string `json:"checkInType" binding:"required"`
 }
 
 type UploadDataReq struct {

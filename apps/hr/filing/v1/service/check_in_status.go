@@ -148,15 +148,15 @@ func (c *checkInStatus) UploadData(in []*model.UploadDataReq) error {
 			)
 
 			switch data.CheckInType {
-			case "1":
+			case "0":
 				// 上班
 				isWork = true
-			case "2":
+			case "1":
 				// 下班
 				isWork = false
 			}
 
-			err = qCheckInStatus.WithContext(c.ctx).UpdateTime(fullDateTime, data.WorkShiftCode, data.CardNumber, isWork)
+			err = qCheckInStatus.WithContext(c.ctx).UpdateTime(fullDateTime, data.CardNumber, isWork)
 			if err != nil {
 				return err
 			}

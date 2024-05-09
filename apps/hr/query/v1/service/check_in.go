@@ -21,6 +21,8 @@ type (
 	ICheckIn interface {
 		// QueryStatus 查詢出勤狀態
 		QueryStatus(in model.QueryStatusReq) (out []*model.QueryStatusRes, err error)
+		// QueryStatusByKeyword 根據關鍵字查詢
+		QueryStatusByKeyword(in model.QueryStatusByKeywordReq) (out model.QueryStatusByKeywordRes, err error)
 	}
 
 	checkIn struct {
@@ -45,6 +47,33 @@ func (c *checkIn) QueryStatus(in model.QueryStatusReq) (out []*model.QueryStatus
 
 	if err = copier.Copy(&out, result); err != nil {
 		return nil, err
+	}
+
+	return out, nil
+}
+
+// QueryStatusByKeyword 根據關鍵字查詢
+func (c *checkIn) QueryStatusByKeyword(in model.QueryStatusByKeywordReq) (out model.QueryStatusByKeywordRes, err error) {
+	var (
+		qCheckInStatus = query.CheckInStatus
+		result         []*types.CheckInStatus
+	)
+
+	result, err = qCheckInStatus.WithContext(c.ctx).
+		Preload(field.Associations, qCheckInStatus.Employee.Department).
+		QueryByDateRangeAndKeyword("%"+in.Keyword+"%", in.DateRangeStart, in.DateRangeEnd, in.Abnormal, c.page.Offset, c.page.Limit)
+	if err != nil {
+		return
+	}
+
+	if err = copier.Copy(&out.Items, result); err != nil {
+		return
+	}
+
+	// count
+	out.Total, err = qCheckInStatus.WithContext(c.ctx).CountByDateRangeAndKeyword("%"+in.Keyword+"%", in.DateRangeStart, in.DateRangeEnd, in.Abnormal)
+	if err != nil {
+		return
 	}
 
 	return out, nil

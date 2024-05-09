@@ -24,6 +24,7 @@ func (e *EmployeeApi) Init(group *gin.RouterGroup) {
 	v1.POST("", middleware.Software(), e.insert)
 	v1.PUT(":id", middleware.Software(), e.update)
 	v1.DELETE(":id", middleware.Software(), e.delete)
+	v1.PATCH(":id/roles", middleware.Software(), e.setRoles)
 	v1.PATCH(":id/password", middleware.Software(), e.resetPassword)
 	v1.PATCH(":id/employmentStatus", middleware.Software(), e.setEmploymentStatus)
 	v1.PATCH(":id/login/status", middleware.Software(), e.setLoginStatus)
@@ -148,6 +149,36 @@ func (e *EmployeeApi) delete(c *gin.Context) {
 	in.ID = gbconv.Uint(gbhttp.ParseParam(c, "id"))
 
 	err = service.Employee(ctx).Delete(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 設定角色
+//
+//	route => PATCH /api/v1/employee/:id/roles
+func (e *EmployeeApi) setRoles(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.SetEmployeeRolesReq
+		err error
+	)
+
+	in.EmployeeID = gbconv.Uint(c.Param("id"))
+	if in.EmployeeID == 0 {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, "employee id required")
+		return
+	}
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.Employee(ctx).SetRoles(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
