@@ -23,6 +23,7 @@ import (
 	"hrapi/internal/types/enum"
 	"hrapi/internal/utils"
 	"hrapi/internal/utils/email"
+	"hrapi/internal/utils/identity"
 	"hrapi/internal/utils/mathx"
 	"hrapi/internal/utils/paginator"
 	"io"
@@ -30,7 +31,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 )
 
 func Leave(ctx context.Context, page ...*paginator.Pagination) ILeave {
@@ -189,14 +189,10 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 
 		// 如果form id為0，先建立資料獲取id
 		if leaveForm.ID == 0 {
-			// create a leave form
-			if err = qForm.WithContext(dbcache.WithCtx(l.ctx)).Create(leaveForm); err != nil {
+			leaveForm.Order, err = identity.LeaveOrder(l.ctx)
+			if err != nil {
 				return err
 			}
-			// create order
-			// maybe A20240131000010
-			// A + 今天日期 + (id % 1000000)補全6位數
-			leaveForm.Order = "A" + time.Now().Format("20060102") + fmt.Sprintf("%06d", leaveForm.ID%1000000)
 		}
 
 		// 刪除該form的簽核流程並且建立新的

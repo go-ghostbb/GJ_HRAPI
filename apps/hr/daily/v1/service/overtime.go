@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gberror "ghostbb.io/gb/errors/gb_error"
 	gbi18n "ghostbb.io/gb/i18n/gb_i18n"
@@ -18,9 +17,9 @@ import (
 	"hrapi/internal/query"
 	"hrapi/internal/types"
 	"hrapi/internal/types/enum"
+	"hrapi/internal/utils/identity"
 	"hrapi/internal/utils/paginator"
 	"slices"
-	"time"
 )
 
 func Overtime(ctx context.Context, page ...*paginator.Pagination) IOvertime {
@@ -118,15 +117,10 @@ func (o *overtime) SaveOvertimeForm(in model.SaveOvertimeFormReq) (out model.Sav
 		)
 
 		if form.ID == 0 {
-			// 如果form id為0
-			// create a leave form
-			if err = qForm.WithContext(dbcache.WithCtx(o.ctx)).Create(form); err != nil {
+			form.Order, err = identity.OvertimeOrder(o.ctx)
+			if err != nil {
 				return err
 			}
-			// create order
-			// maybe O20240131000010
-			// A + 今天日期 + (id % 1000000)補全6位數
-			form.Order = "O" + time.Now().Format("20060102") + fmt.Sprintf("%06d", form.ID%1000000)
 		}
 
 		// 刪除原有的倍率

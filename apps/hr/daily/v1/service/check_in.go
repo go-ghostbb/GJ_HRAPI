@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gbi18n "ghostbb.io/gb/i18n/gb_i18n"
 	gbctx "ghostbb.io/gb/os/gb_ctx"
@@ -21,13 +20,13 @@ import (
 	"hrapi/internal/types/enum"
 	"hrapi/internal/utils"
 	"hrapi/internal/utils/driver"
+	"hrapi/internal/utils/identity"
 	"hrapi/internal/utils/paginator"
 	"io"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 )
 
 func CheckIn(ctx context.Context, page ...*paginator.Pagination) ICheckIn {
@@ -115,15 +114,10 @@ func (c *checkIn) SaveCheckInForm(in model.SaveCheckInFormReq) (out model.SaveCh
 		)
 
 		if form.ID == 0 {
-			// 如果form id為0
-			// create a leave form
-			if err = qForm.WithContext(dbcache.WithCtx(c.ctx)).Create(form); err != nil {
+			form.Order, err = identity.CheckInOrder(c.ctx)
+			if err != nil {
 				return err
 			}
-			// create order
-			// maybe A20240131000010
-			// A + 今天日期 + (id % 1000000)補全6位數
-			form.Order = "C" + time.Now().Format("20060102") + fmt.Sprintf("%06d", form.ID%1000000)
 		}
 
 		// 刪除原本的detail

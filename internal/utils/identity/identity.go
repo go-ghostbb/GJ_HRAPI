@@ -5,5 +5,9 @@ func Init() error {
 		return err
 	}
 
+	if err := formOrderInit(); err != nil {
+		return err
+	}
+
 	return nil
 }
