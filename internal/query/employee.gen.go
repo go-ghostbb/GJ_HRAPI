@@ -818,6 +818,7 @@ type IEmployeeDo interface {
 	QueryIDWhereCardNum(cardNums []string) (result []map[string]interface{}, err error)
 	CalculateEmployeeSeniority() (result []map[string]interface{}, err error)
 	CalculateEmployeeSeniorityWithEndDate(dateOnly string) (result []map[string]interface{}, err error)
+	GetMaxCode() (result string, err error)
 }
 
 // select id, card_number from @@table where card_number in (@cardNums);
@@ -857,6 +858,23 @@ func (e employeeDo) CalculateEmployeeSeniorityWithEndDate(dateOnly string) (resu
 
 	var executeSQL *gorm.DB
 	executeSQL = e.UnderlyingDB().Raw(generateSQL.String(), params...).Find(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select max(code)
+// from employee
+// where
+//
+//	exists (select value from config_map where [key] = 'EmployeeCodePrefix' and deleted_at is null) and
+//	code like (select concat(value, '%') from config_map where [key] = 'EmployeeCodePrefix' and deleted_at is null)
+func (e employeeDo) GetMaxCode() (result string, err error) {
+	var generateSQL strings.Builder
+	generateSQL.WriteString("select max(code) from employee where exists (select value from config_map where [key] = 'EmployeeCodePrefix' and deleted_at is null) and code like (select concat(value, '%') from config_map where [key] = 'EmployeeCodePrefix' and deleted_at is null) ")
+
+	var executeSQL *gorm.DB
+	executeSQL = e.UnderlyingDB().Raw(generateSQL.String()).Take(&result) // ignore_security_alert
 	err = executeSQL.Error
 
 	return

@@ -9,4 +9,10 @@ type Employee interface {
 	CalculateEmployeeSeniority() ([]gen.M, error)
 	// select * from FN_C_EmployeeSeniorityWithEndDate(@dateOnly)
 	CalculateEmployeeSeniorityWithEndDate(dateOnly string) ([]gen.M, error)
+	// select max(code)
+	// from employee
+	// where
+	//     exists (select value from config_map where [key] = 'EmployeeCodePrefix' and deleted_at is null) and
+	//     code like (select concat(value, '%') from config_map where [key] = 'EmployeeCodePrefix' and deleted_at is null)
+	GetMaxCode() (string, error)
 }

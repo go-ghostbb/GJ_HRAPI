@@ -17,6 +17,7 @@ import (
 	"hrapi/internal/query"
 	"hrapi/internal/task"
 	"hrapi/internal/utils"
+	"hrapi/internal/utils/identity"
 	"hrapi/internal/utils/response"
 )
 
@@ -53,6 +54,11 @@ func mainFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 
 	// 定時任務
 	task.Init()
+
+	// 併發可用，自動遞增單號或員工編號等......
+	if err = identity.Init(); err != nil {
+		return err
+	}
 
 	// 執行
 	s.Run()

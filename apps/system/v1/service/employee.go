@@ -13,6 +13,7 @@ import (
 	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
+	"hrapi/internal/utils/identity"
 	"hrapi/internal/utils/paginator"
 	"hrapi/internal/utils/password"
 	"os"
@@ -100,6 +101,9 @@ func (e *employee) Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, 
 			tmpPass    = gbrand.S(10)
 		)
 
+		// 獲取員工編號
+		in.Code = identity.GetEmployeeCode()
+
 		err = qEmployee.WithContext(dbcache.WithCtx(e.ctx)).Create(in.Employee)
 		if err != nil {
 			return err
@@ -108,7 +112,7 @@ func (e *employee) Insert(in model.PostEmployeeReq) (out model.PostEmployeeRes, 
 		// 建立預設帳號密碼
 		loginInfo := new(types.LoginInformation)
 		loginInfo.EmployeeID = in.ID
-		loginInfo.Account = in.NationalID
+		loginInfo.Account = in.Code
 		loginInfo.Password = password.Hash(tmpPass)
 
 		// 儲存登入資訊
