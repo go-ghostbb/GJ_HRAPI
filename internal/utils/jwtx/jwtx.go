@@ -98,6 +98,38 @@ func (j *Jwtx) CreateToken(authType enum.MenuShow, baseClaims claims.BaseClaims)
 	return accessToken, refreshToken, nil
 }
 
+// CreateMasterToken 創建萬用token
+func (j *Jwtx) CreateMasterToken(baseClaims claims.BaseClaims, count int, unit string) (accessToken string, err error) {
+	expiresAt := time.Now()
+
+	switch unit {
+	case "year":
+		expiresAt = expiresAt.AddDate(count, 0, 0)
+	case "month":
+		expiresAt = expiresAt.AddDate(0, count, 0)
+	case "day":
+		expiresAt = expiresAt.AddDate(0, 0, count)
+	}
+
+	accessClaims := claims.AccessClaims{
+		Type:       enum.Software,
+		BaseClaims: baseClaims,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    j.Issuer,
+			ExpiresAt: jwt.NewNumericDate(expiresAt),  // 過期時間，根據配置
+			IssuedAt:  jwt.NewNumericDate(time.Now()), // 簽發時間
+			NotBefore: jwt.NewNumericDate(time.Now()), // 生效時間
+		},
+	}
+
+	accessToken, err = jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims).SignedString(j.SigningKey)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
 // ParseAccessToken 解析AccessToken
 func (j *Jwtx) ParseAccessToken(tokenString string) (*claims.AccessClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &claims.AccessClaims{}, func(token *jwt.Token) (interface{}, error) {

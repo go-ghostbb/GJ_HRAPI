@@ -54,3 +54,12 @@ type ChangePasswordReq struct {
 }
 
 type ChangePasswordRes struct{}
+
+type CreateMasterKeyReq struct {
+	Count int    `form:"count" bind:"required"`
+	Unit  string `form:"unit" bind:"required"`
+}
+
+type CreateMasterKeyRes struct {
+	Token string `json:"token"`
+}

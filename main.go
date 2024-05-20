@@ -1,6 +1,8 @@
 package main
 
 import (
+	_ "time/tzdata"
+
 	_ "ghostbb.io/gb/contrib/drivers/mssql"
 	_ "ghostbb.io/gb/contrib/nosql/redis"
 	"hrapi/internal/cmd"

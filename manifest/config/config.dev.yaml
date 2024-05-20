@@ -8,31 +8,34 @@ server:
   write-timeout: "0"
   idle-timeout: "60s"
   max-header-bytes: "10240"
-  access-log-enabled: true
+  access-log-enabled: false
   dump-router-map: false
 
 logger:
   path: "./log/system"
-  level : "all"
+  level : "dev"
   stdout: true
 
 redis:
   default:
-    address: 127.0.0.1:6379
-    db:      1
-  dbcache:
-    address: 127.0.0.1:6379
+    address: "192.168.1.206:6379"
+    pass:    "Gj_52676089"
     db:      0
+  dbcache:
+    address: "192.168.1.206:6379"
+    pass:    "Gj_52676089"
+    db:      1
 
 database:
   logger:
     path: "./log/database"
   default:
-    host: "localhost"
+    host: "192.168.1.206"
     port: "1433"
     user: "sa"
-    pass: "Ab@589095"
-    name: "hrms"
+    pass: "Gj_52676089"
+    name: "HRMS"
+    extra: "encrypt=disable"
     type: "mssql"
     maxIdle: 10
     maxOpen: 100

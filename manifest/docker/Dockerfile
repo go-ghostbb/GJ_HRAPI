@@ -33,5 +33,5 @@ COPY   --from=stage1 /hrapi/bin .
 # expose port
 EXPOSE 9000
 # start server
-ENV GB_CFG_FILE=config.prod.yaml
+ENV GB_CFG_FILE=config.yaml
 ENTRYPOINT ["./hrapi"]

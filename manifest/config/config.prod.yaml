@@ -1,12 +1,16 @@
+domain: "192.168.1.206"
+
 server:
   logger:
     path: "./log/server"
+    level: "prod"
   address: "9000"
   read-timeout: "60s"
   write-timeout: "0"
   idle-timeout: "60s"
   max-header-bytes: "10240"
-  access-log-enabled: true
+  access-log-enabled: false
+  dump-router-map: false
 
 logger:
   path: "./log/system"
@@ -15,32 +19,43 @@ logger:
 
 redis:
   default:
-    address: host.docker.internal:6379
-    db:      1
+    address: "127.0.0.1:6379"
+    pass:    "Gj_52676089"
+    db:      2
   dbcache:
-    address: host.docker.internal:6379
-    db:      0
+    address: "127.0.0.1:6379"
+    pass:    "Gj_52676089"
+    db:      3
 
 database:
   logger:
     path: "./log/database"
+    level: "prod"
   default:
-    host: "host.docker.internal"
+    host: "127.0.0.1"
     port: "1433"
     user: "sa"
-    pass: "Ab@589095"
-    name: "hr"
+    pass: "Gj_52676089"
+    name: "HRMS"
+    extra: "encrypt=disable"
     type: "mssql"
     maxIdle: 10
     maxOpen: 100
-    access-log-enabled: true
+    access-log-enabled: false
     slow-threshold: "2s"
     record-not-found-err: false
 
 viewer:
-  path: ["resource/template"]
+  paths: ["resource/template"]
   leaveSign:
+    paths: ["resource/template/mail"]
     default-file: "leaveSign.html"
+  checkSign:
+    paths: [ "resource/template/mail" ]
+    default-file: "checkInSign.html"
+  overtimeSign:
+    paths: [ "resource/template/mail" ]
+    default-file: "overtimeSign.html"
 
 cors:
   # mode說明
@@ -51,7 +66,7 @@ cors:
   whitelist:
     - allow-origin: example.com
       allow-methods: GET, POST, OPTIONS, PUT, DELETE
-      allow-headers: Content-Type, AccessToken, X-CSRF-Token, Authorization, Locale
+      allow-headers: Content-Type, AccessToken, X-CSRF-Token, Authorization, x-locale
       expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type, Content-Disposition, X-Token
       allow-credentials: true
 

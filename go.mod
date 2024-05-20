@@ -3,10 +3,10 @@ module hrapi
 go 1.22
 
 require (
-	ghostbb.io/gb v1.5.3
-	ghostbb.io/gb/contrib/dbcache v1.5.3
-	ghostbb.io/gb/contrib/drivers/mssql v1.5.3
-	ghostbb.io/gb/contrib/nosql/redis v1.5.3
+	ghostbb.io/gb v1.5.6
+	ghostbb.io/gb/contrib/dbcache v1.5.6
+	ghostbb.io/gb/contrib/drivers/mssql v1.5.6
+	ghostbb.io/gb/contrib/nosql/redis v1.5.6
 	github.com/chromedp/cdproto v0.0.0-20240226204813-532e667d868f
 	github.com/chromedp/chromedp v0.9.5
 	github.com/gin-gonic/gin v1.9.1
@@ -14,12 +14,12 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/xuri/excelize/v2 v2.8.1
-	golang.org/x/crypto v0.21.0
+	golang.org/x/crypto v0.23.0
 	golang.org/x/sync v0.6.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/driver/sqlserver v1.5.3
 	gorm.io/gen v0.3.25
-	gorm.io/gorm v1.25.7
+	gorm.io/gorm v1.25.10
 	gorm.io/plugin/dbresolver v1.5.1
 )
 
@@ -62,7 +62,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/microsoft/go-mssqldb v1.7.0 // indirect
+	github.com/microsoft/go-mssqldb v1.6.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
@@ -76,15 +76,15 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53 // indirect
 	github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 // indirect
-	go.opentelemetry.io/otel v1.24.0 // indirect
-	go.opentelemetry.io/otel/metric v1.24.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
-	go.opentelemetry.io/otel/trace v1.24.0 // indirect
+	go.opentelemetry.io/otel v1.26.0 // indirect
+	go.opentelemetry.io/otel/metric v1.26.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.26.0 // indirect
+	go.opentelemetry.io/otel/trace v1.26.0 // indirect
 	golang.org/x/arch v0.7.0 // indirect
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/tools v0.19.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
@@ -93,3 +93,8 @@ require (
 	gorm.io/driver/mysql v1.5.4 // indirect
 	gorm.io/hints v1.1.2 // indirect
 )
+
+//replace (
+//	ghostbb.io/gb => /Users/ghostbb/GolandProjects/gb
+//	ghostbb.io/gb/contrib/drivers/mssql => /Users/ghostbb/GolandProjects/gb/contrib/drivers/mssql
+//)

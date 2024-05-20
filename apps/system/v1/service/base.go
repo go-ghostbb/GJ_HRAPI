@@ -33,6 +33,7 @@ type (
 		GetPermission(roleCodes []string) (out []string, err error)
 		GetMenu(roleCodes []string, show enum.MenuShow) (out []*model.GetMenuRes, err error)
 		ChangePassword(in model.ChangePasswordReq) (err error)
+		CreateMasterKey(in model.CreateMasterKeyReq) (out model.CreateMasterKeyRes, err error)
 	}
 
 	base struct {
@@ -269,4 +270,17 @@ func (b *base) ChangePassword(in model.ChangePasswordReq) (err error) {
 	}
 
 	return nil
+}
+
+func (b *base) CreateMasterKey(in model.CreateMasterKeyReq) (out model.CreateMasterKeyRes, err error) {
+	out.Token, err = jwtx.Service.CreateMasterToken(claims.BaseClaims{
+		EmployeeID: 1,
+		RealName:   "admin",
+		Account:    "admin",
+	}, in.Count, in.Unit)
+	if err != nil {
+		return model.CreateMasterKeyRes{}, err
+	}
+
+	return
 }

@@ -18,6 +18,7 @@ func (b *BaseApi) Init(v1 *gin.RouterGroup) {
 	v1.GET("migrate", b.migrate)
 	v1.POST("login/:type", b.login)
 	v1.Use(middleware.Auth()).DELETE("logout/:type", b.logout)
+	v1.Use(middleware.Auth()).GET("master/key", b.createMasterKey)
 
 	// me
 	meGroup := v1.Group("me", middleware.Auth())
@@ -200,4 +201,29 @@ func (b *BaseApi) changePassword(c *gin.Context) {
 	}
 
 	Responder(Mount(c)).Ok()
+}
+
+// 創建萬用token
+//
+//	route => GET /api/v1/master/key
+func (b *BaseApi) createMasterKey(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.CreateMasterKeyReq
+		out model.CreateMasterKeyRes
+		err error
+	)
+
+	if err = gbhttp.ParseQuery(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	out, err = service.Base(ctx).CreateMasterKey(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).OkWithData(out)
 }

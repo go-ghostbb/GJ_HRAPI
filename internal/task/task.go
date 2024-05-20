@@ -1,11 +1,10 @@
 package task
 
 import (
-	"context"
 	"ghostbb.io/gb/frame/g"
 	gbcron "ghostbb.io/gb/os/gb_cron"
+	gbctx "ghostbb.io/gb/os/gb_ctx"
 	"hrapi/internal/task/NewCheckIn"
-	"hrapi/internal/task/SyncCheckIn"
 )
 
 func Init() {
@@ -13,20 +12,14 @@ func Init() {
 
 	var (
 		err error
-		ctx context.Context
+		ctx = gbctx.New()
 	)
 
 	// 使用系統logger
 	gbcron.SetLogger(g.Log())
 
 	// 每天將班表加入需打卡表裡
-	_, err = gbcron.Add(ctx, "@daily", NewCheckIn.Start, "new check_in")
-	if err != nil {
-		panic(err)
-	}
-
-	// 每天固定10點同步打卡機資料
-	_, err = gbcron.Add(ctx, "0 0 10 * * *", SyncCheckIn.Start, "sync check_in")
+	_, err = gbcron.Add(ctx, "0 0 1 * * *", NewCheckIn.Start, "new check_in")
 	if err != nil {
 		panic(err)
 	}

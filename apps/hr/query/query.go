@@ -22,5 +22,6 @@ func (q *Query) Init(group *gin.RouterGroup) {
 func v1List() []gbhttp.IBind {
 	return []gbhttp.IBind{
 		&v1.CheckInApi{},
+		&v1.LeaveApi{},
 	}
 }
