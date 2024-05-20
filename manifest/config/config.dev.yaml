@@ -1,4 +1,4 @@
-domain: "127.0.0.1:5180"
+domain: "192.168.1.206"
 
 server:
   logger:
@@ -46,14 +46,11 @@ database:
 viewer:
   paths: ["resource/template"]
   leaveSign:
-    paths: ["resource/template/mail"]
-    default-file: "leaveSign.html"
+    default-file: "leaveSign.mail.html"
   checkSign:
-    paths: [ "resource/template/mail" ]
-    default-file: "checkInSign.html"
+    default-file: "checkInSign.mail.html"
   overtimeSign:
-    paths: [ "resource/template/mail" ]
-    default-file: "overtimeSign.html"
+    default-file: "overtimeSign.mail.html"
 
 cors:
   # mode說明
