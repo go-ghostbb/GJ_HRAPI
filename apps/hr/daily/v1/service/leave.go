@@ -14,6 +14,7 @@ import (
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
+	"github.com/shopspring/decimal"
 	"gorm.io/gen"
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
@@ -24,7 +25,6 @@ import (
 	"hrapi/internal/utils"
 	"hrapi/internal/utils/email"
 	"hrapi/internal/utils/identity"
-	"hrapi/internal/utils/mathx"
 	"hrapi/internal/utils/paginator"
 	"io"
 	"os"
@@ -91,6 +91,7 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 			qForm          = tx.LeaveRequestForm
 			qFlow          = tx.LeaveSignOffFlow
 			qCheckInStatus = tx.CheckInStatus
+			qLeaveCorrect  = tx.LeaveCorrect
 			form           *types.LeaveRequestForm
 			err            error
 		)
@@ -114,7 +115,7 @@ func (l *leave) DeleteLeaveForm(in model.DeleteLeaveFormReq) error {
 		}
 
 		// 更新請假可用表
-		err = l.updateLeaveCorrect(tx, form)
+		_, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(form.ID, false)
 		if err != nil {
 			return err
 		}
@@ -184,6 +185,7 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 			qForm          = tx.LeaveRequestForm
 			qFlow          = tx.LeaveSignOffFlow
 			qCheckInStatus = tx.CheckInStatus
+			qLeaveCorrect  = tx.LeaveCorrect
 			err            error
 		)
 
@@ -221,7 +223,7 @@ func (l *leave) SaveLeaveForm(in model.SaveLeaveFormReq) (out model.SaveLeaveFor
 		}
 
 		// 更新請假可用表
-		err = l.updateLeaveCorrect(tx, leaveForm)
+		_, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(leaveForm.ID, true)
 		if err != nil {
 			return err
 		}
@@ -311,23 +313,42 @@ func (l *leave) countTime(form *types.LeaveRequestForm) (err error) {
 
 	// 班表遍歷+計算
 	var (
-		sec    float32
 		minute float32
 		hour   float32
 		day    float32
 	)
-	hour, err = qWorkSchedule.WithContext(l.ctx).WorkHoursCountMany(form.EmployeeID, form.StartDate.Format(), form.EndDate.Format(), form.StartTime.Format(), form.EndTime.Format())
-	minute = hour * 60
-	sec = minute * 60
-	day = hour / hoursADay
 
-	// 請假少於最低要求
-	if sec != 0 && minute < float32(form.Leave.Minimum) {
-		// 自動補滿
-		minute = float32(form.Leave.Minimum)
-		hour = float32(mathx.Round(float64(minute/60), 2))
-		day = float32(mathx.Round(float64(hour/hoursADay), 2))
+	tmpStart := form.StartDate
+	for tmpStart.Before(form.EndDate.AddDate(0, 0, 1)) {
+		start := tmpStart.DateTime(form.StartTime)
+		end := tmpStart.DateTime(form.EndTime)
+		if form.StartTime.After(form.EndTime) {
+			// 如果開始時間>結束時間，代表過夜
+			end = end.AddDate(0, 0, 1)
+		}
+
+		var tmpHour float32
+		tmpHour, err = qWorkSchedule.WithContext(l.ctx).WorkHourCount(form.EmployeeID, start.Format(), end.Format())
+		if err != nil {
+			return err
+		}
+		hour += tmpHour
+
+		// 判斷最小單位
+		if form.Leave.Minimum != 0 {
+			temp, _ := decimal.NewFromFloat32(hour * 60).
+				Div(decimal.NewFromInt(int64(form.Leave.Minimum))).Ceil().
+				Mul(decimal.NewFromInt(int64(form.Leave.Minimum))).
+				Float64()
+			hour = float32(temp / 60)
+		}
+
+		// step
+		tmpStart = tmpStart.AddDate(0, 0, 1)
 	}
+
+	minute = hour * 60
+	day = hour / hoursADay
 
 	// 請假時數不能為0
 	if hour == 0 {
@@ -407,43 +428,6 @@ func (l *leave) isOverlap(form *types.LeaveRequestForm) (bool, error) {
 	}
 
 	return false, nil
-}
-
-// 更新請假可用表
-func (l *leave) updateLeaveCorrect(tx *query.Query, form *types.LeaveRequestForm) error {
-	var (
-		qLeaveCorrect = tx.LeaveCorrect
-		lcIDs         = make([]uint, 0)
-		err           error
-	)
-
-	// 查詢表單內日期區間對應的所有可用表id
-	lcIDs, err = qLeaveCorrect.WithContext(l.ctx).FindByDateRange(form.EmployeeID, form.LeaveID, form.StartDate.Format(), form.EndDate.Format())
-	if err != nil {
-		return err
-	}
-
-	// 如果有一個id為0
-	// 代表請假有到下一個週期，且人事未結算本週期
-	for _, id := range lcIDs {
-		if id == 0 {
-			return gberror.New("leave_correct id is 0")
-		}
-	}
-
-	// 更新可用表
-	var rowCount int64
-	for _, id := range lcIDs {
-		rowCount, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(id)
-		if err != nil {
-			return err
-		}
-		if rowCount == 0 {
-			return gberror.New("leave_correct update quantity is 0")
-		}
-	}
-
-	return nil
 }
 
 // 創建流程

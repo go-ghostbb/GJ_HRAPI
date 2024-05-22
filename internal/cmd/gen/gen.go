@@ -1,25 +1,13 @@
 package main
 
 import (
-	"fmt"
 	gbstr "ghostbb.io/gb/text/gb_str"
-	"gorm.io/driver/sqlserver"
 	"gorm.io/gen"
-	"gorm.io/gorm"
 	"hrapi/internal/types"
 	"hrapi/internal/types/method"
 )
 
 func main() {
-	const sqlServerDSN = "sqlserver://sa:Ab@589095@localhost:1433?database=hrms&encrypt=disable"
-	var connectDB = func(dsn string) *gorm.DB {
-		db, err := gorm.Open(sqlserver.Open(dsn))
-		if err != nil {
-			panic(fmt.Errorf("connect db fail: %w", err))
-		}
-		return db
-	}
-
 	// 指定生成程式碼的具體相對目錄（相對於當前檔案），默認為：./query
 	// 默認生成需要使用WithContext之後才可以查詢的程式碼，但可以通過設置gen.WithoutContext禁用該模式
 	config := gen.Config{
@@ -52,10 +40,6 @@ func main() {
 	})
 
 	g := gen.NewGenerator(config)
-
-	// 通常複用項目中已有的 SQL 連接配置 db(*gorm.DB)
-	// 非必需，但如果需要複用連接時的 gorm.Config 或需要連接數據庫同步表信息則必須設置
-	g.UseDB(connectDB(sqlServerDSN))
 
 	// 從連接的數據庫為所有表生成 Model 結構體和 CRUD 程式碼
 	// 也可以手動指定需要生成程式碼的數據表

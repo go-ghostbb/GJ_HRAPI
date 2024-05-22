@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"ghostbb.io/gb/contrib/dbcache"
 	"github.com/jinzhu/copier"
 	"gorm.io/gen/field"
 	"hrapi/apps/hr/query/v1/model"
@@ -33,7 +32,7 @@ func (l *leave) GetLeaveCorrect(in model.GetLeaveCorrectReq) (out []*model.GetLe
 		queryRes []*types.LeaveCorrect
 	)
 
-	queryRes, err = qCorrect.WithContext(dbcache.WithCtx(l.ctx)).
+	queryRes, err = qCorrect.WithContext(l.ctx).
 		Where(qCorrect.EmployeeID.Eq(in.EmployeeID)).
 		Where(qCorrect.WithContext(l.ctx).Where(qCorrect.Effective.Like(driver.NewString(in.Year + "%"))).Or(qCorrect.Expired.Like(driver.NewString(in.Year + "%")))).
 		Preload(field.Associations).Find()

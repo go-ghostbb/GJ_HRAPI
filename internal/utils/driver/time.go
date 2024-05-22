@@ -45,3 +45,11 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 func (t Time) Time() time.Time {
 	return time.Unix(int64(t), 0).UTC()
 }
+
+func (t Time) After(u Time) bool {
+	return t.Time().After(u.Time())
+}
+
+func (t Time) Before(u Time) bool {
+	return t.Time().Before(u.Time())
+}

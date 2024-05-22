@@ -566,17 +566,30 @@ type ILeaveCorrectDo interface {
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
 
-	UpdateCount(id uint) (rowsAffected int64, err error)
+	UpdateCount(leaveRequestFormID uint, signing bool) (rowsAffected int64, err error)
 	FindByDateRange(empID uint, leaveID uint, start string, end string) (result []uint, err error)
 }
 
-// exec P_C_LeaveCorrectUpdateCount @id
-func (l leaveCorrectDo) UpdateCount(id uint) (rowsAffected int64, err error) {
+// {{if signing}}
+//
+//	exec P_C_LeaveCorrectUpdateByFormSigning @leaveRequestFormID
+//
+// {{else}}
+//
+//	exec P_C_LeaveCorrectUpdateByFormApproveOrReject @leaveRequestFormID
+//
+// {{end}}
+func (l leaveCorrectDo) UpdateCount(leaveRequestFormID uint, signing bool) (rowsAffected int64, err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
-	params = append(params, id)
-	generateSQL.WriteString("exec P_C_LeaveCorrectUpdateCount ? ")
+	if signing {
+		params = append(params, leaveRequestFormID)
+		generateSQL.WriteString("exec P_C_LeaveCorrectUpdateByFormSigning ? ")
+	} else {
+		params = append(params, leaveRequestFormID)
+		generateSQL.WriteString("exec P_C_LeaveCorrectUpdateByFormApproveOrReject ? ")
+	}
 
 	var executeSQL *gorm.DB
 	executeSQL = l.UnderlyingDB().Exec(generateSQL.String(), params...) // ignore_security_alert

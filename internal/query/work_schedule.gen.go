@@ -491,9 +491,10 @@ type IWorkScheduleDo interface {
 	schema.Tabler
 
 	WorkHoursCountMany(empID uint, startDate string, endDate string, startTime string, endTime string) (result float32, err error)
+	WorkHourCount(empID uint, start string, end string) (result float32, err error)
 }
 
-// select dbo.FN_C_WorkHoursCountMany(@empID, @startDate, @endDate, @startTime, @endTime);
+// select dbo.FN_C_WorkHoursCountMany(@empID, @startDate, @endDate, @startTime, @endTime)
 func (w workScheduleDo) WorkHoursCountMany(empID uint, startDate string, endDate string, startTime string, endTime string) (result float32, err error) {
 	var params []interface{}
 
@@ -503,7 +504,24 @@ func (w workScheduleDo) WorkHoursCountMany(empID uint, startDate string, endDate
 	params = append(params, endDate)
 	params = append(params, startTime)
 	params = append(params, endTime)
-	generateSQL.WriteString("select dbo.FN_C_WorkHoursCountMany(?, ?, ?, ?, ?); ")
+	generateSQL.WriteString("select dbo.FN_C_WorkHoursCountMany(?, ?, ?, ?, ?) ")
+
+	var executeSQL *gorm.DB
+	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert
+	err = executeSQL.Error
+
+	return
+}
+
+// select dbo.FN_C_WorkHoursCount(@empID, @start, @end)
+func (w workScheduleDo) WorkHourCount(empID uint, start string, end string) (result float32, err error) {
+	var params []interface{}
+
+	var generateSQL strings.Builder
+	params = append(params, empID)
+	params = append(params, start)
+	params = append(params, end)
+	generateSQL.WriteString("select dbo.FN_C_WorkHoursCount(?, ?, ?) ")
 
 	var executeSQL *gorm.DB
 	executeSQL = w.UnderlyingDB().Raw(generateSQL.String(), params...).Take(&result) // ignore_security_alert

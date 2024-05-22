@@ -45,9 +45,20 @@ begin
                     dbo.FN_C_WorkHoursCount(b.employee_id, a.start, a.[end]) as hours_count
              from step1 as a
              join leave_request_form as b on (a.id = b.id)
+         ),
+         step3 as (
+             select a.id,
+                    a.leave_id,
+                    a.sign_status,
+                    a.employee_id,
+                    a.start,
+                    a.[end],
+                    iif(b.minimum = 0, a.hours_count, ceiling(a.hours_count * 60 / b.minimum) * b.minimum) / 60 as hours_count
+             from step2 as a
+             join leave as b on (a.leave_id = b.id)
          )
     insert into @result (id, leave_id, sign_status, employee_id, start, [end], leave_hours_count)
-    select * from step2 where start <= @end and @start <= [end];
+    select * from step3 where start <= @end and @start <= [end];
 
     return;
 end

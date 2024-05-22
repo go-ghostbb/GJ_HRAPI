@@ -49,9 +49,9 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (d Date) DateTime(t Time) time.Time {
+func (d Date) DateTime(t Time) Datetime {
 	result, _ := time.Parse(time.DateTime, d.Format()+" "+t.Format())
-	return result
+	return NewDateTime(result)
 }
 
 func (d Date) Time() time.Time {

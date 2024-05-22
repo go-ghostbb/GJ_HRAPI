@@ -4,10 +4,17 @@ import (
 	"database/sql/driver"
 	"fmt"
 	gbstr "ghostbb.io/gb/text/gb_str"
+	gbconv "ghostbb.io/gb/util/gb_conv"
 	"time"
 )
 
 type Datetime int64
+
+func NewDateTime[T string | time.Time](n T) Datetime {
+	t := gbconv.Time(n)
+	t, _ = time.Parse(time.DateTime, t.Format(time.DateTime))
+	return Datetime(t.Unix())
+}
 
 func (d *Datetime) Scan(value interface{}) error {
 	if value == nil {
@@ -60,6 +67,6 @@ func (d Datetime) After(u Date) bool {
 	return d.Time().After(u.Time())
 }
 
-func (d Datetime) AddDate(years int, months int, days int) Date {
-	return Date(d.Time().AddDate(years, months, days).Unix())
+func (d Datetime) AddDate(years int, months int, days int) Datetime {
+	return Datetime(d.Time().AddDate(years, months, days).Unix())
 }

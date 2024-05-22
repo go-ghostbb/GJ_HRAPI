@@ -128,6 +128,7 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 			qFlow          = tx.LeaveSignOffFlow
 			qForm          = tx.LeaveRequestForm
 			qCheckInStatus = tx.CheckInStatus
+			qLeaveCorrect  = tx.LeaveCorrect
 
 			err error
 		)
@@ -147,7 +148,7 @@ func (l *leave) Reject(in model.LeaveRejectReq) error {
 		}
 
 		// 更新遞延表或可用請假表
-		err = l.updateLeaveCorrect(tx, form)
+		_, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(form.ID, false)
 		if err != nil {
 			return err
 		}
@@ -283,6 +284,7 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 		var (
 			qForm          = tx.LeaveRequestForm
 			qCheckInStatus = tx.CheckInStatus
+			qLeaveCorrect  = tx.LeaveCorrect
 			err            error
 		)
 
@@ -293,7 +295,7 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 		}
 
 		// 如果不是從遞延表裡面使用的話
-		err = l.updateLeaveCorrect(tx, form)
+		_, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(form.ID, false)
 		if err != nil {
 			return err
 		}
@@ -315,43 +317,6 @@ func (l *leave) handleSignDone(form *types.LeaveRequestForm) error {
 		// 啟用讀取未提交
 		Isolation: sql.LevelReadCommitted,
 	})
-}
-
-// 更新請假可用表
-func (l *leave) updateLeaveCorrect(tx *query.Query, form *types.LeaveRequestForm) error {
-	var (
-		qLeaveCorrect = tx.LeaveCorrect
-		lcIDs         = make([]uint, 0)
-		err           error
-	)
-
-	// 查詢表單內日期區間對應的所有可用表id
-	lcIDs, err = qLeaveCorrect.WithContext(l.ctx).FindByDateRange(form.EmployeeID, form.LeaveID, form.StartDate.Format(), form.EndDate.Format())
-	if err != nil {
-		return err
-	}
-
-	// 如果有一個id為0
-	// 代表請假有到下一個週期，且人事未結算本週期
-	for _, id := range lcIDs {
-		if id == 0 {
-			return gberror.New("leave_correct id is 0")
-		}
-	}
-
-	// 更新可用表
-	var rowCount int64
-	for _, id := range lcIDs {
-		rowCount, err = qLeaveCorrect.WithContext(l.ctx).UpdateCount(id)
-		if err != nil {
-			return err
-		}
-		if rowCount == 0 {
-			return gberror.New("leave_correct update quantity is 0")
-		}
-	}
-
-	return nil
 }
 
 // 寄信通知
