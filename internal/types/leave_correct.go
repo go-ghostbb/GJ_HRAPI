@@ -1,8 +1,10 @@
 package types
 
 import (
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	"hrapi/internal/utils/driver"
+	"math"
 )
 
 type LeaveCorrect struct {
@@ -21,4 +23,24 @@ type LeaveCorrect struct {
 
 func (LeaveCorrect) TableName() string {
 	return "leave_correct"
+}
+
+// RoundA 取到整數
+// Available = 0.5    => 保留
+// Available > 0.5    => 進位
+// Available < 0.5    => 捨去
+func (l *LeaveCorrect) RoundA() {
+	// 提取整數
+	intPart := math.Floor(l.Available)
+	// 提取小數，使用十進制去做運算，避免二進制進行小數點加減法產生的誤差
+	decimalPart, _ := decimal.NewFromFloat(l.Available).Sub(decimal.NewFromFloat(intPart)).Float64()
+
+	switch {
+	case decimalPart > 0.5:
+		l.Available = intPart + 1
+	case decimalPart < 0.5:
+		l.Available = intPart
+	case decimalPart == 0.5:
+		l.Available = intPart + l.Available
+	}
 }

@@ -358,34 +358,41 @@ func (l *leave) ResetEmployeeAvailable(in model.ResetEmployeeAvailableReq) error
 		)
 
 		for _, employee := range employees {
-			var correct *types.LeaveCorrect
+			var correct []*types.LeaveCorrect
+			var temp *types.LeaveCorrect
 			switch leave.Cycle {
 			case enum.Annual:
-				correct, err = l.annual(employee, leave, in.Year)
+				temp, err = l.annual(employee, leave, in.Year)
+				correct = append(correct, temp)
 			case enum.Calendar:
-				correct, err = l.calendar(employee, leave, in.Year)
+				temp, err = l.calendar(employee, leave, in.Year)
+				correct = append(correct, temp)
+			case enum.CalendarTwice:
+				correct, err = l.calendarTwice(employee, leave, in.Year)
 			case enum.Default:
-				correct = &types.LeaveCorrect{
+				correct = append(correct, &types.LeaveCorrect{
 					Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", in.Year)),
 					Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", in.Year)),
 					EmployeeID: employee.ID,
 					LeaveID:    in.LeaveID,
 					Available:  float64(leave.Default),
-				}
+				})
 			}
 			if err != nil {
 				return err
 			}
 
 			// 刪除原有資料
-			_, err = qCorrect.WithContext(dbcache.WithCtx(l.ctx)).
-				Where(qCorrect.EmployeeID.Eq(employee.ID), qCorrect.LeaveID.Eq(in.LeaveID), qCorrect.Effective.Eq(correct.Effective), qCorrect.Expired.Eq(correct.Expired)).
-				Unscoped().Delete()
-			if err != nil {
-				return err
+			for _, c := range correct {
+				_, err = qCorrect.WithContext(dbcache.WithCtx(l.ctx)).
+					Where(qCorrect.EmployeeID.Eq(employee.ID), qCorrect.LeaveID.Eq(in.LeaveID), qCorrect.Effective.Eq(c.Effective), qCorrect.Expired.Eq(c.Expired)).
+					Unscoped().Delete()
+				if err != nil {
+					return err
+				}
 			}
 
-			corrects = append(corrects, correct)
+			corrects = append(corrects, correct...)
 		}
 
 		// 建立
@@ -580,10 +587,10 @@ func (l *leave) calendar(employee *types.Employee, leave *types.Leave, year int)
 			}
 
 			if conditions[currCondIndex-1].ConditionType == enum.ConditionYear {
-				conditionNum *= 12
+				lastConditionNum *= 12
 			}
 
-			if float64(months) >= conditionNum {
+			if float64(months) >= lastConditionNum {
 				if len(conditions) == 1 {
 					// 滿一年，加上去年有滿足第一個條件，但是條件只有一個的情況下，直接帶入可用天數
 					result.Available = availableDay
@@ -606,6 +613,207 @@ func (l *leave) calendar(employee *types.Employee, leave *types.Leave, year int)
 			}
 			result.Available = dayMonthPercent*lastAvailableDay + (availableDay - dayMonthPercent*availableDay)
 		}
+	}
+
+	return result, nil
+}
+
+// 曆年制計算(拆兩次給假)
+func (l *leave) calendarTwice(employee *types.Employee, leave *types.Leave, year int) ([]*types.LeaveCorrect, error) {
+	var (
+		result        = make([]*types.LeaveCorrect, 0)
+		years, months int
+		conditions    []*types.LeaveGroupCondition
+		currDate      = time.Date(year, 12, 31, 0, 0, 0, 0, time.UTC)
+		currCondIndex = -1 // 套用的條件index
+	)
+
+	// 計算年資
+	years, months, _ = utils.CalcSeniority(employee.HireDate.Time(), currDate)
+
+	// 搜尋套用到哪個群組
+	for _, g := range leave.LeaveGroup {
+		var exist = false
+		for _, e := range g.Employee {
+			if e.ID == employee.ID {
+				exist = true
+				break
+			}
+		}
+
+		if exist {
+			conditions = g.LeaveGroupCondition
+			break
+		}
+	}
+
+	// 判斷條件
+	for index, cond := range conditions {
+		var isChange = false
+
+		switch cond.ConditionType {
+		case enum.ConditionMonth:
+			// 年資滿<#>個月
+			if uint(years*12+months) >= cond.ConditionNum {
+				currCondIndex = index
+				isChange = true
+			}
+		case enum.ConditionYear:
+			// 年資滿<#>年
+			if uint(years) >= cond.ConditionNum {
+				currCondIndex = index
+				isChange = true
+			}
+		}
+
+		if !isChange {
+			// 如果沒達成條件 直接退出
+			break
+		}
+	}
+
+	if currCondIndex == -1 || conditions == nil {
+		// 如果連一關都沒有達成或是找不到群組，直接帶入預設天數
+		result = append(result, &types.LeaveCorrect{
+			LeaveID:    leave.ID,
+			EmployeeID: employee.ID,
+			Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", year)),
+			Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+			Available:  float64(leave.Default),
+		})
+		return result, nil
+	}
+
+	var (
+		availableDay    = float64(conditions[currCondIndex].Result)
+		hireMonth       = float64(employee.HireDate.Month() - 1)
+		hireDay         = float64(employee.HireDate.Day() - 1)
+		daysByMonth     = utils.GetDay(employee.HireDate.Year(), employee.HireDate.Month())
+		conditionNum    = float64(conditions[currCondIndex].ConditionNum)
+		dayMonthPercent = (hireMonth + hireDay/daysByMonth) / 12
+	)
+
+	if years == 0 {
+		// 無論如何，到今天未滿第一個條件，直接回傳0
+		if _, m, _ := utils.CalcSeniority(employee.HireDate.Time(), currDate); float64(m) < conditionNum {
+			result = append(result, &types.LeaveCorrect{
+				LeaveID:    leave.ID,
+				EmployeeID: employee.ID,
+				Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", year)),
+				Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+				Available:  0,
+			})
+		} else {
+			// 未滿一年
+			var effDay = driver.NewDate(fmt.Sprintf("%d-%d-%d", year, employee.HireDate.Month(), employee.HireDate.Day()))
+			result = append(result, &types.LeaveCorrect{
+				LeaveID:    leave.ID,
+				EmployeeID: employee.ID,
+				Effective:  effDay.AddDate(0, int(conditions[currCondIndex].ConditionNum), 0),
+				Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+				Available:  availableDay - (hireMonth+hireDay/daysByMonth)/conditionNum*availableDay,
+			})
+		}
+	} else if years > 0 {
+		var (
+			lastAvailableDay float64
+			lastConditionNum float64
+		)
+
+		if years == 1 {
+			if len(conditions) > 1 {
+				lastAvailableDay = float64(conditions[currCondIndex-1].Result)
+				lastConditionNum = float64(conditions[currCondIndex-1].ConditionNum)
+			} else {
+				lastAvailableDay = float64(leave.Default)
+			}
+
+			if conditions[currCondIndex-1].ConditionType == enum.ConditionYear {
+				lastConditionNum *= 12
+			}
+
+			if float64(months) >= lastConditionNum {
+				if len(conditions) == 1 {
+					// 滿一年，加上去年有滿足第一個條件，但是條件只有一個的情況下，直接帶入可用天數
+					result = append(result, &types.LeaveCorrect{
+						LeaveID:    leave.ID,
+						EmployeeID: employee.ID,
+						Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", year)),
+						Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+						Available:  availableDay,
+					})
+				} else {
+					// 滿一年，加上去年有滿足第一個條件
+					// 拆兩次給予
+					// 1/1 ~ 12/31
+					result = append(result, &types.LeaveCorrect{
+						LeaveID:    leave.ID,
+						EmployeeID: employee.ID,
+						Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", year)),
+						Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+						Available:  (hireMonth + hireDay/daysByMonth) / lastConditionNum * lastAvailableDay,
+					})
+					// hireDate ~ 12/31
+					result = append(result, &types.LeaveCorrect{
+						LeaveID:    leave.ID,
+						EmployeeID: employee.ID,
+						Effective:  driver.NewDate(fmt.Sprintf("%d-%d-%d", year, employee.HireDate.Month(), employee.HireDate.Day())),
+						Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+						Available:  availableDay - dayMonthPercent*availableDay,
+					})
+				}
+			} else {
+				// 滿一年，但去年沒有滿足第一個條件
+				// 拆兩次給予
+				// 滿足條件的當天 ~ 12/31
+				result = append(result, &types.LeaveCorrect{
+					LeaveID:    leave.ID,
+					EmployeeID: employee.ID,
+					Effective:  employee.HireDate.AddDate(0, int(lastConditionNum), 0),
+					Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+					Available:  lastAvailableDay,
+				})
+				// hireDate ~ 12/31
+				result = append(result, &types.LeaveCorrect{
+					LeaveID:    leave.ID,
+					EmployeeID: employee.ID,
+					Effective:  driver.NewDate(fmt.Sprintf("%d-%d-%d", year, employee.HireDate.Month(), employee.HireDate.Day())),
+					Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+					Available:  availableDay - dayMonthPercent*availableDay,
+				})
+			}
+		} else {
+			// 超過一年
+			if years-1 >= int(conditions[currCondIndex].ConditionNum) {
+				// 如果前一年也符合條件
+				// 前一年的套用天數會等於今天套用天數
+				lastAvailableDay = availableDay
+			} else {
+				lastAvailableDay = float64(conditions[currCondIndex-1].Result)
+			}
+			// 拆兩次給予
+			// 1/1 ~ 12/31
+			result = append(result, &types.LeaveCorrect{
+				LeaveID:    leave.ID,
+				EmployeeID: employee.ID,
+				Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", year)),
+				Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+				Available:  dayMonthPercent * lastAvailableDay,
+			})
+			// hireDate ~ 12/31
+			result = append(result, &types.LeaveCorrect{
+				LeaveID:    leave.ID,
+				EmployeeID: employee.ID,
+				Effective:  driver.NewDate(fmt.Sprintf("%d-%d-%d", year, employee.HireDate.Month(), employee.HireDate.Day())),
+				Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", year)),
+				Available:  availableDay - dayMonthPercent*availableDay,
+			})
+		}
+	}
+
+	// 四捨五入
+	for _, r := range result {
+		r.RoundA()
 	}
 
 	return result, nil

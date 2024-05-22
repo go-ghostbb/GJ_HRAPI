@@ -5,9 +5,10 @@ import "database/sql/driver"
 type LeaveCycle string
 
 const (
-	Default  LeaveCycle = "year"
-	Annual   LeaveCycle = "annual"
-	Calendar LeaveCycle = "calendar"
+	Default       LeaveCycle = "year"
+	Annual        LeaveCycle = "annual"
+	Calendar      LeaveCycle = "calendar"
+	CalendarTwice LeaveCycle = "calendar_twice"
 )
 
 func (l *LeaveCycle) Scan(value interface{}) error {
