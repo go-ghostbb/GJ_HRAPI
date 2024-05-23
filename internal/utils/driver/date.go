@@ -81,3 +81,7 @@ func (d Date) Month() int {
 func (d Date) Day() int {
 	return d.Time().Day()
 }
+
+func (d Date) Weekday() time.Weekday {
+	return d.Time().Weekday()
+}

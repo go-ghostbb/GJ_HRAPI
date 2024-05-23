@@ -69,3 +69,16 @@ type PutBatchWorkScheduleRes struct{}
 type DeleteWorkScheduleReq struct {
 	ID uint `form:"id" binding:"required"`
 }
+
+type QuickSettingWorkScheduleReq struct {
+	Monday         []uint   `json:"mon"`
+	Tuesday        []uint   `json:"tue"`
+	Wednesday      []uint   `json:"wed"`
+	Thursday       []uint   `json:"thu"`
+	Friday         []uint   `json:"fri"`
+	Saturday       []uint   `json:"sat"`
+	Sunday         []uint   `json:"sun"`
+	DateRange      []string `json:"dateRange" binding:"required"`
+	EmployeeID     []uint   `json:"employeeId" binding:"required"`
+	IgnoreVacation bool     `json:"ignoreVacation"`
+}

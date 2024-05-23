@@ -15,6 +15,7 @@ import (
 	"hrapi/internal/utils/mathx"
 	"hrapi/internal/utils/paginator"
 	"math"
+	"time"
 )
 
 func WorkShift(ctx context.Context, page ...*paginator.Pagination) IWorkShift {
@@ -44,6 +45,8 @@ type (
 		UpdateWorkScheduleBatch(in model.PutBatchWorkScheduleReq) error
 		// DeleteWorkSchedule 刪除班表
 		DeleteWorkSchedule(in model.DeleteWorkScheduleReq) error
+		// QuickSettingWorkSchedule 快速設定班表
+		QuickSettingWorkSchedule(in model.QuickSettingWorkScheduleReq) (err error)
 	}
 
 	workShift struct {
@@ -231,4 +234,109 @@ func (w *workShift) UpdateWorkScheduleBatch(in model.PutBatchWorkScheduleReq) er
 func (w *workShift) DeleteWorkSchedule(in model.DeleteWorkScheduleReq) error {
 	_, err := query.WorkSchedule.WithContext(dbcache.WithCtx(w.ctx)).Where(query.WorkSchedule.ID.Eq(in.ID)).Delete()
 	return err
+}
+
+// QuickSettingWorkSchedule 快速設定班表
+func (w *workShift) QuickSettingWorkSchedule(in model.QuickSettingWorkScheduleReq) (err error) {
+	var (
+		qVacationSchedule = query.VacationSchedule
+		vacationSchedule  []*types.VacationSchedule
+		workSchedule      = make([]*types.WorkSchedule, 0)
+		vacationMap       = make(map[string]struct{})
+	)
+
+	// 查詢schedule
+	vacationSchedule, err = qVacationSchedule.WithContext(dbcache.WithCtx(w.ctx)).
+		Where(qVacationSchedule.ScheduleDate.Gte(driver.NewDate(in.DateRange[0])), qVacationSchedule.ScheduleDate.Lte(driver.NewDate(in.DateRange[1]))).
+		Find()
+	if err != nil {
+		return err
+	}
+
+	// 建立map對照表
+	for _, v := range vacationSchedule {
+		vacationMap[v.ScheduleDate.Format()] = struct{}{}
+	}
+
+	var (
+		start = driver.NewDate(in.DateRange[0])
+		end   = driver.NewDate(in.DateRange[1])
+	)
+
+	for start.Before(end.AddDate(0, 0, 1)) {
+		if in.IgnoreVacation {
+			if _, ok := vacationMap[start.Format()]; ok {
+				// 如果忽略休假日且此天為休假日的話
+				// step
+				start = start.AddDate(0, 0, 1)
+				continue
+			}
+		}
+
+		for _, e := range in.EmployeeID {
+			var tempWork []uint
+
+			switch start.Weekday() {
+			case time.Monday:
+				tempWork = in.Monday
+			case time.Tuesday:
+				tempWork = in.Tuesday
+			case time.Wednesday:
+				tempWork = in.Wednesday
+			case time.Thursday:
+				tempWork = in.Thursday
+			case time.Friday:
+				tempWork = in.Friday
+			case time.Saturday:
+				tempWork = in.Saturday
+			case time.Sunday:
+				tempWork = in.Sunday
+			default:
+				panic("unhandled default case")
+			}
+
+			for _, w := range tempWork {
+				workSchedule = append(workSchedule, &types.WorkSchedule{
+					ScheduleDate: start,
+					EmployeeID:   e,
+					WorkShiftID:  w,
+				})
+			}
+		}
+
+		// step
+		start = start.AddDate(0, 0, 1)
+	}
+
+	//開啟事務
+	err = query.Q.Transaction(func(tx *query.Query) error {
+		var (
+			qWorkSchedule = tx.WorkSchedule
+			err           error
+		)
+		// 刪除原有資料
+		_, err = qWorkSchedule.WithContext(dbcache.WithCtx(w.ctx)).
+			Where(
+				qWorkSchedule.EmployeeID.In(in.EmployeeID...),
+				qWorkSchedule.ScheduleDate.Gte(driver.NewDate(in.DateRange[0])),
+				qWorkSchedule.ScheduleDate.Lte(driver.NewDate(in.DateRange[1])),
+			).
+			Delete()
+		if err != nil {
+			return err
+		}
+		// 建立新資料
+		err = qWorkSchedule.WithContext(dbcache.WithCtx(w.ctx)).CreateInBatches(workSchedule, 100)
+		if err != nil {
+			return err
+		}
+
+		// commit
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

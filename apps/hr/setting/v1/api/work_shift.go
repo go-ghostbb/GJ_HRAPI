@@ -28,6 +28,7 @@ func (w *WorkShiftApi) Init(group *gin.RouterGroup) {
 	v1.GET("schedule", w.getScheduleByDate)
 	v1.PUT("schedule/:employeeID/batch", w.updateWorkScheduleBatch)
 	v1.DELETE("schedule/:id", w.deleteWorkSchedule)
+	v1.PUT("schedule/quick", w.quickSettingWorkSchedule)
 }
 
 // 根據keyword, status獲取對應班別
@@ -232,6 +233,30 @@ func (w *WorkShiftApi) deleteWorkSchedule(c *gin.Context) {
 	in.ID = gbconv.Uint(c.Param("id"))
 
 	err = service.WorkShift(ctx).DeleteWorkSchedule(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
+}
+
+// 快速設定班表
+//
+//	route => PUT /api/v1/workShift/schedule/quick
+func (w *WorkShiftApi) quickSettingWorkSchedule(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.QuickSettingWorkScheduleReq
+		err error
+	)
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.WorkShift(ctx).QuickSettingWorkSchedule(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
