@@ -39,7 +39,7 @@ begin
 
     -- 新增至打卡資料表
     insert into check_in_data (created_at, updated_at, deleted_at, employee_id, datetime, type)
-    values (getdate(), getdate(), null, (select id from employee where card_number = @card_number and deleted_at is null), @datetime, @type);
+    values (sysdatetimeoffset(), sysdatetimeoffset(), null, (select id from employee where card_number = @card_number and deleted_at is null), @datetime, @type);
     
     declare @date date = convert(date, @datetime);
     declare @start_date date = dateadd(day, -1, @date);

@@ -329,7 +329,7 @@ func (l *leave) ResetEmployeeAvailable(in model.ResetEmployeeAvailableReq) error
 		qEmployee = query.Employee
 		qLeave    = query.Leave
 		employees []*types.Employee
-		leave     *types.Leave
+		leaves    []*types.Leave
 		err       error
 	)
 
@@ -340,11 +340,11 @@ func (l *leave) ResetEmployeeAvailable(in model.ResetEmployeeAvailableReq) error
 	}
 
 	// leave query
-	leave, err = qLeave.WithContext(dbcache.WithCtx(l.ctx)).
+	leaves, err = qLeave.WithContext(dbcache.WithCtx(l.ctx)).
 		Preload(qLeave.LeaveGroup).
 		Preload(qLeave.LeaveGroup.Employee).
 		Preload(qLeave.LeaveGroup.LeaveGroupCondition).
-		Where(qLeave.ID.Eq(in.LeaveID)).First()
+		Where(qLeave.ID.In(in.LeaveID...)).Find()
 	if err != nil {
 		return err
 	}
@@ -357,42 +357,44 @@ func (l *leave) ResetEmployeeAvailable(in model.ResetEmployeeAvailableReq) error
 			err      error
 		)
 
-		for _, employee := range employees {
-			var correct []*types.LeaveCorrect
-			var temp *types.LeaveCorrect
-			switch leave.Cycle {
-			case enum.Annual:
-				temp, err = l.annual(employee, leave, in.Year)
-				correct = append(correct, temp)
-			case enum.Calendar:
-				temp, err = l.calendar(employee, leave, in.Year)
-				correct = append(correct, temp)
-			case enum.CalendarTwice:
-				correct, err = l.calendarTwice(employee, leave, in.Year)
-			case enum.Default:
-				correct = append(correct, &types.LeaveCorrect{
-					Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", in.Year)),
-					Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", in.Year)),
-					EmployeeID: employee.ID,
-					LeaveID:    in.LeaveID,
-					Available:  float64(leave.Default),
-				})
-			}
-			if err != nil {
-				return err
-			}
-
-			// 刪除原有資料
-			for _, c := range correct {
-				_, err = qCorrect.WithContext(dbcache.WithCtx(l.ctx)).
-					Where(qCorrect.EmployeeID.Eq(employee.ID), qCorrect.LeaveID.Eq(in.LeaveID), qCorrect.Effective.Eq(c.Effective), qCorrect.Expired.Eq(c.Expired)).
-					Unscoped().Delete()
+		for _, leave := range leaves {
+			for _, employee := range employees {
+				var correct []*types.LeaveCorrect
+				var temp *types.LeaveCorrect
+				switch leave.Cycle {
+				case enum.Annual:
+					temp, err = l.annual(employee, leave, in.Year)
+					correct = append(correct, temp)
+				case enum.Calendar:
+					temp, err = l.calendar(employee, leave, in.Year)
+					correct = append(correct, temp)
+				case enum.CalendarTwice:
+					correct, err = l.calendarTwice(employee, leave, in.Year)
+				case enum.Default:
+					correct = append(correct, &types.LeaveCorrect{
+						Effective:  driver.NewDate(fmt.Sprintf("%d-01-01", in.Year)),
+						Expired:    driver.NewDate(fmt.Sprintf("%d-12-31", in.Year)),
+						EmployeeID: employee.ID,
+						LeaveID:    leave.ID,
+						Available:  float64(leave.Default),
+					})
+				}
 				if err != nil {
 					return err
 				}
-			}
 
-			corrects = append(corrects, correct...)
+				// 刪除原有資料
+				for _, c := range correct {
+					_, err = qCorrect.WithContext(dbcache.WithCtx(l.ctx)).
+						Where(qCorrect.EmployeeID.Eq(employee.ID), qCorrect.LeaveID.Eq(leave.ID), qCorrect.Effective.Eq(c.Effective), qCorrect.Expired.Eq(c.Expired)).
+						Unscoped().Delete()
+					if err != nil {
+						return err
+					}
+				}
+
+				corrects = append(corrects, correct...)
+			}
 		}
 
 		// 建立
