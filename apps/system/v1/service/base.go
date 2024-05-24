@@ -9,6 +9,7 @@ import (
 	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"hrapi/apps/system/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
@@ -27,6 +28,7 @@ func Base(ctx context.Context) IBase {
 type (
 	IBase interface {
 		Migrate() error
+		MigrateSpec(tableName string) error
 		Login(loginType enum.MenuShow, in model.LoginReq) (out model.LoginRes, err error)
 		Logout(logoutType enum.MenuShow, employeeID uint, accessToken string) error
 		GetEmployeeInfo(employeeID uint) (out model.GetEmployeeInfoRes, err error)
@@ -55,6 +57,15 @@ func (b *base) Migrate() error {
 		return err
 	}
 	return nil
+}
+
+func (b *base) MigrateSpec(tableName string) error {
+	for _, t := range types.Basic() {
+		if v, ok := t.(schema.Tabler); ok && v.TableName() == tableName {
+			return g.DB().AutoMigrate(v)
+		}
+	}
+	return gberror.Newf("table %s not found", tableName)
 }
 
 func (b *base) Login(loginType enum.MenuShow, in model.LoginReq) (out model.LoginRes, err error) {

@@ -21,6 +21,7 @@ var (
 	CalcSalaryAdd             *calcSalaryAdd
 	CalcSalaryEmployee        *calcSalaryEmployee
 	CalcSalaryReduce          *calcSalaryReduce
+	CheckInData               *checkInData
 	CheckInRequestForm        *checkInRequestForm
 	CheckInRequestFormDetail  *checkInRequestFormDetail
 	CheckInSignOffFlow        *checkInSignOffFlow
@@ -70,6 +71,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	CalcSalaryAdd = &Q.CalcSalaryAdd
 	CalcSalaryEmployee = &Q.CalcSalaryEmployee
 	CalcSalaryReduce = &Q.CalcSalaryReduce
+	CheckInData = &Q.CheckInData
 	CheckInRequestForm = &Q.CheckInRequestForm
 	CheckInRequestFormDetail = &Q.CheckInRequestFormDetail
 	CheckInSignOffFlow = &Q.CheckInSignOffFlow
@@ -120,6 +122,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		CalcSalaryAdd:             newCalcSalaryAdd(db, opts...),
 		CalcSalaryEmployee:        newCalcSalaryEmployee(db, opts...),
 		CalcSalaryReduce:          newCalcSalaryReduce(db, opts...),
+		CheckInData:               newCheckInData(db, opts...),
 		CheckInRequestForm:        newCheckInRequestForm(db, opts...),
 		CheckInRequestFormDetail:  newCheckInRequestFormDetail(db, opts...),
 		CheckInSignOffFlow:        newCheckInSignOffFlow(db, opts...),
@@ -171,6 +174,7 @@ type Query struct {
 	CalcSalaryAdd             calcSalaryAdd
 	CalcSalaryEmployee        calcSalaryEmployee
 	CalcSalaryReduce          calcSalaryReduce
+	CheckInData               checkInData
 	CheckInRequestForm        checkInRequestForm
 	CheckInRequestFormDetail  checkInRequestFormDetail
 	CheckInSignOffFlow        checkInSignOffFlow
@@ -223,6 +227,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		CalcSalaryAdd:             q.CalcSalaryAdd.clone(db),
 		CalcSalaryEmployee:        q.CalcSalaryEmployee.clone(db),
 		CalcSalaryReduce:          q.CalcSalaryReduce.clone(db),
+		CheckInData:               q.CheckInData.clone(db),
 		CheckInRequestForm:        q.CheckInRequestForm.clone(db),
 		CheckInRequestFormDetail:  q.CheckInRequestFormDetail.clone(db),
 		CheckInSignOffFlow:        q.CheckInSignOffFlow.clone(db),
@@ -282,6 +287,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		CalcSalaryAdd:             q.CalcSalaryAdd.replaceDB(db),
 		CalcSalaryEmployee:        q.CalcSalaryEmployee.replaceDB(db),
 		CalcSalaryReduce:          q.CalcSalaryReduce.replaceDB(db),
+		CheckInData:               q.CheckInData.replaceDB(db),
 		CheckInRequestForm:        q.CheckInRequestForm.replaceDB(db),
 		CheckInRequestFormDetail:  q.CheckInRequestFormDetail.replaceDB(db),
 		CheckInSignOffFlow:        q.CheckInSignOffFlow.replaceDB(db),
@@ -331,6 +337,7 @@ type queryCtx struct {
 	CalcSalaryAdd             ICalcSalaryAddDo
 	CalcSalaryEmployee        ICalcSalaryEmployeeDo
 	CalcSalaryReduce          ICalcSalaryReduceDo
+	CheckInData               ICheckInDataDo
 	CheckInRequestForm        ICheckInRequestFormDo
 	CheckInRequestFormDetail  ICheckInRequestFormDetailDo
 	CheckInSignOffFlow        ICheckInSignOffFlowDo
@@ -380,6 +387,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		CalcSalaryAdd:             q.CalcSalaryAdd.WithContext(ctx),
 		CalcSalaryEmployee:        q.CalcSalaryEmployee.WithContext(ctx),
 		CalcSalaryReduce:          q.CalcSalaryReduce.WithContext(ctx),
+		CheckInData:               q.CheckInData.WithContext(ctx),
 		CheckInRequestForm:        q.CheckInRequestForm.WithContext(ctx),
 		CheckInRequestFormDetail:  q.CheckInRequestFormDetail.WithContext(ctx),
 		CheckInSignOffFlow:        q.CheckInSignOffFlow.WithContext(ctx),

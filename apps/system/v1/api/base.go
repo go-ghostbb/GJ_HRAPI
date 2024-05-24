@@ -16,6 +16,7 @@ type BaseApi struct{}
 
 func (b *BaseApi) Init(v1 *gin.RouterGroup) {
 	v1.GET("migrate", b.migrate)
+	v1.GET("migrate/:tableName", b.migrateSpec)
 	v1.POST("login/:type", b.login)
 	v1.Use(middleware.Auth()).DELETE("logout/:type", b.logout)
 	v1.Use(middleware.Auth()).GET("master/key", b.createMasterKey)
@@ -42,6 +43,27 @@ func (b *BaseApi) migrate(c *gin.Context) {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
 	}
+	Responder(Mount(c)).Ok()
+}
+
+// 遷移特定資料表
+//
+//	route => GET /api/v1/migrate/:tableName
+func (b *BaseApi) migrateSpec(c *gin.Context) {
+	var (
+		ctx       = gbhttp.Ctx(c)
+		tableName string
+		err       error
+	)
+
+	tableName = c.Param("tableName")
+
+	err = service.Base(ctx).MigrateSpec(tableName)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
 	Responder(Mount(c)).Ok()
 }
 

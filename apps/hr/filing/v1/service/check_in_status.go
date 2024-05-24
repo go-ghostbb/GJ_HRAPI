@@ -144,19 +144,19 @@ func (c *checkInStatus) UploadData(in []*model.UploadDataReq) error {
 		for _, data := range in {
 			var (
 				fullDateTime = gbconv.Time(data.DateTime).Format(time.DateTime)
-				isWork       bool
+				ttype        enum.CheckInType
 			)
 
 			switch data.CheckInType {
 			case "0":
 				// 上班
-				isWork = true
+				ttype = enum.Work
 			case "1":
 				// 下班
-				isWork = false
+				ttype = enum.OffWork
 			}
 
-			err = qCheckInStatus.WithContext(c.ctx).UpdateTime(fullDateTime, data.CardNumber, isWork)
+			err = qCheckInStatus.WithContext(c.ctx).UpdateTime(fullDateTime, data.CardNumber, string(ttype))
 			if err != nil {
 				return err
 			}

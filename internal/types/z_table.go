@@ -8,6 +8,7 @@ func Basic() []interface{} {
 		&CheckInSignOffFlow{},        // check_in_sign_off_flow
 		&CheckInSignOffSetting{},     // check_in_sign_off_setting
 		&CheckInStatus{},             // check_in_status
+		&CheckInData{},               // check_in_data
 		&Employee{},                  // employee
 		&LoginInformation{},          // login_information
 		&Role{},                      // role

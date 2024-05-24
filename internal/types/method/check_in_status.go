@@ -21,8 +21,8 @@ type CheckInStatus interface {
 	CountByDateRangeAndKeyword(keyword, dateOnly1, dateOnly2 string, abnormal bool) (int64, error)
 	// exec P_C_CheckInStatusUpdateStatus @startDate, @endDate, @empIDs
 	UpdateStatus(startDate, endDate, empIDs string) error
-	// exec P_C_CheckInStatusUpdateTime @datetime, @cardNum, @isWork
-	UpdateTime(datetime, cardNum string, isWork bool) error
+	// exec P_C_CheckInStatusUpdateTime @datetime, @cardNum, @ttype
+	UpdateTime(datetime, cardNum string, ttype string) error
 	// select sum(w.total_hours) - sum(c.absence_hours) - sum(c.leave_hours) from check_in_status c
 	//     join work_shift w on (c.work_shift_id = w.id)
 	//     join employee e on (c.employee_id = e.id)

@@ -538,7 +538,7 @@ type ICheckInStatusDo interface {
 	QueryByDateRangeAndKeyword(keyword string, dateOnly1 string, dateOnly2 string, abnormal bool, offset int, limit int) (result []*types.CheckInStatus, err error)
 	CountByDateRangeAndKeyword(keyword string, dateOnly1 string, dateOnly2 string, abnormal bool) (result int64, err error)
 	UpdateStatus(startDate string, endDate string, empIDs string) (err error)
-	UpdateTime(datetime string, cardNum string, isWork bool) (err error)
+	UpdateTime(datetime string, cardNum string, ttype string) (err error)
 	QueryTotalAttendHours(empID uint, dateOnly1 string, dateOnly2 string) (result float32, err error)
 }
 
@@ -632,14 +632,14 @@ func (c checkInStatusDo) UpdateStatus(startDate string, endDate string, empIDs s
 	return
 }
 
-// exec P_C_CheckInStatusUpdateTime @datetime, @cardNum, @isWork
-func (c checkInStatusDo) UpdateTime(datetime string, cardNum string, isWork bool) (err error) {
+// exec P_C_CheckInStatusUpdateTime @datetime, @cardNum, @ttype
+func (c checkInStatusDo) UpdateTime(datetime string, cardNum string, ttype string) (err error) {
 	var params []interface{}
 
 	var generateSQL strings.Builder
 	params = append(params, datetime)
 	params = append(params, cardNum)
-	params = append(params, isWork)
+	params = append(params, ttype)
 	generateSQL.WriteString("exec P_C_CheckInStatusUpdateTime ?, ?, ? ")
 
 	var executeSQL *gorm.DB
