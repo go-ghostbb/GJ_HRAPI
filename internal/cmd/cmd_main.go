@@ -5,6 +5,7 @@ import (
 	"ghostbb.io/gb/contrib/dbcache"
 	"ghostbb.io/gb/frame/g"
 	gbcmd "ghostbb.io/gb/os/gb_cmd"
+	"github.com/gin-gonic/gin"
 	"hrapi/apps/hr/daily"
 	"hrapi/apps/hr/filing"
 	queryApp "hrapi/apps/hr/query"
@@ -51,6 +52,15 @@ func mainFn(ctx context.Context, parser *gbcmd.Parser) (err error) {
 	// Register static resource
 	utils.MkdirIfNotExist("assets")
 	s.Static("/assets", "./assets")
+
+	// 健康檢查
+	g.Server().GET("health", func(c *gin.Context) {
+		c.JSON(200, g.Map{
+			"code": 0,
+			"data": g.Map{},
+			"msg":  "ok",
+		})
+	})
 
 	// 定時任務
 	task.Init()
