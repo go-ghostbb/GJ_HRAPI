@@ -2,6 +2,7 @@ package api
 
 import (
 	gbhttp "ghostbb.io/gb/net/gb_http"
+	gbconv "ghostbb.io/gb/util/gb_conv"
 	"github.com/gin-gonic/gin"
 	"hrapi/apps/hr/query/v1/model"
 	"hrapi/apps/hr/query/v1/service"
@@ -19,6 +20,9 @@ func (ch *CheckInApi) Init(group *gin.RouterGroup) {
 	v1 := group.Group("query/checkIn").Use(middleware.Auth())
 	v1.GET("status", middleware.Web(), ch.queryStatus)
 	v1.GET("status/keyword", middleware.Software(), middleware.Paginator(), ch.queryStatusByKeyword)
+
+	v1S := group.Group("checkIn").Use(middleware.Auth())
+	v1S.PUT(":id", middleware.Software(), ch.updateCheckInStatus)
 }
 
 // 查詢出勤狀態
@@ -72,4 +76,30 @@ func (ch *CheckInApi) queryStatusByKeyword(c *gin.Context) {
 	}
 
 	Responder(Mount(c)).OkWithData(out)
+}
+
+// 更新狀態表
+//
+//	route => PUT /api/v1/checkIn/:id
+func (ch *CheckInApi) updateCheckInStatus(c *gin.Context) {
+	var (
+		ctx = gbhttp.Ctx(c)
+		in  model.PutCheckInStatusReq
+		err error
+	)
+
+	in.ID = gbconv.Uint(c.Param("id"))
+
+	if err = gbhttp.ParseJSON(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidBody, err.Error())
+		return
+	}
+
+	err = service.CheckIn(ctx).UpdateCheckInStatus(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).Ok()
 }

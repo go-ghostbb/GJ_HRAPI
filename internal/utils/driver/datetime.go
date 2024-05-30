@@ -10,8 +10,8 @@ import (
 
 type Datetime int64
 
-func NewDateTime[T string | time.Time](n T) Datetime {
-	t := gbconv.Time(n)
+func NewDateTime[T string | time.Time](n T, format ...string) Datetime {
+	t := gbconv.Time(n, format...)
 	t, _ = time.Parse(time.DateTime, t.Format(time.DateTime))
 	return Datetime(t.Unix())
 }
@@ -33,8 +33,11 @@ func (d Datetime) Value() (driver.Value, error) {
 	return d.Format(), nil
 }
 
-func (d Datetime) Format() string {
-	return time.Unix(int64(d), 0).UTC().Format(time.DateTime)
+func (d Datetime) Format(layout ...string) string {
+	if len(layout) == 0 {
+		return time.Unix(int64(d), 0).UTC().Format(time.DateTime)
+	}
+	return time.Unix(int64(d), 0).UTC().Format(layout[0])
 }
 
 func (d Datetime) Unix() int64 {
@@ -50,6 +53,10 @@ func (d Datetime) MarshalJSON() ([]byte, error) {
 
 func (d *Datetime) UnmarshalJSON(data []byte) error {
 	dataStr := gbstr.Replace(string(data), `"`, "")
+	if dataStr == "null" || len(dataStr) == 0 {
+		*d = Datetime(0)
+		return nil
+	}
 	t, err := time.Parse(time.DateTime, dataStr)
 	if err != nil {
 		return err
@@ -63,10 +70,18 @@ func (d Datetime) Time() time.Time {
 	return time.Unix(int64(d), 0).UTC()
 }
 
-func (d Datetime) After(u Date) bool {
+func (d Datetime) After(u Datetime) bool {
 	return d.Time().After(u.Time())
+}
+
+func (d Datetime) Before(u Datetime) bool {
+	return d.Time().Before(u.Time())
 }
 
 func (d Datetime) AddDate(years int, months int, days int) Datetime {
 	return Datetime(d.Time().AddDate(years, months, days).Unix())
+}
+
+func (d Datetime) IsZero() bool {
+	return d.Unix() == 0
 }

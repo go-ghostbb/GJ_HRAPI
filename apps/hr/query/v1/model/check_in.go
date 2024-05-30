@@ -2,6 +2,7 @@ package model
 
 import (
 	"hrapi/internal/types"
+	"hrapi/internal/utils/driver"
 	"hrapi/internal/utils/response/page"
 )
 
@@ -25,4 +26,11 @@ type QueryStatusByKeywordReq struct {
 
 type QueryStatusByKeywordRes struct {
 	page.Model[types.CheckInStatus]
+}
+
+type PutCheckInStatusReq struct {
+	ID          uint
+	WorkShiftID uint            `json:"workShiftId" binging:"required"`
+	Work        driver.Datetime `json:"work"`
+	OffWork     driver.Datetime `json:"offWork"`
 }
