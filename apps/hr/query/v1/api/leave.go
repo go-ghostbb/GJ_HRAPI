@@ -6,6 +6,7 @@ import (
 	"hrapi/apps/hr/query/v1/model"
 	"hrapi/apps/hr/query/v1/service"
 	"hrapi/internal/middleware"
+	"hrapi/internal/utils/paginator"
 
 	. "hrapi/internal/utils/response"
 	. "hrapi/internal/utils/response/status"
@@ -16,6 +17,7 @@ type LeaveApi struct{}
 func (l *LeaveApi) Init(group *gin.RouterGroup) {
 	v1 := group.Group("query/leave").Use(middleware.Auth())
 	v1.GET("correct", middleware.Web(), l.getLeaveCorrect)
+	v1.GET("correct/keyword", middleware.Software(), middleware.Paginator(), l.getLeaveCorrectKeyword)
 }
 
 // 查詢可用假別
@@ -37,6 +39,32 @@ func (l *LeaveApi) getLeaveCorrect(c *gin.Context) {
 	}
 
 	out, err = service.Leave(ctx).GetLeaveCorrect(in)
+	if err != nil {
+		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
+		return
+	}
+
+	Responder(Mount(c)).OkWithData(out)
+}
+
+// 根據關鍵字查詢可用假別
+//
+//	route => /api/v1/query/leave/correct/keyword
+func (l *LeaveApi) getLeaveCorrectKeyword(c *gin.Context) {
+	var (
+		ctx  = gbhttp.Ctx(c)
+		page = gbhttp.Get(c, "paginator").Interface().(*paginator.Pagination)
+		in   model.GetLeaveCorrectByKeywordReq
+		out  model.GetLeaveCorrectByKeywordRes
+		err  error
+	)
+
+	if err = gbhttp.ParseQuery(c, &in); err != nil {
+		Responder(Mount(c)).FailWithDetail(CodeRequestInvalidQuery, err.Error())
+		return
+	}
+
+	out, err = service.Leave(ctx, page).GetLeaveCorrectByKeyword(in)
 	if err != nil {
 		Responder(Mount(c)).FailWithMsg(CodeFailed, err.Error())
 		return
