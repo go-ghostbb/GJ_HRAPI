@@ -26,3 +26,5 @@ docker-dev:
 	@docker push giajiu/hrapi:dev
 act:
 	@act --container-architecture linux/amd64 -s DOCKER_USERNAME="giajiu" -s DOCKER_PASSWORD="Gj_52676089"
+test:
+	@echo test
