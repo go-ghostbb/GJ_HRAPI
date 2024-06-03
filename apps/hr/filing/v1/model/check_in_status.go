@@ -1,7 +1,8 @@
 package model
 
 type FilingCheckInStatusReq struct {
-	DateRange []string `json:"dateRange" binding:"required"`
+	EmployeeID []uint   `json:"employeeId"`
+	DateRange  []string `json:"dateRange" binding:"required"`
 }
 
 type CheckInData struct {

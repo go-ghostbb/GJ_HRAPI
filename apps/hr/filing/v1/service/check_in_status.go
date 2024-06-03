@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"ghostbb.io/gb/contrib/dbcache"
 	gbconv "ghostbb.io/gb/util/gb_conv"
+	"gorm.io/gen"
 	"hrapi/apps/hr/filing/v1/model"
 	"hrapi/internal/query"
 	"hrapi/internal/types"
@@ -64,10 +65,11 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 		}
 
 		// 查詢所有在職員工id
-		var empIDs []uint
-		err = qEmployee.WithContext(c.ctx).Select(qEmployee.ID).Where(qEmployee.EmploymentStatus.Eq(enum.Active)).Scan(&empIDs)
-		if err != nil {
-			return err
+		if in.EmployeeID == nil || len(in.EmployeeID) == 0 {
+			err = qEmployee.WithContext(c.ctx).Select(qEmployee.ID).Where(qEmployee.EmploymentStatus.Eq(enum.Active)).Scan(&in.EmployeeID)
+			if err != nil {
+				return err
+			}
 		}
 
 		// 遍歷時間區間
@@ -76,7 +78,7 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 		for endDate.After(startDate) {
 			tmpDate := startDate.Format() // 暫存日期(string)
 			// 遍歷所有員工
-			for _, empID := range empIDs {
+			for _, empID := range in.EmployeeID {
 				// 查詢該名員工是否有班表
 				if v, ok := empScheMap[empID][tmpDate]; ok {
 					// 存在
@@ -115,10 +117,14 @@ func (c *checkInStatus) Filing(in model.FilingCheckInStatusReq) error {
 
 		// 刪除原有, 避免資料重複
 		// in.DateRange[0] <= date <= in.DateRange[1]
-		if _, err = qCheckInStatus.WithContext(c.ctx).Unscoped().
-			Where(qCheckInStatus.Date.Gte(driver.NewDate(in.DateRange[0])),
-				qCheckInStatus.Date.Lte(driver.NewDate(in.DateRange[1]))).
-			Delete(); err != nil {
+		var whereSQL = []gen.Condition{
+			qCheckInStatus.Date.Gte(driver.NewDate(in.DateRange[0])),
+			qCheckInStatus.Date.Lte(driver.NewDate(in.DateRange[1])),
+		}
+		if in.EmployeeID != nil && len(in.EmployeeID) > 0 {
+			whereSQL = append(whereSQL, qCheckInStatus.EmployeeID.In(in.EmployeeID...))
+		}
+		if _, err = qCheckInStatus.WithContext(c.ctx).Unscoped().Where(whereSQL...).Delete(); err != nil {
 			return err
 		}
 

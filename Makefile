@@ -24,3 +24,5 @@ docker-dev:
 	@make pack
 	@docker buildx build --platform linux/amd64 -t giajiu/hrapi:dev -f ./manifest/docker/Dockerfile .
 	@docker push giajiu/hrapi:dev
+act:
+	@act --container-architecture linux/amd64 -s DOCKER_USERNAME="giajiu" -s DOCKER_PASSWORD="Gj_52676089"

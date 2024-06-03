@@ -148,7 +148,7 @@ func (c *checkIn) UpdateCheckInStatus(in model.PutCheckInStatusReq) error {
 
 		if status.WorkCheckIn.IsZero() || status.OffWorkCheckIn.IsZero() {
 			// 如果上下班其中一個沒打卡，缺勤時數=整天
-			absenceHours, err = qWorkSchedule.WithContext(c.ctx).WorkHourCount(status.EmployeeID, status.WorkCheckIn.Format(), status.OffWorkCheckIn.Format())
+			absenceHours, err = qWorkSchedule.WithContext(c.ctx).WorkHourCount(status.EmployeeID, basicWork.Format(), basicOffWork.Format())
 			if err != nil {
 				return err
 			}

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"ghostbb.io/gb/contrib/dbcache"
 	"github.com/jinzhu/copier"
 	"gorm.io/gen/field"
 	"hrapi/apps/hr/query/v1/model"
@@ -24,6 +25,8 @@ type (
 		GetLeaveCorrect(in model.GetLeaveCorrectReq) (out []*model.GetLeaveCorrectRes, err error)
 		// GetLeaveCorrectByKeyword 根據關鍵字查詢可用假別
 		GetLeaveCorrectByKeyword(in model.GetLeaveCorrectByKeywordReq) (out model.GetLeaveCorrectByKeywordRes, err error)
+		// UpdateLeaveCorrect 更新leave correct
+		UpdateLeaveCorrect(in model.PutLeaveCorrectReq) (err error)
 	}
 
 	leave struct {
@@ -88,4 +91,23 @@ func (l *leave) GetLeaveCorrectByKeyword(in model.GetLeaveCorrectByKeywordReq) (
 	}
 
 	return out, nil
+}
+
+// UpdateLeaveCorrect 更新leave correct
+func (l *leave) UpdateLeaveCorrect(in model.PutLeaveCorrectReq) (err error) {
+	var (
+		qLeaveCorrect = query.LeaveCorrect
+		leaveCorrect  *types.LeaveCorrect
+	)
+
+	leaveCorrect, err = qLeaveCorrect.WithContext(dbcache.WithCtx(l.ctx)).Where(qLeaveCorrect.ID.Eq(in.ID)).First()
+	if err != nil {
+		return err
+	}
+
+	leaveCorrect.Effective = in.Effective
+	leaveCorrect.Expired = in.Expired
+	leaveCorrect.Available = in.Available
+
+	return qLeaveCorrect.WithContext(dbcache.WithCtx(l.ctx)).Save(leaveCorrect)
 }
