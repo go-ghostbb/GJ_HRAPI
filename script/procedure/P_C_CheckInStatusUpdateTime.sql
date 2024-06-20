@@ -24,7 +24,7 @@ begin
                   from check_in_status i_c
                   join work_shift i_w on (i_c.work_shift_id = i_w.id)
                   where employee_id = (select id from employee where card_number = @card_number and deleted_at is null) and
-                        abs(datediff(second, @datetime, dbo.FN_Convert_Datetime(i_c.date, i_w.work_start))) <= @hoursADay and
+                        abs(datediff(second, @datetime, dbo.FN_Convert_Datetime(i_c.date, i_w.work_start))) / 60 / 60 <= @hoursADay and
                         i_c.deleted_at is null
                   order by abs(datediff(second, @datetime, dbo.FN_Convert_Datetime(i_c.date, i_w.work_start))));
     end
@@ -38,7 +38,7 @@ begin
                   from check_in_status i_c
                   join work_shift i_w on (i_c.work_shift_id = i_w.id)
                   where employee_id = (select id from employee where card_number = @card_number and deleted_at is null) and
-                        abs(datediff(second, @datetime, dbo.FN_Convert_Datetime(iif(i_w.work_start > i_w.work_end, dateadd(day, 1, i_c.date), i_c.date), i_w.work_end))) <= @hoursADay and
+                        abs(datediff(second, @datetime, dbo.FN_Convert_Datetime(iif(i_w.work_start > i_w.work_end, dateadd(day, 1, i_c.date), i_c.date), i_w.work_end))) / 60 / 60 <= @hoursADay and
                         i_c.deleted_at is null
                   order by abs(datediff(second, @datetime, dbo.FN_Convert_Datetime(iif(i_w.work_start > i_w.work_end, dateadd(day, 1, i_c.date), i_c.date), i_w.work_end))));
     end;
